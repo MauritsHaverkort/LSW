@@ -38,7 +38,6 @@ def path_k_space(k_points, total_steps, a, steps=None):
     return k_scalars,k_vectors, xticks_labels, xticks_pos
 
 
-
 def render_matrix_as_image(matrix, filename="matrix.png"):
     """
     Renders a given matrix as a LaTeX-styled image and saves it.

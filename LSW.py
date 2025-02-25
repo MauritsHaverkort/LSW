@@ -41,7 +41,7 @@ def draw_atoms(atoms:List["Atom"], with_bonds=True):
         for i,n in enumerate(a.neighbours):
             pos_n=n.position
             u,v,w=pos_n[0],pos_n[1],pos_n[2]
-            ax.quiver(x, y, z, u, v, w,arrow_length_ratio=0.1,linewidth=np.abs(a.J_bonds[i])) #, color=['r', 'g', 'b'], arrow_length_ratio=0.1
+            ax.quiver(x, y, z, u-x, v-y, w-z,arrow_length_ratio=0.05,linewidth=np.abs(a.J_bonds[i])) #, color=['r', 'g', 'b'], arrow_length_ratio=0.1
     #plt.show()
 
 def is_approximately_diagonal(matrix, tolerance=1e-3):
@@ -151,9 +151,10 @@ def AFM_with_trafo(S, bonds, J, k_, w0=1.0001, Delta=0.1, debug=False):
         print("normalisation")
         print(herm_conj(eigvecs)@Gamma@eigvecs)
     normalisation_factor=1/np.sqrt((herm_conj(eigvecs)@Gamma@eigvecs)[0,0])
-    eigvecs=normalisation_factor*eigvecs
-    print("corrected eigvecs")
-    print(eigvecs)
+    eigvecs_corrected=normalisation_factor*eigvecs
+    if debug:
+        print("corrected eigvecs")
+        print(eigvecs_corrected)
     #going from ab Hamiltonian to alpha_beta
     H_comp=trafo_bogoliubov@H_ab@trafo_bogoliubov
     
@@ -162,7 +163,7 @@ def AFM_with_trafo(S, bonds, J, k_, w0=1.0001, Delta=0.1, debug=False):
     if debug:
         print("eigval H")
         print(H)
-        H=Gamma@la.inv(eigvecs)@Gamma@H_ab@eigvecs
+        H=Gamma@la.inv(eigvecs_corrected)@Gamma@H_ab@eigvecs_corrected
         print("diagonalised with eigvecs")
         print(H)
         print("H_Comp")
@@ -182,6 +183,7 @@ def AFM_with_trafo(S, bonds, J, k_, w0=1.0001, Delta=0.1, debug=False):
     #print("AFM literature result")
     
     spin_creation_basis_c_d=np.array([1,1])
+    #TODO: right normalisation: eigvecs or corrected eigvecs
     spin_creation_basis_alpha_beta= eigvecs@spin_creation_basis_c_d
 
     #print(Gamma@eigvecs@Gamma)
@@ -283,8 +285,10 @@ def general_Ham_types_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_dista
 def herm_conj(U):
     return np.conjugate(U).T
 
-def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"], energies=[], q_values=[] ,w_a=1,Delta=0, interaction_function=J_of_k, use_correct_self_interaction=True,
-                            debug=False):
+def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"], energies=[], q_values=[] ,w_a=1,Delta=0, interaction_function=J_of_k, 
+                            use_correct_self_interaction=True,
+                            debug=False,
+                            AFM=True):
     
     H = [[0 for _ in range(len(J_bonds))] for _ in range(len(J_bonds))]
     Gamma=np.eye(len(H))
@@ -321,7 +325,11 @@ def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_d
     
     #TODO check why eigvecs and not inv() --> this corresponds to eigvecs (U) for AFM and U^-1 for FM
     #print("Gamma")
-    spin_creation=la.inv(eigvecs)@spin_creation
+    #TODO: this should be generalised
+    if AFM:
+        spin_creation=eigvecs@spin_creation
+    else:
+        spin_creation=la.inv(eigvecs)@spin_creation
     #print(herm_conj(spin_creation)@H@spin_creation)
     #this seems to work for 1D AFM/FM ---> but only approximately
     #spin_creation=Gamma@la.inv(eigvecs)@Gamma@spin_creation
@@ -461,7 +469,7 @@ def hamiltonian_solver(diagonalise_before_using=False,
             
             # Define variables
             S = 1  
-            Bz=1
+            Bz=0
             Ba_z=0
             #here always initial bonds FM
             J1 = - param_2  # constant J1
@@ -474,20 +482,25 @@ def hamiltonian_solver(diagonalise_before_using=False,
             #H_shift=2
 
             #Define simulation parameters
-            amount_k_values=50
-            amount_w_values=50
+            amount_k_values=300
+            amount_w_values=300
             k_values=[]
             k_values_scalar=[]
             w_values=np.linspace(-1,4,amount_w_values)
 
-            k_values_scalar,k_values,xticks_label, xticks_pos = functions.path_k_space([np.array([0,0,0]),np.array([4,0,0])], amount_k_values, a)
+            #path: Gamma, X, M, L, Gamma
+            path=[np.array([0,0,0]),np.array([2,0,0]),np.array([2,2,0]),np.array([2,2,2]),np.array([0,0,0])]
+            #path: (2d) Gamma X M Gamma
+            #path=[np.array([0,0,0]),np.array([2,0,0]),np.array([2,2,0]),np.array([0,0,0])]
+            
+            k_values_scalar,k_values,xticks_label, xticks_pos = functions.path_k_space(path, amount_k_values, a)
 
             #bonds and couplings for old testing
             if(True):
                 bonds=[
                     a1*normalized_vector(np.array([1,0,0])),
-                    #a1*normalized_vector(np.array([0,1,0])),
-                    #a1*normalized_vector(np.array([0,0,1]))
+                    a1*normalized_vector(np.array([0,1,0])),
+                    a1*normalized_vector(np.array([0,0,1]))
                     ]
                 J=[-J1 for i in range(len(bonds))]
                 #adding the bonds in the opposite direction
@@ -516,11 +529,11 @@ def hamiltonian_solver(diagonalise_before_using=False,
             spin_creation=np.array([])
 
             #for general Hamiltonian
-            #all_atoms=example_1_1D_FM_AFM(J1,J2,a,a1,S1=1,S2=-1)
+            all_atoms=example_1_General_D_FM_AFM(J1,J2,a,a1,S1=1,S2=-1,d=3)
 
             #Nickel, Copper example
             #Ni - Ni FM exchange / Cu - Ni weak exchange weak FM
-            all_atoms = example_2_mixing_FM_AFM(J11=-1,J12=0.5, J22=-0.1,S1=-1/2,S2=1)
+            #all_atoms = example_2_BCC_FM_AFM(J11=0,J12=-1, J22=0,S1=-1,S2=1, dimension=2)
 
             draw_atoms(all_atoms)
 
@@ -586,7 +599,7 @@ def hamiltonian_solver(diagonalise_before_using=False,
                     #print(spin_creation)
                     #print(H_comp)
                     #print("AFM_general")
-                    if False:
+                    if True:
                         if use_S_squared_operator:
                             H, spin_creation =general_Ham_types_AFM_FM(k_, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz, interaction_function=interaction_k_k_minus)
                         elif use_higher_order_corrections and refinement_step!=0:
@@ -598,7 +611,7 @@ def hamiltonian_solver(diagonalise_before_using=False,
                     #print(H)
                     #print("general")
                     #print(H)
-                    H, spin_creation = AFM_with_trafo(S, bonds=bonds, J=J, k_=k_, w0=1.001, Delta=0)
+                    #H, spin_creation = AFM_with_trafo(S, bonds=bonds, J=J, k_=k_, w0=1.001, Delta=0)
                     #print(H)
                     #H = general_Ham_types_FM(k_, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general)
                     #print(H)
@@ -728,14 +741,16 @@ def hamiltonian_solver(diagonalise_before_using=False,
     
     
 #examples
-def example_1_1D_FM_AFM(J1,J2,a,a1,S1,S2):
+def example_1_General_D_FM_AFM(J1,J2,a,a1,S1,S2, d=3):
 
     lv=[np.array([a,0,0]),np.array([0,a,0]),np.array([0,0,a])]
     # Create atoms with specific bonds
     atoms:List["Atom"] =[]
     atoms=[Atom(np.array([0,0,0]),type=0,S=S1)
-                ,Atom(np.array([a1,0,0]),type=1,S=S2),
-                #Atom(np.array([0,0.9*a1,0]),type=0)
+                ,Atom(np.array([a1,0,0]),type=1,S=S2)
+                ,Atom(np.array([0,a1,0]),type=1,S=S2)
+                ,Atom(np.array([0,0,a1]),type=1,S=S2)
+                
                 ]
     all_atoms=[]
     """ all_atoms=all_atoms+atoms[0].create_bonds(atoms[0], connections=[give_vector_terms_of_lattice_vectors([1,0,0],lv)
@@ -743,6 +758,13 @@ def example_1_1D_FM_AFM(J1,J2,a,a1,S1,S2):
                                                                         ], J=[J1,J1]) """
     all_atoms=all_atoms+atoms[0].create_bonds(atoms[1], dir_with_neighbours=[[0,0,0],[-1,0,0]
                                                                         ], J=[J1,J2],pass_actual_vector=False, lv=lv)                                                                 
+    if d>1:
+        all_atoms=all_atoms+atoms[0].create_bonds(atoms[2], dir_with_neighbours=[[0,0,0],[0,-1,0]
+                                                                            ], J=[J1,J2],pass_actual_vector=False, lv=lv)                                                                 
+    if d>2:    
+        all_atoms=all_atoms+atoms[0].create_bonds(atoms[3], dir_with_neighbours=[[0,0,0],[0,0,-1]
+                                                                            ], J=[J1,J2],pass_actual_vector=False, lv=lv)                                                                 
+    
     all_atoms.append(atoms[0])
     return all_atoms
 
@@ -771,8 +793,21 @@ def example_d_FM_AFM(J1,J2,a,a1,S1,S2
     all_atoms.append(atoms[0])
     return all_atoms
 
-def example_2_mixing_FM_AFM(J11,J12,J22,pos_atom_2=np.array([0.5,0.5,0]),
-                            lv=[np.array([1,0,0]),np.array([0,1,0]),np.array([0,0,1])],S1=1,S2=-1, dimension=2):
+#def example_FCC_FM_AFM():
+
+
+#only works for d=2 right now
+def example_2_BCC_FM_AFM(J11,J12,J22,pos_atom_2=[],
+                            lv=[],S1=1,S2=-1, dimension=2):
+    if lv==[]:
+        lv=[np.array([1,0,0]),np.array([0,1,0]),np.array([0,0,1])]
+    #dimesnional ajustments
+    if pos_atom_2==[]:
+        pos_atom_2=[0,0,0]
+        for i in range(dimension):
+            pos_atom_2[i]=0.5
+        pos_atom_2=np.array(pos_atom_2)
+    lv_d=lv[:dimension]
     
     # Create atoms with specific bonds
     atoms:List["Atom"] =[]
@@ -783,9 +818,15 @@ def example_2_mixing_FM_AFM(J11,J12,J22,pos_atom_2=np.array([0.5,0.5,0]),
                 ]
     all_atoms=[]
     
-    all_atoms=all_atoms+atoms[0].create_bonds(atoms[0], dir_with_neighbours=lv[:dimension], J=[J11,J11,J11,J11], pass_actual_vector=True, lv=lv) #only need the one direction since coupling to itself
-    all_atoms=all_atoms+atoms[0].create_bonds(atoms[1], dir_with_neighbours=[[0,0,0],[-1,0,0],[0,-1,0],[0,-1,-1]], J=[J12,J12,J12,J12],lv=lv)
-    all_atoms=all_atoms+atoms[1].create_bonds(atoms[1],dir_with_neighbours=lv[:dimension], J=[J22,J22,J22,J22], pass_actual_vector=True, lv=lv)
+    cross_connections=[[0,0,0],[-1,0,0]]#,[-1,0,-1],[0,0,-1]]
+    if dimension>1:
+        cross_connections=cross_connections+[[0,-1,0],[-1,-1,0]]
+    if dimension >2:
+        cross_connections=cross_connections+[[-1,0,-1],[0,0,-1],[0,-1,-1],[-1,-1,-1]]
+        
+    all_atoms=all_atoms+atoms[0].create_bonds(atoms[0], dir_with_neighbours=lv_d, J=[J11], pass_actual_vector=True, lv=lv) #only need the one direction since coupling to itself
+    all_atoms=all_atoms+atoms[0].create_bonds(atoms[1], dir_with_neighbours=cross_connections, J=[J12],lv=lv)
+    all_atoms=all_atoms+atoms[1].create_bonds(atoms[1],dir_with_neighbours=lv_d, J=[J22], pass_actual_vector=True, lv=lv)
     #TODO think about how to make less confusing: what atoms have to be added when exactly
     all_atoms=all_atoms+[atoms[0],atoms[1]]
     return all_atoms

@@ -25,13 +25,19 @@ class Atom:
     #this creates all given bonds and returns the new atoms that were created
     def create_bonds(self, bond_atom:"Atom", dir_with_neighbours, J, lv, pass_actual_vector=False):
         
+        #
+        if len(J) != len(dir_with_neighbours):
+            print("ATTENTION: J-bonds set equal (not same amount)")
+            temp=J[0]
+            J=[temp for _ in range(len(dir_with_neighbours))]
+
         #go from "lattice vector basis" to real basis
         if not pass_actual_vector:
             for i in range(len(dir_with_neighbours)):
                 dir_with_neighbours[i]=functions.give_vector_terms_of_lattice_vectors(np.array(dir_with_neighbours[i]),lv)
         new_Atoms=[]
         for i in range(len(dir_with_neighbours)):
-            new_Atom=Atom((bond_atom.position-self.position)+dir_with_neighbours[i],bond_atom.type, S=bond_atom.S)
+            new_Atom=Atom((bond_atom.position)+dir_with_neighbours[i],bond_atom.type, S=bond_atom.S)
             new_Atoms.append(new_Atom)
             self.neighbours.append(new_Atom)
             self.J_bonds.append(J[i])
