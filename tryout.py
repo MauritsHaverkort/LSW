@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from typing import List  # Import List for type hints
 from mpl_toolkits.mplot3d import Axes3D
+from LSW import give_grid_vectors_2d
 
 
 def test1():
@@ -106,4 +107,14 @@ def draw_vector():
     # Show the plot
     plt.show()
 
-draw_vector()
+def test_grid_creation():
+    vectors=give_grid_vectors_2d([np.array([1,0,0]),np.array([0,1,0]),np.array([0,0,1])],steps=10)
+    print("finished creating")
+    fig=plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    for v in vectors:
+        ax.scatter(v[0],v[1],v[2],s=50,marker="o")
+    plt.show()
+
+
+test_grid_creation()

@@ -1,4 +1,23 @@
 # Define the matrix
+
+#Hamiltonians:
+
+                    #k_=k_[0] #for looking at scalar values
+                    #H= Ham_1D_FM_couplings_change(S, bonds=[a1,-a2], J=[J1,J2], k_=k_)
+                
+                    #H= Ham_1D_FM_couplings_change(S, bonds=[bonds[0],bonds[3]], J=[J1,J2], k_=k_)
+                    #print(H)
+                    #H = Ham_3D_AFM(S, bonds=bonds, J=J, k_=k_, w0=1)
+                    #print("AFM_3D")
+                    #print(H)
+                    #[-np.array([0.5,0,0]),np.array([0.5,0,0])]
+                    
+                    #H = Ham_1D_AFM(S, bonds=[np.array([a1,0,0]),np.array([-a2,0,0])], J=[-J1,-J2], k_=k_)
+                    #H = Ham_1D_AFM(S, bonds=[a1,-a2], J=[-J1,-J2], k_=k_, w0=w0) #here need to set k_ to scalar
+                    #print(spin_creation)
+                    #print(H_comp)
+                    #print("AFM_general")
+
 hbar = 1  # Replace with the value of ħ if needed
 matrix = (hbar**2 / 4) * np.array([
     [-1,  0,  0, 0],
@@ -258,3 +277,61 @@ def matrix_1D_FM_couplings_change():
         plt.plot(k_values, e)
     
     plt.show()
+
+
+#04.03. conv_d
+def convoluted_intensities_d(k_values, w_values, J_bonds_general,dist_bonds_general, spins, lv, dimension=2):
+    #conv_intensities=[[[] for _ in range(2*len(w_values))] for _ in range(len(k_values))]
+    grid_fineness=len(k_values)
+    conv_intensities = np.zeros((2 * len(w_values),) + (grid_fineness,) * dimension)
+    
+    q_values=give_grid_vectors_2d(give_reciprocal_lv(lv)[:dimension],grid_fineness)
+    print("len q_values: "+str(len(q_values)))
+    spectral_weight_grid=np.zeros((len(w_values),)+(len(q_values),len(q_values[0],len(q_values[0,0])))
+    for w_index in range(len(w_values)):
+        for v1 in range(len(q_values)):
+            for v2 in range(len(q_values[0])):
+                for v3 in range(len(q_values[0,0])):
+                    q_=q_values[v1,v2,v3]
+                    #q_=q_values[v1]
+                    spectral_weight_q = calculate_spectral_weight_general_AFM_FM(q_,w_values[w_index],J_bonds_general,dist_bonds_general,spins)
+                    spectral_weight_grid[w_index,v1,v2,v3]=spectral_weight_q
+    #path Gamma, X
+    plt.figure()
+    image=plt.pcolormesh(np.concatenate([spectral_weight_grid[:,0,:int(grid_fineness/2)],spectral_weight_grid[:,:int(grid_fineness/2),int(grid_fineness/2)]],axis=1), cmap='viridis', shading='auto', norm=LogNorm(1e+1,np.max(spectral_weight_grid)))
+    #plt.show()
+    def find_closest_spectral_weight(w_index, k_):
+        best_result_dist=10
+        best_result_sw=0
+        for q_,sw in spectral_weight_q[w_index]:
+            current_dist=la.norm(q_-k_)
+            if current_dist<best_result_dist:
+                best_result_dist=current_dist
+                best_result_dist=sw
+    print("convoluting")
+    for w_index in range(len(w_values)):
+        for w_index_2 in range(w_index, len(w_values)):
+            conv_intensities[w_index+w_index_2]+=fftconvolve(spectral_weight_grid[w_index], spectral_weight_grid[w_index_2], mode='same')
+    #max_intensity=np.max(np.array(intensities))
+    
+    #non_zero_indices_k_w=np.array(non_zero_indices_k_w).T
+    #k_values=non_zero_indices_k_w[0]
+    #w_values=non_zero_indices_k_w[1]
+    
+        #temp_value=0
+        #temp_value_test=0
+    if False:
+        for k_index in range(len(k_values)):
+            print(k_index)
+            for w_index in range(len(w_values)):
+                print(w_index)
+                #conv_intensities[k_index][w_index]+=calculate_spectral_weight_general_AFM_FM(k_values[k_index],w_values[w_index],J_bonds_general,dist_bonds_general,spins)
+        
+                for q_ in q_values:
+                    for w_index_2 in range(len(w_values)):
+                            conv_intensities[k_index][w_index_2+w_index]+=calculate_spectral_weight_general_AFM_FM(q_,w_values[w_index],J_bonds_general,dist_bonds_general,spins)*calculate_spectral_weight_general_AFM_FM(k_values[k_index]-q_,w_values[w_index_2],J_bonds_general,dist_bonds_general,spins)
+            
+    #conv_intensities[k_index][w_index_2+w_index]+=calculate_spectral_weight_general_AFM_FM(q_,w_values[w_index],J_bonds_general,dist_bonds_general,spins)*calculate_spectral_weight_general_AFM_FM(k_values[k_index]-q_,w_values[w_index_2],J_bonds_general,dist_bonds_general,spins)
+                      
+    return np.concatenate([conv_intensities[:,0,:int(grid_fineness/2)],conv_intensities[:,:int(grid_fineness/2),int(grid_fineness/2)]],axis=1)
+    #conv_intensities[:,0,:]

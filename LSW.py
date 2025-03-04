@@ -1,14 +1,18 @@
 import numpy as np
 import scipy.linalg as la
+from scipy.fft import fftn, ifftn
+from scipy.signal import fftconvolve
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from typing import List  # Import List for type hints
 import funtions as functions
 from Atoms import Atom
+from matplotlib.colors import LogNorm
+import time
 
 
-DEBUG=False
+DEBUG=True
 
 
 # Define the function to format the x-axis labels
@@ -74,122 +78,6 @@ def is_approximately_diagonal(matrix, tolerance=1e-3):
 
 #Hamiltonians
 #AFM
-def AFM_with_trafo(S, bonds, J, k_, w0=1.0001, Delta=0.1, debug=False):
-    #basis of |0>, |c>, |d>, |cd>
-    a=np.array([1,0,0])
-    #E_0=0
-    #w0 has to be a bit larger than 1 here otherwise 
-    def w1(k_, Error_if_w0_to_big=True):
-        result = J_of_k(S,bonds,J,k_)
-        #print(result)
-        #result=2*np.cos(k_@a)
-        if(result>w0 and Error_if_w0_to_big):
-            raise ValueError("w1 is larger than w0; w1="+str(result)+" ;k="+str(k_)+"; w0="+str(w0))
-        return result
-    
-    #w0=w1(np.array([0,0,0]), Error_if_w0_to_big=False )+0.0001 #w0 = maximal value of w1 ((J1+J2)/2) with some spin values
-    #print(w0)
-
-    theta = 0.5*np.arctanh(-w1(k_)/w0)
-    if theta == np.nan:
-        raise ValueError("theta is nan")
-    u = np.cosh(theta)
-    v = np.sinh(theta)
-    Gamma= np.array([[1,0],[0,-1]])
-    #trafo from alpha/beta to a/b
-    trafo_bogoliubov = np.array(
-        [[ u, v],
-        [v, u]])
-    """ [1, 0, 0, 0],
-    [0, u, v, 0],
-    [0, v, u, 0],
-    [0, 0, 0, 2*u*v]
-    ]) """
-    
-    #in |c>, |d^+> basis
-    H_ab= np.array([
-        [w0+Delta,w1(k_)],
-        [np.conjugate(w1(k_)),w0-Delta]
-    ])
-    
-    """ np.array([
-        [E_0,0,0,w1(k_)],
-        [0,w0+Delta,0,0],
-        [0,0,w0-Delta,0],
-        [w1(k_),0,0,2*w0]])
-     """'''
-    H=[
-        [E_0,0,0,Delta],
-        [0,w0,w1(k_),0],
-        [0,w1(k_),w0,0],
-        [Delta,0,0,2*w0]]
-    '''
-    #print("before diagonalasing")
-    #print(Gamma@H_ab)
-    #print(la.inv(trafo_bugliobuv))
-    #print(trafo_bugliobuv)
-    #eigvals, eigvecs = la.eig(H)
-    #print(np.diag(eigvals))
-    #plt.figure(3)
-    #plt.scatter(la.norm(k_),eigvals[0])
-    #plt.scatter(la.norm(k_),Delta+2*w0*(u**2+v**2)+2*u*v*w1(k_))
-    #print(Delta+2*w0*(u**2+v**2)+2*u*v*w1(k_))
-    #plt.scatter(la.norm(k_),np.sqrt(w0**2-w1(k_)**2)+Delta)
-    #print(np.sqrt(w0**2-w1(k_)**2)+Delta)
-    #H_ab[0,1]=H_ab[0,1]-2j*np.imag(H_ab[0,1])
-    eigvals, eigvecs = la.eig(Gamma@H_ab)
-    #print(np.diag(eigvals))
-    if debug:
-        print("eigvecs")
-        print(eigvecs)
-        print("bugliobuv")
-        print(trafo_bogoliubov)
-        print("eigvecs trafo")
-        print(Gamma@la.inv(eigvecs)@Gamma)
-        print("Gamma U Gamma")
-        print(Gamma@trafo_bogoliubov@Gamma)
-        print("normalisation")
-        print(herm_conj(eigvecs)@Gamma@eigvecs)
-    normalisation_factor=1/np.sqrt((herm_conj(eigvecs)@Gamma@eigvecs)[0,0])
-    eigvecs_corrected=normalisation_factor*eigvecs
-    if debug:
-        print("corrected eigvecs")
-        print(eigvecs_corrected)
-    #going from ab Hamiltonian to alpha_beta
-    H_comp=trafo_bogoliubov@H_ab@trafo_bogoliubov
-    
-
-    H=Gamma@np.diag(eigvals)
-    if debug:
-        print("eigval H")
-        print(H)
-        H=Gamma@la.inv(eigvecs_corrected)@Gamma@H_ab@eigvecs_corrected
-        print("diagonalised with eigvecs")
-        print(H)
-        print("H_Comp")
-        print(H_comp)
-    if True and functions.get_difference_of(H,H_comp)>1e-2:
-        raise ValueError("something wrong with bugliobuv transformation")
-
-    #setting off diagonal elements to zero manually
-    if H[1,0]<1e-6 and H[0,1]<1e-6:
-        H[1,0]=0
-        H[0,1]=0
-    else:
-        raise ValueError("off diagonal elements are not zero")
-    #H=Gamma@la.inv(trafo_bugliobuv)@(Gamma@H_ab)@trafo_bugliobuv
-    #print(H)
-    #H=Ham_3D_AFM(S, bonds, J, k_, w0, Delta)
-    #print("AFM literature result")
-    
-    spin_creation_basis_c_d=np.array([1,1])
-    #TODO: right normalisation: eigvecs or corrected eigvecs
-    spin_creation_basis_alpha_beta= eigvecs@spin_creation_basis_c_d
-
-    #print(Gamma@eigvecs@Gamma)
-    #print(spin_creation_basis_alpha_beta)
-    #print(H)
-    return S * H,spin_creation_basis_alpha_beta
 
 
 def Ham_3D_AFM(S, bonds, J, k_, w0=1.0001, Delta=0):
@@ -285,9 +173,99 @@ def general_Ham_types_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_dista
 def herm_conj(U):
     return np.conjugate(U).T
 
-def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"], energies=[], q_values=[] ,w_a=1,Delta=0, interaction_function=J_of_k, 
+def AFM_with_trafo(S, bonds, J, k_, w0=1.0001, Delta=0.1, debug=False):
+    #basis of |0>, |c>, |d>, |cd>
+    a=np.array([1,0,0])
+    #E_0=0
+    #w0 has to be a bit larger than 1 here otherwise 
+    def w1(k_, Error_if_w0_to_big=True):
+        result = J_of_k(S,bonds,J,k_)
+        #print(result)
+        #result=2*np.cos(k_@a)
+        if(result>w0 and Error_if_w0_to_big):
+            raise ValueError("w1 is larger than w0; w1="+str(result)+" ;k="+str(k_)+"; w0="+str(w0))
+        return result
+    
+    #w0=w1(np.array([0,0,0]), Error_if_w0_to_big=False )+0.0001 #w0 = maximal value of w1 ((J1+J2)/2) with some spin values
+    #print(w0)
+
+    theta = 0.5*np.arctanh(-w1(k_)/w0)
+    if theta == np.nan:
+        raise ValueError("theta is nan")
+    u = np.cosh(theta)
+    v = np.sinh(theta)
+    Gamma= np.array([[1,0],[0,-1]])
+    #trafo from alpha/beta to a/b
+    trafo_bogoliubov = np.array(
+        [[ u, v],
+        [v, u]])
+   
+    #in |c>, |d^+> basis
+    H_ab= np.array([
+        [w0+Delta,w1(k_)],
+        [np.conjugate(w1(k_)),w0-Delta]
+    ])
+    eigvals, eigvecs = la.eig(Gamma@H_ab)
+
+    if debug:
+        print("eigvecs")
+        print(eigvecs)
+        print("bugliobuv")
+        print(trafo_bogoliubov)
+        print("eigvecs trafo")
+        print(Gamma@la.inv(eigvecs)@Gamma)
+        print("Gamma U Gamma")
+        print(Gamma@trafo_bogoliubov@Gamma)
+        print("normalisation")
+        print(herm_conj(eigvecs)@Gamma@eigvecs)
+    normalisation_factor=1/np.sqrt((herm_conj(eigvecs)@Gamma@eigvecs)[0,0])
+    eigvecs_corrected=normalisation_factor*eigvecs
+    if debug:
+        print("corrected eigvecs")
+        print(eigvecs_corrected)
+    #going from ab Hamiltonian to alpha_beta
+    H_comp=trafo_bogoliubov@H_ab@trafo_bogoliubov
+    
+
+    H=Gamma@np.diag(eigvals)
+    if debug:
+        print("eigval H")
+        print(H)
+        H=Gamma@la.inv(eigvecs_corrected)@Gamma@H_ab@eigvecs_corrected
+        print("diagonalised with eigvecs")
+        print(H)
+        print("H_Comp")
+        print(H_comp)
+    if True and functions.get_difference_of(H,H_comp)>1e-2:
+        raise ValueError("something wrong with bugliobuv transformation")
+
+    #setting off diagonal elements to zero manually
+    if H[1,0]<1e-6 and H[0,1]<1e-6:
+        H[1,0]=0
+        H[0,1]=0
+    else:
+        raise ValueError("off diagonal elements are not zero")
+    #H=Gamma@la.inv(trafo_bugliobuv)@(Gamma@H_ab)@trafo_bugliobuv
+    #print(H)
+    #H=Ham_3D_AFM(S, bonds, J, k_, w0, Delta)
+    #print("AFM literature result")
+    
+    spin_creation_basis_c_d=np.array([1,1])
+    #TODO: right normalisation: eigvecs or corrected eigvecs
+    #spin_creation_basis_alpha_beta= eigvecs@spin_creation_basis_c_d
+    spin_creation_basis_alpha_beta= eigvecs_corrected@spin_creation_basis_c_d
+
+    #print(Gamma@eigvecs@Gamma)
+    #print(spin_creation_basis_alpha_beta)
+    #print(H)
+    return S * H,spin_creation_basis_alpha_beta
+
+
+def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"], energies=[], q_values=[] ,w_a=1,Delta=0, 
+                            interaction_function=J_of_k, 
                             use_correct_self_interaction=True,
                             debug=False,
+                            use_eigvecs_correction=True,
                             AFM=True):
     
     H = [[0 for _ in range(len(J_bonds))] for _ in range(len(J_bonds))]
@@ -303,8 +281,11 @@ def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_d
                 interaction = interaction_function(S=1,bonds=bonds_distances[i][j],J_couplings=J_bonds[i][j],k_=k_)
             H[i][j]+=np.sqrt(np.abs(S[i]*S[j]))*interaction
             if use_correct_self_interaction:
-                H[i][i]+=np.sum(J_bonds[i][j])*np.abs(S[j])#TODO: check if correct (sum might be over to many)
-        H[i][i]+=Delta*np.sign(S[i])+w_a  
+                onsite_energy=np.sum(J_bonds[i][j])*np.abs(S[j])#TODO: check if correct (sum might be over to many)
+                
+                H[i][i]+=onsite_energy
+        H[i][i]+=Delta*np.sign(S[i])+w_a 
+        #H[i][i]+=1.001
 
             
     spin_creation=np.array([1 for _ in range(len(H))])    
@@ -322,6 +303,9 @@ def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_d
         print(la.inv(eigvecs))
     
     H=Gamma@np.diag(eigvals)
+    if use_eigvecs_correction:
+        normalisation_factor=1/np.sqrt((herm_conj(eigvecs)@Gamma@eigvecs)[0,0])
+        eigvecs=normalisation_factor*eigvecs
     
     #TODO check why eigvecs and not inv() --> this corresponds to eigvecs (U) for AFM and U^-1 for FM
     #print("Gamma")
@@ -336,10 +320,6 @@ def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_d
     #spin_creation=eigvecs@spin_creation
     #print(eigvecs@Gamma@H@la.inv(eigvecs))
     return H, spin_creation
-
-
-
-
 
 def plot_AFM():
 
@@ -427,6 +407,7 @@ def create_all_lattice_vector_combinations(lattice_vectors:List[np.array]):
                     #check for doubles (fix this)
                     if not any(np.array_equal(canditate, x) for x in result):
                         result.append(canditate)
+                        
                     
     
     #print(result)
@@ -455,7 +436,13 @@ def hamiltonian_solver(diagonalise_before_using=False,
                        use_general_Ham_automated_bonds=False, 
                        use_higher_order_corrections=False, 
                        use_S_squared_operator=False,
-                       use_atomated_energy_window=True): 
+                       use_atomated_energy_window=True,
+                       calc_conv_intensities=True,
+                       debug_compare_H_general_H_AFM_trafo=False,
+                       amount_k_values=20,
+                        amount_w_values=20,
+                        dimension=2
+                       ): 
     
     #a_values,running_param_2=np.linspace(0.3,0.7,3),np.linspace(0.5,1.5,3)
     a_values,running_param_2=np.linspace(0.5,0.7,1),np.linspace(1,1.5,1)
@@ -482,16 +469,19 @@ def hamiltonian_solver(diagonalise_before_using=False,
             #H_shift=2
 
             #Define simulation parameters
-            amount_k_values=300
-            amount_w_values=300
+             
             k_values=[]
             k_values_scalar=[]
             w_values=np.linspace(-1,4,amount_w_values)
-
+            #1d
+            if dimension==1:
+                path=[np.array([0,0,0]),np.array([2,0,0]),np.array([0,0,0])]
             #path: Gamma, X, M, L, Gamma
-            path=[np.array([0,0,0]),np.array([2,0,0]),np.array([2,2,0]),np.array([2,2,2]),np.array([0,0,0])]
+            if dimension==3:
+                path=[np.array([0,0,0]),np.array([2,0,0]),np.array([2,2,0]),np.array([2,2,2]),np.array([0,0,0])]
             #path: (2d) Gamma X M Gamma
-            #path=[np.array([0,0,0]),np.array([2,0,0]),np.array([2,2,0]),np.array([0,0,0])]
+            if dimension==2:
+                path=[np.array([0,0,0]),np.array([2,0,0]),np.array([2,2,0]),np.array([0,0,0])]
             
             k_values_scalar,k_values,xticks_label, xticks_pos = functions.path_k_space(path, amount_k_values, a)
 
@@ -529,7 +519,7 @@ def hamiltonian_solver(diagonalise_before_using=False,
             spin_creation=np.array([])
 
             #for general Hamiltonian
-            all_atoms=example_1_General_D_FM_AFM(J1,J2,a,a1,S1=1,S2=-1,d=3)
+            all_atoms,lv = example_1_General_D_FM_AFM(-J1,-J2,a,a1,S1=1,S2=-1,d=dimension)
 
             #Nickel, Copper example
             #Ni - Ni FM exchange / Cu - Ni weak exchange weak FM
@@ -582,36 +572,28 @@ def hamiltonian_solver(diagonalise_before_using=False,
                 energies_last_step=np.array(energies).T
                 energies=[]
                 for k_ in k_values:
-                    #Hamiltonians:
-
-                    #k_=k_[0] #for looking at scalar values
-                    #H= Ham_1D_FM_couplings_change(S, bonds=[a1,-a2], J=[J1,J2], k_=k_)
-                
-                    #H= Ham_1D_FM_couplings_change(S, bonds=[bonds[0],bonds[3]], J=[J1,J2], k_=k_)
-                    #print(H)
-                    #H = Ham_3D_AFM(S, bonds=bonds, J=J, k_=k_, w0=1)
-                    #print("AFM_3D")
-                    #print(H)
-                    #[-np.array([0.5,0,0]),np.array([0.5,0,0])]
                     
-                    #H = Ham_1D_AFM(S, bonds=[np.array([a1,0,0]),np.array([-a2,0,0])], J=[-J1,-J2], k_=k_)
-                    #H = Ham_1D_AFM(S, bonds=[a1,-a2], J=[-J1,-J2], k_=k_, w0=w0) #here need to set k_ to scalar
-                    #print(spin_creation)
-                    #print(H_comp)
-                    #print("AFM_general")
                     if True:
                         if use_S_squared_operator:
                             H, spin_creation =general_Ham_types_AFM_FM(k_, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz, interaction_function=interaction_k_k_minus)
                         elif use_higher_order_corrections and refinement_step!=0:
                             H, spin_creation =general_Ham_types_AFM_FM(k_, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz, interaction_function=higher_order_interaction, energies=energies_last_step, q_values=k_values)
                         else:
-                            H, spin_creation =general_Ham_types_AFM_FM(k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=1, Delta=Bz)
+                            H, spin_creation =general_Ham_types_AFM_FM(k_, use_correct_self_interaction=False, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=1.001, Delta=Bz)
+                        #TODO: fix this --> find out why such high values
+                        if la.norm(spin_creation)>100:  
+                            spin_creation=spin_creation/la.norm(spin_creation)
+                            print("Attention unreasonably high spin_creation operator -> cut off")
+                    if debug_compare_H_general_H_AFM_trafo:
+                        print("new k")
+                        print(H)
+                        print(spin_creation)
+                        H, spin_creation = AFM_with_trafo(S, bonds=bonds, J=J, k_=k_, w0=1.001, Delta=0)
+                        print(H)
+                        print(spin_creation)
+                    
                     #print(H)
-                    #H, spin_creation =general_Ham_types_AFM_FM(k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=1, Delta=Bz)
-                    #print(H)
-                    #print("general")
-                    #print(H)
-                    #H, spin_creation = AFM_with_trafo(S, bonds=bonds, J=J, k_=k_, w0=1.001, Delta=0)
+                    #print(spin_creation)
                     #print(H)
                     #H = general_Ham_types_FM(k_, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general)
                     #print(H)
@@ -626,7 +608,7 @@ def hamiltonian_solver(diagonalise_before_using=False,
                     for i in range(len(eigvals)):
                         if np.imag(eigvals[i])!=0:
                             if DEBUG:
-                                print("ATTTENTION: imaginary part of eigenvalues is zero --> discard imaginary part")
+                                print("ATTTENTION: imaginary part of eigenvalues is not zero --> discard imaginary part")
                             eigvals[i]=np.real(eigvals[i])
                     """    if np.imag(eigvals)!=0:
                         print("ATTTENTION: imaginary part of eigenvalues is zero --> discard imaginary part")
@@ -686,12 +668,7 @@ def hamiltonian_solver(diagonalise_before_using=False,
                         H=H_diag[k_index]
                     else:
                         H=H_not_diag[k_index]
-                    
 
-                    Self_energy=0+0.1j
-                    w=np.eye(H.shape[0])*w_+np.eye(H.shape[0])*Self_energy
-                    G_w=la.inv(w-H)
-                    
                     if(False and np.abs(w_-2)<0.2 and np.abs(la.norm(k_)-3.141)<0.2):
                         print(np.conjugate(states_k[k_index][index_eigvec])@H@states_k[k_index][index_eigvec])
                         print(la.block_diag(H)[0,0])
@@ -704,7 +681,7 @@ def hamiltonian_solver(diagonalise_before_using=False,
                         summed_result_over_different_eigvecs=0
                         for i in range(len(states_k[k_index])):
                             summed_result_over_different_eigvecs+=np.imag(np.conjugate(states_k[k_index][i])@G_w@states_k[k_index][i])
-                    spectral_weight=-np.imag(np.conjugate(states_k[k_index][0])@G_w@states_k[k_index][0])
+                    spectral_weight=calc_spectral_weight(H, states_k[k_index][0],w_)
                     #print(spectral_weight)
                     #spectral_weight=-np.imag(np.conjugate(eigvecs_k[k_index][1])@la.inv(w-H_not_diag[k_index])@eigvecs_k[k_index][1])
                     #print(spectral_weight)
@@ -733,12 +710,173 @@ def hamiltonian_solver(diagonalise_before_using=False,
                 current_ax=ax
 
             #current_ax.set_title("a_factor=" + str(a_factor))
-            image=current_ax.pcolormesh(k_values_scalar, w_values, np.array(intensities).T, cmap='viridis', shading='auto')
+            image=current_ax.pcolormesh(k_values_scalar, w_values, np.array(intensities).T, cmap='viridis', shading='auto', norm=LogNorm(1e+1,np.max(intensities)))
             current_ax.set_xticks(xticks_pos, xticks_label)
             #current_ax.xaxis.set_major_locator(MultipleLocator(base=np.pi))
             #current_ax.xaxis.set_major_formatter(FuncFormatter(format_func))
             fig.colorbar(image, ax=current_ax, label='Intensity')
+    if calc_conv_intensities:
+        #conv_intensities=convoluted_intensities(k_values=k_values, w_values=w_values, intensities=intensities)
+        #TODO: fix lv
+        conv_intensities=convoluted_intensities_d(k_values=k_values,w_values=w_values,J_bonds_general=J_bonds_general,dist_bonds_general=dist_bonds_general,spins=spins,lv=lv)
+        conv_intensities=np.array(conv_intensities)
+        fig=plt.figure()
+        image=plt.pcolormesh(conv_intensities, cmap='viridis', shading='auto', norm=LogNorm(np.max(conv_intensities)/1000,np.max(conv_intensities)))
+        fig.colorbar(image, label='Intensity')  
+
+def calc_spectral_weight(H, state_k, w, Self_energy=0+0.01j):
     
+    w=np.eye(H.shape[0])*w+np.eye(H.shape[0])*Self_energy
+    G_w=la.inv(w-H)
+
+    return -np.imag(np.conjugate(state_k)@G_w@state_k)
+
+
+
+def give_reciprocal_lv(lv):
+    V=np.dot(lv[0],np.cross(lv[1],lv[2]))
+    result=[np.array(2*np.pi/V*np.cross(lv[1],lv[2])),
+            np.array(2*np.pi/V*np.cross(lv[2],lv[0])),
+            np.array(2*np.pi/V*np.cross(lv[0],lv[1]))]
+    return result
+
+def give_grid_vectors_old(vectors, steps):
+    result=[np.array([0,0,0])]
+    #vectors_left=len(vectors)
+    for j in range(len(vectors)):
+        temp_results=[]
+        for r in result:
+            for i in range(1,steps):
+                temp_results.append(r+(i/steps)*vectors[j])
+        result=result+temp_results
+    return result
+
+
+def give_grid_vectors_d(vectors, steps):
+    steps_list=[steps for _ in range(len(vectors))]
+    while len(vectors)<3:
+        vectors.append(np.array([0,0,0]))
+        steps_list.append(1)
+    result=np.zeros((steps_list[0],steps_list[1],steps_list[2],len(vectors[0])))
+    #vectors_left=len(vectors)
+    spacing=[]
+    for s in steps_list:
+        spacing.append(np.linspace(0,2,s))
+    for i,v1 in enumerate(spacing[0]):
+        for j,v2 in enumerate(spacing[1]):
+            for k,v3 in enumerate(spacing[2]):
+                temp=v1*vectors[0]+v2*vectors[1]+v3*vectors[2]
+                result[i,j,k]= temp
+    return result
+#done now only for d=2
+def give_grid_vectors_2d(vectors, steps):
+    result=np.zeros((steps,steps,len(vectors[0])))
+    #vectors_left=len(vectors)
+    spacing=np.linspace(0,2,steps)
+    for i,v1 in enumerate(spacing):
+        for j,v2 in enumerate(spacing):
+            temp=v1*vectors[0]+v2*vectors[1]
+            result[i,j]= temp
+    return result
+def give_grid_vectors_1d(vectors, steps):
+    result=np.zeros((steps,len(vectors[0])))
+    #vectors_left=len(vectors)
+    for i,v1 in enumerate(np.linspace(0,2,steps)):
+        temp=v1*vectors[0]
+        result[i]= temp
+    return result
+
+
+
+#TODO: fix the input parameters so that it makes more sense
+def convoluted_intensities_d(k_values, w_values, J_bonds_general,dist_bonds_general, spins, lv, dimension=2):
+    #conv_intensities=[[[] for _ in range(2*len(w_values))] for _ in range(len(k_values))]
+    grid_fineness=len(k_values)
+    conv_intensities = np.zeros((2 * len(w_values),) + (grid_fineness,) * 3)
+    
+    q_values=give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension],grid_fineness)
+    print("len q_values: "+str(np.shape(q_values)))
+    spectral_weight_grid=np.zeros((len(w_values),)+(len(q_values),len(q_values[0]),len(q_values[0,0])))
+    for w_index in range(len(w_values)):
+        for v1 in range(len(q_values)):
+            for v2 in range(len(q_values[0])):
+                for v3 in range(len(q_values[0,0])):
+                    q_=q_values[v1,v2,v3]
+                    #q_=q_values[v1]
+                    spectral_weight_q = calculate_spectral_weight_general_AFM_FM(q_,w_values[w_index],J_bonds_general,dist_bonds_general,spins)
+                    spectral_weight_grid[w_index,v1,v2,v3]=spectral_weight_q
+    #path Gamma, X
+    plt.figure()
+    image=plt.pcolormesh(np.concatenate([spectral_weight_grid[:,0,:int(grid_fineness/2),0],spectral_weight_grid[:,:int(grid_fineness/2),int(grid_fineness/2),0]],axis=1), cmap='viridis', shading='auto', norm=LogNorm(1e+1,np.max(spectral_weight_grid)))
+    #plt.show()
+    def find_closest_spectral_weight(w_index, k_):
+        best_result_dist=10
+        best_result_sw=0
+        for q_,sw in spectral_weight_q[w_index]:
+            current_dist=la.norm(q_-k_)
+            if current_dist<best_result_dist:
+                best_result_dist=current_dist
+                best_result_dist=sw
+    print("convoluting")
+    for w_index in range(len(w_values)):
+        for w_index_2 in range(w_index, len(w_values)):
+            conv_intensities[w_index+w_index_2]+=fftconvolve(spectral_weight_grid[w_index], spectral_weight_grid[w_index_2], mode='same')
+    #max_intensity=np.max(np.array(intensities))
+    
+    #non_zero_indices_k_w=np.array(non_zero_indices_k_w).T
+    #k_values=non_zero_indices_k_w[0]
+    #w_values=non_zero_indices_k_w[1]
+    
+        #temp_value=0
+        #temp_value_test=0
+    if False:
+        for k_index in range(len(k_values)):
+            print(k_index)
+            for w_index in range(len(w_values)):
+                print(w_index)
+                #conv_intensities[k_index][w_index]+=calculate_spectral_weight_general_AFM_FM(k_values[k_index],w_values[w_index],J_bonds_general,dist_bonds_general,spins)
+        
+                for q_ in q_values:
+                    for w_index_2 in range(len(w_values)):
+                            conv_intensities[k_index][w_index_2+w_index]+=calculate_spectral_weight_general_AFM_FM(q_,w_values[w_index],J_bonds_general,dist_bonds_general,spins)*calculate_spectral_weight_general_AFM_FM(k_values[k_index]-q_,w_values[w_index_2],J_bonds_general,dist_bonds_general,spins)
+            
+    #conv_intensities[k_index][w_index_2+w_index]+=calculate_spectral_weight_general_AFM_FM(q_,w_values[w_index],J_bonds_general,dist_bonds_general,spins)*calculate_spectral_weight_general_AFM_FM(k_values[k_index]-q_,w_values[w_index_2],J_bonds_general,dist_bonds_general,spins)
+                      
+    return np.concatenate([conv_intensities[:,0,:int(grid_fineness/2),0],conv_intensities[:,:int(grid_fineness/2),int(grid_fineness/2),0]],axis=1)
+    #conv_intensities[:,0,:]
+
+def calculate_spectral_weight_general_AFM_FM(k_,w_, J_bonds_general,dist_bonds_general, spins):
+    #start=time.time()
+    H, spin_creation = general_Ham_types_AFM_FM(k_, use_correct_self_interaction=False, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=1.001, Delta=0)
+    #t1=time.time()
+    result=calc_spectral_weight(H,spin_creation, w_)
+    #t2=time.time()
+    #print(str(start-t1)+" "+str(t1-t2))
+    return result
+
+def convoluted_intensities(k_values, w_values, intensities):
+    conv_intensities=[[0 for _ in range(2*len(w_values))] for _ in range(len(k_values))]
+    non_zero_indices_k_w=[]
+    max_intensity=np.max(np.array(intensities))
+    for k_index in range(len(k_values)):
+        for w_index in range(len(w_values)):
+            if intensities[k_index][w_index]>0.01*max_intensity:
+                non_zero_indices_k_w.append([k_index,w_index])
+    #non_zero_indices_k_w=np.array(non_zero_indices_k_w).T
+    #k_values=non_zero_indices_k_w[0]
+    #w_values=non_zero_indices_k_w[1]
+    print(len(non_zero_indices_k_w))
+    print(len(k_values)**2)
+    print(max_intensity)
+        #temp_value=0
+        #temp_value_test=0
+    for k_index in range(len(k_values)):
+        for w_index in range(len(w_values)):
+            for q_index, w_index_2 in non_zero_indices_k_w:
+    
+                conv_intensities[k_index][w_index_2+w_index]+=intensities[q_index][w_index_2]*intensities[(k_index-q_index)%len(k_values)][w_index]
+              
+    return conv_intensities
     
 #examples
 def example_1_General_D_FM_AFM(J1,J2,a,a1,S1,S2, d=3):
@@ -766,7 +904,7 @@ def example_1_General_D_FM_AFM(J1,J2,a,a1,S1,S2, d=3):
                                                                             ], J=[J1,J2],pass_actual_vector=False, lv=lv)                                                                 
     
     all_atoms.append(atoms[0])
-    return all_atoms
+    return all_atoms, lv
 
 def example_d_FM_AFM(J1,J2,a,a1,S1,S2
                      ,dimension=3
@@ -842,5 +980,6 @@ def create_all_nn_connections(lv, dimension=3):
     return [functions.give_vector_terms_of_lattice_vectors([0,0,0],lv)]
 
 hamiltonian_solver()
+
 #plot_AFM()
 plt.show()
