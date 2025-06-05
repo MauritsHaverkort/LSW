@@ -24,7 +24,7 @@ class Atom:
 
     #this creates all given bonds and returns the new atoms that were created
     def create_bonds(self, bond_atom:"Atom", dir_with_neighbours, J, lv, pass_actual_vector=False):
-        
+        """this creates all given bonds and returns the new atoms that were created"""
         #
         if len(J) != len(dir_with_neighbours):
             print("ATTENTION: J-bonds set equal (not same amount)")
@@ -45,9 +45,10 @@ class Atom:
             new_Atom.J_bonds.append(J[i])
         return new_Atoms
 
-    #adds all neighbours and ads self as a neighbour 
-    #if bond is not given, it is calculated from the distance
+    #
     def add_neighbours(self, neighbour: List["Atom"], J_bond: List["float"]=None, both_directions=True):
+        """adds all neighbours and ads self as a neighbour 
+            if bond is not given, it is calculated from the distance"""
         if J_bond is None:
             print("ATTENTION: calculating J_bonds")
             J_bond=[]

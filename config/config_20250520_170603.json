@@ -1,0 +1,88 @@
+{
+    "diagonalise_before_using": false,
+    "use_general_Ham_automated_bonds": false,
+    "use_higher_order_corrections": false,
+    "use_S_squared_operator": false,
+    "use_automated_energy_window": true,
+    "use_Log_Norm": true,
+    "calc_conv_intensities": false,
+    "debug_compare_H_general_H_AFM_trafo": false,
+    "use_normalisation_of_sepctral_weight": true,
+    "use_hamiltonian_paper_experimental": false,
+    "amount_k_values": 20,
+    "amount_w_values": 20,
+    "dimension": 3,
+    "S": 1,
+    "Bz": 0,
+    "Ba_z": 0,
+    "additional_info": {},
+    "plot_info": {
+        "x_ticks_label": [
+            [
+                0.0,
+                0.0,
+                0.0
+            ],
+            [
+                6.28,
+                0.0,
+                0.0
+            ],
+            [
+                6.28,
+                6.28,
+                0.0
+            ],
+            [
+                6.28,
+                6.28,
+                6.28
+            ],
+            [
+                0.0,
+                0.0,
+                0.0
+            ]
+        ],
+        "x_ticks_pos": [
+            0,
+            6.283185307179586,
+            12.566370614359172,
+            18.84955592153876,
+            29.732352106944063
+        ],
+        "y_ticks_label": [
+            -0.19999999999530735,
+            0.13684210526760357,
+            0.47368421053051446,
+            0.8105263157934254,
+            1.1473684210563364,
+            1.4842105263192473,
+            1.8210526315821582,
+            2.1578947368450687,
+            2.49473684210798,
+            2.831578947370891,
+            3.1684210526338017,
+            3.5052631578967124,
+            3.8421052631596235,
+            4.178947368422535,
+            4.515789473685445,
+            4.8526315789483565,
+            5.189473684211268,
+            5.526315789474179,
+            5.86315789473709,
+            6.2
+        ]
+    },
+    "timestamp": "20250520_170603",
+    "state_cr_input_untransformed": [
+        1,
+        1
+    ],
+    "state_an_input_untransformed": [
+        1,
+        1
+    ],
+    "load_saved_grid": false,
+    "double_convolution": false
+}

@@ -6,6 +6,10 @@ from typing import List  # Import List for type hints
 from mpl_toolkits.mplot3d import Axes3D
 from LSW import give_grid_vectors_2d
 
+from scipy.signal import fftconvolve
+
+import funtions as functions
+
 
 def test1():
     n=3
@@ -116,5 +120,63 @@ def test_grid_creation():
         ax.scatter(v[0],v[1],v[2],s=50,marker="o")
     plt.show()
 
+def test_fftconvolve():
+    
+    a = np.array([1,2, 3,3,2,1])
+    a = np.array([3,2,1,1,2,3])
+    
+    dim= len(np.shape(a))
+    #a =  np.array([1, 2, 3,4])
+    b = np.copy(a)
+    tiling_shape=(2,)*dim
+    print(tiling_shape)
+    a=np.tile(a,tiling_shape)
+    print(a)
+    print(b)
+    #b = np.array([4, 3, -1,3])
+    c = fftconvolve(b, a, mode='same')
+    print(c)
+    N=len(b)
+    if dim ==1:
+        d=[0 for _ in range(N)]
+        for i in range(N):
+            for j in range(N):
+                d[i]+=(a[j]*b[(j-i)%N])
+        print(d)
 
-test_grid_creation()
+def test_Bogoliobuv():
+        # Define the variables
+    w0 = 1  # Replace with actual values if needed
+    Delta = 1
+    w1 = 1
+    
+
+    # Construct the matrix
+    matrix = np.array([
+        [(w0 + Delta) / 2,      w1 / 2,             0,                  0],
+        [w1.conjugate() / 2, (w0 - Delta) / 2,      0,                  0],
+        [0,                    0,             (w0 + Delta) / 2,  w1.conjugate() / 2],
+        [0,                    0,             w1 / 2,           (w0 - Delta) / 2]
+    ])
+    Gamma=np.array([[1,0,0,0],
+                   [0,1,0,0],
+                   [0,0,-1,0],
+                   [0,0,0,-1]])
+    eigvals,eigvecs=la.eig(Gamma@matrix)
+    print(eigvecs)
+    print(np.transpose(np.conjugate(eigvecs))@matrix@eigvecs)
+
+    matrix2=np.array([[w0+Delta,w1],
+                     [w1.conjugate(),w0-Delta]])
+    print(la.eig(matrix2))
+    # Display the matrix
+    print(matrix)
+
+
+def test_find_files():
+    res = functions.find_files_with_keywords("complete",["06-03_18"])
+    print(len(res))
+    print(res)
+#test_fftconvolve()
+
+test_find_files()

@@ -1,0 +1,9 @@
+# Ignore all folders listed in the screenshot
+__pycache__/
+complete/
+conv/
+grids/
+working_logs/
+
+# Ignore all .dat files
+*.dat
