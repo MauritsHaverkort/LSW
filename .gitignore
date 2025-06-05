@@ -3,6 +3,7 @@ __pycache__/
 complete/
 conv/
 grids/
+config/
 working_logs/
 
 # Ignore all .dat files
