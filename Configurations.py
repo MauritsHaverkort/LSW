@@ -21,6 +21,7 @@ class Config:
     use_explicit_calculation_of_u_v_for_uv_grid: bool
     calc_u_v_convolutions:bool
     calc_pref_convolutions: bool
+    use_rotation_Paper_4: bool
     path_load_pref_convolutions: str
     amount_k_values: int
     amount_w_values: int
@@ -69,6 +70,7 @@ def config_main():
         use_explicit_calculation_of_u_v_for_uv_grid = False,
 
         use_hamiltonian_paper_experimental = False,
+        use_rotation_Paper_4 = True,
         #simulation parameters
         amount_k_values=40,
         amount_w_values=40,
@@ -88,10 +90,11 @@ def config_main():
 def config_experimental():
     config_tryout_paper = Config(**vars(config_main()))
     config_tryout_paper.use_hamiltonian_paper_experimental = True
+    config_tryout_paper.use_rotation_Paper_4 = True
     config_tryout_paper.calc_conv_intensities = False
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = 80
-    config_tryout_paper.amount_w_values = 80
+    config_tryout_paper.amount_k_values = 20
+    config_tryout_paper.amount_w_values = 20
     config_tryout_paper.calc_u_v_convolutions = False
     config_tryout_paper.use_explicit_calculation_of_u_v_for_uv_grid = False
     config_tryout_paper.calc_pref_convolutions = True

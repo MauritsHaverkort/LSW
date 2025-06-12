@@ -10,7 +10,8 @@ import funtions as functions
 from funtions import *
 from Atoms import Atom
 from matplotlib.colors import LogNorm
-from numba import njit, prange
+from sympy import pprint
+#from numba import njit, prange
 from dataclasses import dataclass
 import Configurations
 from Configurations import Config
@@ -467,7 +468,7 @@ def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_d
 #tryout to implement the general Hamiltonian from the paper: Boguliobuv_A note on the diagonalization of quadratic boson and fermion...
 #idea is to have a general quadratic Hamiltonian with all combinations of creation and annihilation operators
 
-def general_Ham_types_AFM_FM_paper(k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"], energies=[], q_values=[] ,w_a=1,Delta=0, 
+def general_Ham_types_AFM_FM_paper(config: Config, k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"], energies=[], q_values=[] ,w_a=1,Delta=0, 
                             interaction_function=J_of_k, 
                             use_correct_self_interaction=True,
                             debug=False,
@@ -475,16 +476,34 @@ def general_Ham_types_AFM_FM_paper(k_, S:List["float"], J_bonds:List["float"] ,b
                             AFM=True,
                             use_diagonalisation=True,
                             state_cr=None,
-                            state_an=None,):
+                            state_an=None, 
+                            compare_old_and_new= True,
+                            ):
     
     #H will have shape (2N,2N)
-    
+    use_rotation_Paper_4 = config.use_rotation_Paper_4
+    #use_rotation_Paper_4 = True
     N=len(J_bonds)
     H = [[0 for _ in range(N*2)] for _ in range(N*2)]
+    R_prime = np.zeros((N,3,3), dtype=complex)  # Initialize R_prime as a complex matrix 
+    #AFM explicit:
+    R_prime[0,:,:]=np.eye(3, dtype=complex)
+    R_prime[1,:,:]=np.eye(3, dtype=complex)
+    R_prime[1,2,2]=-1 # z direction is flipped for the second atom
+    R_prime[1,0,0]=-1 # x direction is flipped for the second atom
     
+    v = R_prime[:,:,2]
+    u= (R_prime[:,:,0] + 1j*R_prime[:,:,1])
+
+    A = np.zeros((N,N), dtype=complex)
+    mA = np.zeros((N,N), dtype=complex)
+    B = np.zeros((N,N), dtype=complex)
+    C = np.zeros((N,N), dtype=complex)
+
     Gamma=create_Gamma(half_size=N)
+    #atoms
     for i in range(N):
-        
+        #neighbours
         for j in range(N):
             if len(bonds_distances[i][j])!=0 and use_correct_self_interaction:
                 nu=len(bonds_distances[i][j])
@@ -492,23 +511,56 @@ def general_Ham_types_AFM_FM_paper(k_, S:List["float"], J_bonds:List["float"] ,b
                 nu=1
             interaction=0
             
+            
             interaction = interaction_function(S=1,bonds=bonds_distances[i][j],J_couplings=J_bonds[i][j],k_=k_) #set S to one since the spin values are added later
+            interaction_mk = interaction_function(S=1,bonds=bonds_distances[i][j],J_couplings=J_bonds[i][j],k_=-k_) #set S to one since the spin values are added later
+            
+            #interaction = 
+            
             #TODO: proplem not hermitian right now check this
-            if np.sign(S[i])!=np.sign(S[j]): #AFM connection
-                H[i][j+N]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
-                H[i+N][j]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
-            else: #FM connection
-                H[i][j]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
-                H[i+N][j+N]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
-                
-            if use_correct_self_interaction:
-                
-                onsite_energy=np.sum(J_bonds[i][j])*np.abs(S[j])#TODO: check if correct (sum might be over to many)
-                
-                H[i][i]+=onsite_energy   
-                H[i+N][i+N]+=onsite_energy
-        H[i][i]+=(Delta*np.sign(S[i])+w_a+0.001)
-        H[i+N][i+N]+=(Delta*np.sign(S[i])+w_a+0.001) 
+            
+            if not use_rotation_Paper_4 or compare_old_and_new:
+                if np.sign(S[i])!=np.sign(S[j]): #AFM connection
+                    H[i][j+N]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
+                    H[i+N][j]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
+                else: #FM connection
+                    H[i][j]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
+                    H[i+N][j+N]+=np.sqrt(np.abs(S[i]*S[j]))*interaction*nu
+                if use_correct_self_interaction:
+                    
+                    onsite_energy=np.sum(J_bonds[i][j])*np.abs(S[j])#TODO: check if correct (sum might be over to many)
+                    
+                    H[i][i]+=onsite_energy   
+                    H[i+N][i+N]+=onsite_energy
+                H[i][i]+=(Delta*np.sign(S[i])+w_a+0.001)
+                H[i+N][i+N]+=(Delta*np.sign(S[i])+w_a+0.001) 
+            if use_rotation_Paper_4:
+                temp_A = u[i].T @ np.conjugate(u[j])
+                A[i,j] += np.sqrt(np.abs(S[i]*S[j])) * interaction_mk*u[i].T @ np.conjugate(u[j]) *nu / 2
+                mA[i,j] += np.sqrt(np.abs(S[i]*S[j])) *interaction* u[i].T @ np.conjugate(u[j]) *nu / 2
+                temp_B = u[i].T @ u[j]
+                B[i,j] += np.sqrt(np.abs(S[i]*S[j])) * interaction_mk*u[i].T @ u[j] *nu / 2
+                temp_C = v[i].T @ v[j]
+                C[i,i] += np.sum(J_bonds[i][j])*np.abs(S[j])*v[i].T @ v[j]
+
+                #TODO: add Zeeman terms
+                C[i,i]+=-(Delta*np.sign(S[i])+w_a+0.001)
+                #H[i+N][i+N]+=(Delta*np.sign(S[i])+w_a+0.001) 
+    if use_rotation_Paper_4:
+        if debug:
+            print("new k")
+            pprint(H)
+        H = np.block(
+        [[A - C, B], [np.conjugate(B).T, np.conj(mA) - C]]
+    )   
+        if debug:
+            pprint(H)
+            #pprint(H)
+            print(" ")
+
+
+
+            
     #TODO: think about the correct state
     #I think this 
     if state_cr is None:
@@ -535,18 +587,21 @@ def general_Ham_types_AFM_FM_paper(k_, S:List["float"], J_bonds:List["float"] ,b
             print(Gamma@np.conjugate(eigvecs).T@Gamma)
             print(la.inv(eigvecs)) """
         
-        H=Gamma@np.diag(eigvals)
+        H_diag=Gamma@np.diag(eigvals)
         #this is changed to match the way of the comparison project
         if use_eigvecs_correction:
+            temp= herm_conj(eigvecs)
+            temp2= (herm_conj(eigvecs)@Gamma@eigvecs)
+            normalisation_factor=1/np.sqrt(temp2)
             for i in range(len(eigvecs)):
-                normalisation_factor=1/np.sqrt((herm_conj(eigvecs)@Gamma@eigvecs)[i,i])
-                eigvecs[i]=normalisation_factor*eigvecs[i]
+                eigvecs[i]=normalisation_factor[i,i]*eigvecs[i]
+                eigvecs[:,i]=normalisation_factor[i,i]*eigvecs[:,i] #this is the way of comp
             # normalisation_factor=1/np.sqrt((herm_conj(eigvecs)@Gamma@eigvecs)[0,0])
             # eigvecs=normalisation_factor*eigvecs
         
         state_cr=eigvecs@state_cr
         
-    return H, state_cr, state_cr, eigvecs
+    return H_diag, state_cr, state_cr, eigvecs
 
 def plot_AFM():
 
@@ -800,7 +855,7 @@ def current_Hamiltonian_to_use(config:Config, spins, J_bonds_general, dist_bonds
         #just double the states to match the extended Hamiltonian size
         state_cr_input_untransformed = np.concatenate((state_cr_input_untransformed, state_cr_input_untransformed))
         state_an_input_untransformed = np.concatenate((state_an_input_untransformed, state_an_input_untransformed))
-        H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM_paper(k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz
+        H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM_paper(config, k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz
                                                         )
     else:
         H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM(k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz,
@@ -1123,6 +1178,7 @@ def create_bog_pref_grid(config:Config, k_values, w_values, J_bonds_general, dis
                     H, state_cr, state_an, bog_trafo = current_Hamiltonian_to_use(config, spins=spins, J_bonds_general=J_bonds_general, dist_bonds_general=dist_bonds_general, k_=q_, Bz=Bz, Ba_z=Ba_z)
                     #experimental
                     for w_index in range(len(w_values)):
+                        #here I just want the omega dependent part of the compelte intesity (so "Bogoliubov weight" of 1)
                         w_part[w_index] = calc_spectral_weight(
                             H=H, 
                             state_cr=np.array([1] + [0 for _ in range(len(H)-1)]), 
@@ -1249,22 +1305,27 @@ def create_grid_spectral_weight_u_v(config:Config, k_values, w_values, J_bonds_g
     return spectral_weight_grid, u_v_grid
 
 def calculate_convolutions_of_bog_trafo_pref_grid(config:Config, pref_grids:np.ndarray, q_values_grid):
+    terms_to_calculate=(0,1)
     results = []
-    results.append(np.abs(np.sum(pref_grids, axis=-1))**2)
-    
-    temp = np.abs(np.sum(pref_grids, axis=-1))**2
-    #results.append(functions.convolute_grids(temp, temp, dimension=config.dimension))
+    if 0 in terms_to_calculate:
+        results.append(np.abs(np.sum(pref_grids, axis=-1))**2)
+
+    if 1 in terms_to_calculate: 
+        temp = np.abs(np.sum(pref_grids, axis=-1))**2
+        results.append(functions.convolute_grids(temp, temp, dimension=config.dimension))
 
     #TODO: generalise for more than 2x2 case
-    if pref_grids.shape[-1]==2:
-        u_grid_abs_sqrd = np.abs(pref_grids[:,:,:,:,0])**2
-        v_grid_abs_sqrd = np.abs(pref_grids[:,:,:,:,1])**2
-        conv_uuv = functions.convolute_grids(u_grid_abs_sqrd, u_grid_abs_sqrd, dimension=3, double_convolution=True, grid3=v_grid_abs_sqrd)
-        conv_vvu = functions.convolute_grids(v_grid_abs_sqrd, v_grid_abs_sqrd, dimension=3, double_convolution=True, grid3=u_grid_abs_sqrd)
-        
-        results.append((conv_uuv + conv_vvu))
+    if 2 in terms_to_calculate:
+        if pref_grids.shape[-1]==2:
+            u_grid_abs_sqrd = np.abs(pref_grids[:,:,:,:,0])**2
+            v_grid_abs_sqrd = np.abs(pref_grids[:,:,:,:,1])**2
+            conv_uuv = functions.convolute_grids(u_grid_abs_sqrd, u_grid_abs_sqrd, dimension=3, double_convolution=True, grid3=v_grid_abs_sqrd)
+            conv_vvu = functions.convolute_grids(v_grid_abs_sqrd, v_grid_abs_sqrd, dimension=3, double_convolution=True, grid3=u_grid_abs_sqrd)
+            
+            results.append((conv_uuv + conv_vvu))
 
-    names = ["intensities_one_magnon", "intensities_three_magnon", "intensities_three_magnon"]
+    names_ = ["intensities_one_magnon", "intensities_two_magnon", "intensities_three_magnon"]
+    names = [names_[i] for i in terms_to_calculate]
     for i,intensity_result in enumerate(results):
         print(np.sum(intensity_result))
         steps = int(len(pref_grids[1][0]) / 2)
@@ -1456,20 +1517,20 @@ def compute_on_w_k_grid(config:Config, k_values, w_values, J_bonds_general,dist_
        
 
 
-@njit(parallel=True)
-def fill_spectral_grid(q_values, w_values, spectral_weight_grid, 
-                       J_bonds_general, dist_bonds_general, spins, Bz, Ba_z):
-    """tryout to speed up the calculation of the spectral weight grid --> not working yet"""
-    for w_index in prange(len(w_values)):
-        for v1 in range(q_values.shape[0]):
-            for v2 in range(q_values.shape[1]):
-                for v3 in range(q_values.shape[2]):
-                    q_ = q_values[v1, v2, v3]
-                    spectral_weight_q = calculate_spectral_weight_general_AFM_FM(
-                        q_, w_values[w_index], J_bonds_general,
-                        dist_bonds_general, spins, Bz, Ba_z
-                    )
-                    spectral_weight_grid[w_index, v1, v2, v3] = spectral_weight_q
+# @njit(parallel=True)
+# def fill_spectral_grid(q_values, w_values, spectral_weight_grid, 
+#                        J_bonds_general, dist_bonds_general, spins, Bz, Ba_z):
+#     """tryout to speed up the calculation of the spectral weight grid --> not working yet"""
+#     for w_index in prange(len(w_values)):
+#         for v1 in range(q_values.shape[0]):
+#             for v2 in range(q_values.shape[1]):
+#                 for v3 in range(q_values.shape[2]):
+#                     q_ = q_values[v1, v2, v3]
+#                     spectral_weight_q = calculate_spectral_weight_general_AFM_FM(
+#                         q_, w_values[w_index], J_bonds_general,
+#                         dist_bonds_general, spins, Bz, Ba_z
+#                     )
+#                     spectral_weight_grid[w_index, v1, v2, v3] = spectral_weight_q
 
 def calculate_spectral_weight_general_AFM_FM(k_,w_, J_bonds_general,dist_bonds_general, spins, Bz, Ba_z):
     #start=time.time()

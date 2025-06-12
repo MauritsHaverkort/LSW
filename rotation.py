@@ -49,12 +49,12 @@ def rotation_matrix_from_axis_angle(axis, angle):
         [z*x*C - y*s, z*y*C + x*s, c + z*z*C]
     ])
     print(R)
-    return 
+    return R
 
 if __name__ == "__main__":
     # Example vectors
     v1 = np.array([0, 0, 1])
-    v2 = np.array([1, -2, 1])
+    v2 = np.array([0, 0, -1])
 
     # Compute rotation matrix
     R = rotation_matrix_from_vectors(v1, v2)
@@ -72,16 +72,16 @@ if __name__ == "__main__":
     ax.quiver(0, 0, 0, *v1_rotated, color='b', label='R * v1', linewidth=5)
 
     ax.quiver(0, 0, 0, *np.cross(v1,v2), color='black', label='rotation axis', linewidth=5)
-
-    test_vectors = [np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), np.array([1, 1, 1])]
-    for i,vec in enumerate(test_vectors):
-    # Plotting
-        color_random = np.random.rand(3,)
-        
-        # Original vector
-        ax.quiver(0, 0, 0, *vec, color=color_random, label=f'v{i}', linewidth=1)
-        # Rotated vector
-        ax.quiver(0, 0, 0, *(R@vec), color=color_random, label=f'v_rot{i}', linewidth=3)
+    if False:
+        test_vectors = [np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]), np.array([1, 1, 1])]
+        for i,vec in enumerate(test_vectors):
+        # Plotting
+            color_random = np.random.rand(3,)
+            
+            # Original vector
+            ax.quiver(0, 0, 0, *vec, color=color_random, label=f'v{i}', linewidth=1)
+            # Rotated vector
+            ax.quiver(0, 0, 0, *(R@vec), color=color_random, label=f'v_rot{i}', linewidth=3)
         
 
     ax.set_xlim([-1, 1])
