@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from typing import List, Callable  # Import List for type hints
+from Material import Material
 import funtions as functions
 from funtions import *
 from Atoms import Atom
@@ -468,7 +469,10 @@ def general_Ham_types_AFM_FM(k_, S:List["float"], J_bonds:List["float"] ,bonds_d
 #tryout to implement the general Hamiltonian from the paper: Boguliobuv_A note on the diagonalization of quadratic boson and fermion...
 #idea is to have a general quadratic Hamiltonian with all combinations of creation and annihilation operators
 
-def general_Ham_types_AFM_FM_paper(config: Config, k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"], energies=[], q_values=[] ,w_a=1,Delta=0, 
+def general_Ham_types_AFM_FM_paper(config: Config, k_, S:List["float"], J_bonds:List["float"] ,bonds_distances: List["float"],
+                            material:Material,
+                            energies=[], q_values=[] , 
+                            w_a=1,Delta=0,
                             interaction_function=J_of_k, 
                             use_correct_self_interaction=True,
                             debug=False,
@@ -477,7 +481,8 @@ def general_Ham_types_AFM_FM_paper(config: Config, k_, S:List["float"], J_bonds:
                             use_diagonalisation=True,
                             state_cr=None,
                             state_an=None, 
-                            compare_old_and_new= True,
+                            compare_old_and_new= True
+                            
                             ):
     
     #H will have shape (2N,2N)
@@ -492,8 +497,11 @@ def general_Ham_types_AFM_FM_paper(config: Config, k_, S:List["float"], J_bonds:
     R_prime[1,2,2]=-1 # z direction is flipped for the second atom
     R_prime[1,0,0]=-1 # x direction is flipped for the second atom
     
-    v = R_prime[:,:,2]
-    u= (R_prime[:,:,0] + 1j*R_prime[:,:,1])
+    # v = R_prime[:,:,2]
+    # u= (R_prime[:,:,0] + 1j*R_prime[:,:,1])
+    
+    v= np.array([material.atoms[i][0].v for i in range(N) ]) #the sorted atoms are a list of lists where each list contains all atoms of a certain type
+    u= np.array([material.atoms[i][0].u for i in range(N) ])
 
     A = np.zeros((N,N), dtype=complex)
     mA = np.zeros((N,N), dtype=complex)
@@ -655,32 +663,7 @@ def sort_atoms_for_type(atoms: List["Atom"]):
             type_index+=1
     return sorted_atoms
 
-def creating_bonds_dist_lists_types(atoms_sorted: List[List["Atom"]], fill_with_zeros=False):
-    """Creates the bonds_distances and J_bonds matrices for each type of atom in atoms_sorted."""
-    #this is not working yet
-    if fill_with_zeros:
-        bonds_distances = [[[0 for _ in range(len(atoms_sorted))] for _ in range(len(atoms_sorted))] for _ in range(len(atoms_sorted))]
-        J_bonds = [[[0 for _ in range(len(atoms_sorted))] for _ in range(len(atoms_sorted))] for _ in range(len(atoms_sorted))]
-        
-    else:
-        bonds_distances = [[[] for _ in range(len(atoms_sorted))] for _ in range(len(atoms_sorted))]
-        J_bonds = [[[] for _ in range(len(atoms_sorted))] for _ in range(len(atoms_sorted))]
-    spins=[]
-    for i in range(len(atoms_sorted)):
-        spins.append(atoms_sorted[i][0].S)
-        for k in range(len(atoms_sorted[i])):
-            current_atom=atoms_sorted[i][k]
-            neighbours=current_atom.neighbours
-            if spins[i]!=current_atom.S:
-                raise ValueError("S is not the same for all atoms of the same type")
-            
-            for j in range(len(neighbours)):
-                neighbour_type= neighbours[j].type
-                bonds_distances[i][neighbour_type].append(current_atom.position - neighbours[j].position)
-                #bonds_distances[neighbour_index,i] = -bonds_distances [i,neighbour_index]
-                J_bonds[i][neighbour_type].append(current_atom.J_bonds[j])
-        
-    return J_bonds,bonds_distances, spins
+
           
 
 
@@ -840,7 +823,7 @@ def tryout_comp(config: Config):
     for e in energies.T:
         plt.plot(e, 'o')
 
-def current_Hamiltonian_to_use(config:Config, spins, J_bonds_general, dist_bonds_general, k_, Bz, Ba_z):
+def current_Hamiltonian_to_use(config:Config, spins, J_bonds_general, dist_bonds_general, k_, Bz, Ba_z, material):
     
     state_cr_input_untransformed =  config.state_cr_input_untransformed
     state_an_input_untransformed = config.state_an_input_untransformed
@@ -855,8 +838,8 @@ def current_Hamiltonian_to_use(config:Config, spins, J_bonds_general, dist_bonds
         #just double the states to match the extended Hamiltonian size
         state_cr_input_untransformed = np.concatenate((state_cr_input_untransformed, state_cr_input_untransformed))
         state_an_input_untransformed = np.concatenate((state_an_input_untransformed, state_an_input_untransformed))
-        H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM_paper(config, k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz
-                                                        )
+        H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM_paper(config, k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz,
+                                                        material=material)
     else:
         H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM(k_, use_correct_self_interaction=True, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general, w_a=Ba_z, Delta=Bz,
                                                             state_cr=state_cr_input_untransformed,
@@ -972,13 +955,13 @@ def main(config: Config):
             draw_atoms(all_atoms)
 
             sorted_atoms=sort_atoms_for_type(all_atoms)
-
-            J_bonds_general,dist_bonds_general, spins=creating_bonds_dist_lists_types(atoms_sorted=sorted_atoms)
+            material = Material(sorted_atoms, lattice_vectors=lv)
+            J_bonds_general,dist_bonds_general, spins=material.creating_bonds_dist_lists_types()
                 
             
             for k_ in k_values:
 
-                H, spin_creation, spin_anihil, bog_trafo = current_Hamiltonian_to_use(config, spins=spins, J_bonds_general=J_bonds_general, dist_bonds_general=dist_bonds_general, k_=k_, Bz=Bz, Ba_z=Ba_z)
+                H, spin_creation, spin_anihil, bog_trafo = current_Hamiltonian_to_use(config, spins=spins, J_bonds_general=J_bonds_general, dist_bonds_general=dist_bonds_general, k_=k_, Bz=Bz, Ba_z=Ba_z, material=material)
                         #spin_anihil=np.array([])
                 if debug_compare_H_general_H_AFM_trafo:
                     print("new k")
@@ -1132,7 +1115,8 @@ def main(config: Config):
             pref_grid, *_=functions.load_grid_from_file(config.path_load_pref_convolutions)
         else:
             print("calculating new pref_grid")
-            pref_grid = create_bog_pref_grid(config=config, k_values=k_values, w_values=w_values, J_bonds_general=J_bonds_general, dist_bonds_general=dist_bonds_general, spins=spins, lv=lv, dimension=dimension,Bz=Bz, Ba_z=Ba_z, q_values=q_values)
+            pref_grid = create_bog_pref_grid(config=config, k_values=k_values, w_values=w_values, J_bonds_general=J_bonds_general, dist_bonds_general=dist_bonds_general, spins=spins, lv=lv, dimension=dimension,Bz=Bz, Ba_z=Ba_z, q_values=q_values,
+                                             material=material)
         calculate_convolutions_of_bog_trafo_pref_grid(config, pref_grid, q_values)
     
     functions.save_config_to_json(config)
@@ -1140,7 +1124,8 @@ def main(config: Config):
     plt.show()
     print("finished")
 
-def create_bog_pref_grid(config:Config, k_values, w_values, J_bonds_general, dist_bonds_general, spins, lv, dimension,Bz, Ba_z, q_values):
+def create_bog_pref_grid(config:Config, k_values, w_values, J_bonds_general, dist_bonds_general, spins, lv, dimension,Bz, Ba_z, q_values
+                         ,material: Material):
     """ 
     creates the grid for the spectral weight (also u,v grid computation is currently implemented)
     """
@@ -1175,7 +1160,7 @@ def create_bog_pref_grid(config:Config, k_values, w_values, J_bonds_general, dis
             for v2 in range(len(q_values[0])):
                 for v3 in range(len(q_values[0,0])):
                     q_=q_values[v1,v2,v3]
-                    H, state_cr, state_an, bog_trafo = current_Hamiltonian_to_use(config, spins=spins, J_bonds_general=J_bonds_general, dist_bonds_general=dist_bonds_general, k_=q_, Bz=Bz, Ba_z=Ba_z)
+                    H, state_cr, state_an, bog_trafo = current_Hamiltonian_to_use(config, spins=spins, J_bonds_general=J_bonds_general, dist_bonds_general=dist_bonds_general, k_=q_, Bz=Bz, Ba_z=Ba_z, material=material)
                     #experimental
                     for w_index in range(len(w_values)):
                         #here I just want the omega dependent part of the compelte intesity (so "Bogoliubov weight" of 1)
@@ -1623,10 +1608,10 @@ def example_1_General_D_FM_AFM(J1,J2,a,a1,S1,S2, d=3):
     lv=[np.array([a,0,0]),np.array([0,a,0]),np.array([0,0,a])]
     # Create atoms with specific bonds
     atoms:List["Atom"] =[]
-    atoms=[Atom(np.array([0,0,0]),type=0,S=S1)
-                ,Atom(np.array([a1,0,0]),type=1,S=S2)
-                ,Atom(np.array([0,a1,0]),type=1,S=S2)
-                ,Atom(np.array([0,0,a1]),type=1,S=S2)
+    atoms=[Atom(np.array([0,0,0]),type=0,S=S1, dir=np.array([0,0,S1]))
+                ,Atom(np.array([a1,0,0]),type=1,S=S2, dir=np.array([0,0,S2]))
+                ,Atom(np.array([0,a1,0]),type=1,S=S2, dir=np.array([0,0,S2]))
+                ,Atom(np.array([0,0,a1]),type=1,S=S2, dir=np.array([0,0,S2]))
                 
                 ]
     all_atoms=[]

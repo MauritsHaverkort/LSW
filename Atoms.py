@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List
 import funtions as functions
+from rotation import rotation_matrix_from_vectors, rotation_matrix_from_axis_angle
 
 #just so that no atom index is used twice by accident
 ATOM_INDEX=0
@@ -11,14 +12,17 @@ def give_next_index():
     return ATOM_INDEX-1
 
 class Atom:
-    def __init__(self, position,type, J_bonds=None, neighbours: List["Atom"]=None, S=1):
+    def __init__(self, position,type, J_bonds=None, neighbours: List["Atom"]=None, S=1, dir=None):
         self.position=position
         self.neighbours = neighbours if neighbours is not None else []  #creating a new list
         self.type=type
         self.J_bonds=J_bonds if J_bonds is not None else []
         self.index=give_next_index()
         self.S=S
-
+        self.dir = dir if dir is not None else np.array([0,0,1])  #direction of the atom z by default
+        self.rotation = rotation_matrix_from_vectors(np.array([0,0,1]), self.dir)  #rotation matrix to align the atom with the z-axis
+        self.v = self.rotation[:,2]
+        self.u= (self.rotation[:,0] + 1j*self.rotation[:,1])
     def j_coupling_function(self, distance, correlation_length):
         return np.exp(-distance/correlation_length)
 
@@ -37,7 +41,7 @@ class Atom:
                 dir_with_neighbours[i]=functions.give_vector_terms_of_lattice_vectors(np.array(dir_with_neighbours[i]),lv)
         new_Atoms=[]
         for i in range(len(dir_with_neighbours)):
-            new_Atom=Atom((bond_atom.position)+dir_with_neighbours[i],bond_atom.type, S=bond_atom.S)
+            new_Atom=Atom((bond_atom.position)+dir_with_neighbours[i],bond_atom.type, S=bond_atom.S, dir=bond_atom.dir)
             new_Atoms.append(new_Atom)
             self.neighbours.append(new_Atom)
             self.J_bonds.append(J[i])
