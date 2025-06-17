@@ -14,6 +14,7 @@ from Configurations import Config
 from scipy.signal import fftconvolve
 #from LSW import Atom
 
+
 class Debug_timing:
     def __init__(self):
         self.ref_timestamp = int(time.time() * 1000)
@@ -55,14 +56,37 @@ def cut_array_by_one(arr, dimensions_to_exclude=[]):
             slices.append(slice(0,s))
     return arr[tuple(slices)]
 
+def sort_atoms_for_type(atoms):
+    from Atoms import Atom
+    if not all(isinstance(atom, Atom) for atom in atoms):
+        raise TypeError("All elements in atoms must be of type Atom")
+    atoms: List[Atom] = atoms
+    sorted_atoms = []
+    type_index = 0
+    atoms_left = True
+    while atoms_left:
+        temp = []
+        atoms_left = False
+        for a in atoms:
+            if type_index == a.type:
+                temp.append(a)
+                atoms_left = True
+        if not atoms_left:
+            break
+        else:
+            sorted_atoms.append(temp)
+            type_index += 1
+    return sorted_atoms
+
 def path_k_space(k_points, total_steps, a, steps=None):
     xticks_pos=[]
     xticks_labels=[]
     for i in range(len(k_points)):
         k_points[i]=k_points[i]*np.pi/a
     
-    k_vectors=[]
-    k_scalars=[]
+    k_vectors=[k_points[0]]
+    k_scalars=[0]
+    #if steps is not given, it is calculated from the total_steps and the number of k_points
     if steps==None:
         steps=[]
         for i in range(len(k_points)-1):
@@ -76,7 +100,7 @@ def path_k_space(k_points, total_steps, a, steps=None):
         
         k_dir= k_points[i]-previous_k_point
         
-        for k_ in np.linspace(0,1,steps[i-1]):
+        for k_ in np.linspace(0,1,steps[i-1]+1)[1:]:  # start from 1 to avoid the first point being repeated (if I would take 0 this would give the same ponint as from the previous direction)
             k_vectors.append(k_dir*k_+previous_k_point)
             k_scalars.append(la.norm(k_dir)*k_+previous_k_scalar)
         

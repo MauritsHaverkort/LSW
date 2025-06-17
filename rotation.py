@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.spatial.transform import Rotation as R
+
 
 def rotation_matrix_from_vectors(v1, v2):
     """
@@ -50,6 +52,17 @@ def rotation_matrix_from_axis_angle(axis, angle):
     ])
     print(R)
     return R
+
+def rot_vec(theta, n):
+    """
+    Rotate theta (in radian) about unit vector n
+    """
+    if theta:
+        n_norm = n / np.linalg.norm(n)
+        r_mat = R.from_rotvec(theta * np.array(n_norm)).as_matrix()
+    else:
+        r_mat = np.identity(3)
+    return np.array(r_mat)
 
 if __name__ == "__main__":
     # Example vectors

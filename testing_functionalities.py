@@ -19,6 +19,8 @@ from sympy.physics.quantum import Dagger, Commutator, Operator
 from datetime import datetime
 
 from rotation import rotation_matrix_from_vectors, rotation_matrix_from_axis_angle
+from Material import Material
+from Configurations import Config
 
 def test_RIXS_prefactor_calculations():
     from RIXS import calculate_prefactors_of_intensities
@@ -108,6 +110,115 @@ def test_RIXS_prefactor_calculations_experimental_non_squared():
                                               ,give_eff_scattering_operator_polarisation_dependent=test_term))
 
 
+def test_current_Hamiltonian(
+    config: Config, k_array: np.ndarray, Bz, Ba_z, material: Material, spins: List[float] = [], J_bonds_general: List[List[float]] = [], dist_bonds_general: List[List[float]] = [],
+    use_looping_over_k_for_old_H=True
+):
+    from LSW import general_Ham_types_AFM_FM, general_Ham_types_AFM_FM_paper_comp, post_process, general_Ham_types_AFM_FM_paper, plotting_additional_values
+    state_cr_input_untransformed = config.state_cr_input_untransformed
+    state_an_input_untransformed = config.state_an_input_untransformed
+
+    # Initialize arrays to store results
+    H_res = []
+    state_cr_res = []
+    state_anihil_res = []
+    eigvecs_res = []
+    if len(k_array.shape) >= 2:
+        assert k_array.shape[-1] == 3, "Expected first or last dimension to be 3"
+        k_array = k_array.reshape(k_array.shape[0], k_array.shape[-1])  # Keep only the first and last dimensions
+    
+    state_cr_input_untransformed = np.concatenate(
+            (state_cr_input_untransformed, state_cr_input_untransformed)
+        )
+    state_an_input_untransformed = np.concatenate(
+        (state_an_input_untransformed, state_an_input_untransformed)
+    )
+    for k_ in k_array:
+        # just double the states to match the extended Hamiltonian size
+        
+        H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM_paper(
+            config,
+            k_,
+            use_correct_self_interaction=True,
+            w_a=Ba_z,
+            Delta=Bz,
+            material=material,
+            S=spins,
+            J_bonds=J_bonds_general,
+            bonds_distances=dist_bonds_general
+        )
+        
+        # Append results for the current k_
+        H_res.append(H)
+        state_cr_res.append(state_cr)
+        state_anihil_res.append(state_anihil)
+        eigvecs_res.append(eigvecs)
+
+    # Convert lists to arrays for consistency
+    H_res = np.array(H_res)
+    state_cr_res = np.array(state_cr_res)
+    state_anihil_res = np.array(state_anihil_res)
+    eigvecs_res = np.array(eigvecs_res)
+    
+    plotting_additional_values()
+
+    return H_res, state_cr_res, state_anihil_res, eigvecs_res
+def test_grid_spectral_weight_computation(config:Config):
+    k_values = []
+    k_values_scalar = []
+    w_values = np.linspace(-1, 4, config.amount_w_values)
+    dimension = config.dimension
+    a1 = config.a
+    
+    # 1d
+    if config.dimension == 1:
+        path = [np.array([0, 0, 0]), np.array([2, 0, 0]), np.array([0, 0, 0])]
+    # path: Gamma, X, M, L, Gamma
+    if config.dimension == 3:
+        path = [
+            np.array([0, 0, 0]),
+            np.array([2, 0, 0]),
+            np.array([2, 2, 0]),
+            np.array([2, 2, 2]),
+            np.array([0, 0, 0]),
+        ]
+        # path = [
+        #     np.array([-1, -1, 0]),
+        #     np.array([1, 1, 0])
+        # ]
+    # path: (2d) Gamma X M Gamma
+    if config.dimension == 2:
+        path = [
+            np.array([0, 0, 0]),
+            np.array([2, 0, 0]),
+            np.array([2, 2, 0]),
+            np.array([0, 0, 0]),
+        ]
+
+    k_values_scalar, k_values, xticks_label, xticks_pos = (
+        functions.path_k_space(path, config.amount_k_values, a1)
+    ) 
+    from LSW import example_1_General_D_FM_AFM_bonds, general_Ham_types_AFM_FM_paper_comp, create_bog_pref_grid
+    material = example_1_General_D_FM_AFM_bonds(
+                    -1, -1, 1, config.a, S1=config.S, S2=-config.S, d=config.dimension
+                )
+              
+    J_bonds_general, dist_bonds_general, spins = (
+        material.creating_bonds_dist_lists_types_new_system_bonds()
+    )
+    lv = material.lattice_vectors
+    
+    H, state_cr, state_anihil, eigvecs=general_Ham_types_AFM_FM_paper_comp(
+                config,
+                k_=np.array(k_values),
+                material=material,
+                Ba_z=config.Ba_z,
+                Bz=config.Bz,
+            )
+    
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
-    test_RIXS_prefactor_calculations_experimental_non_squared()
+    #test_RIXS_prefactor_calculations_experimental_non_squared()
+    from LSW import call_main
+    call_main()
