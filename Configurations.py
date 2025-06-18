@@ -23,6 +23,7 @@ class Config:
     use_explicit_calculation_of_u_v_for_uv_grid: bool
     calc_u_v_convolutions:bool
     calc_pref_convolutions: bool
+    terms_to_calculate_in_pref_conv: List[int]# List of terms to calculate, e.g., ["S+", "S-", "Sz", "S^2"]
     
     use_rotation_Paper_4: bool
     path_load_pref_convolutions: str
@@ -92,7 +93,8 @@ def config_main():
         state_an_input_untransformed = np.array([1,1]),
         load_saved_grid=True,
         double_convolution=False, 
-        additional_values = {}
+        additional_values = {},
+        terms_to_calculate_in_pref_conv=[0,1,2,3],  # List of terms to calculate, e.g., ["S+", "S-", "Sz", "S^2"]
     )
     return config
 
@@ -102,8 +104,8 @@ def config_experimental():
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = 40
-    config_tryout_paper.amount_w_values = 40
+    config_tryout_paper.amount_k_values = 80
+    config_tryout_paper.amount_w_values = 80
     
     config_tryout_paper.calc_conv_intensities = False
     config_tryout_paper.calc_u_v_convolutions = False
@@ -111,6 +113,7 @@ def config_experimental():
     config_tryout_paper.calc_pref_convolutions = True
     config_tryout_paper.use_direct_grid_calculation = True
     config_tryout_paper.use_old_example_version = False
+    config_tryout_paper.terms_to_calculate_in_pref_conv = [3]
 
     return config_tryout_paper
 

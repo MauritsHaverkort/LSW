@@ -109,6 +109,67 @@ def test_RIXS_prefactor_calculations_experimental_non_squared():
                                               ,a=0.5
                                               ,give_eff_scattering_operator_polarisation_dependent=test_term))
 
+def test_the_Hamiltonian_on_grids_of_k(config:Config):
+    from Examples import example_1_General_D_FM_AFM_bonds
+    material:Material = example_1_General_D_FM_AFM_bonds(1,1,1,0.5,1,-1)
+    dimension = 3
+    amount_k_values = 100
+    # 1d
+    if dimension == 1:
+        path = [np.array([0, 0, 0]), np.array([2, 0, 0]), np.array([0, 0, 0])]
+    # path: Gamma, X, M, L, Gamma
+    if dimension == 3:
+        path = [
+            np.array([0, 0, 0]),
+            np.array([2, 0, 0]),
+            np.array([2, 2, 0]),
+            np.array([2, 2, 2]),
+            np.array([0, 0, 0]),
+        ]
+        # path = [
+        #     np.array([-1, -1, 0]),
+        #     np.array([1, 1, 0])
+        # ]
+    # path: (2d) Gamma X M Gamma
+    if dimension == 2:
+        path = [
+            np.array([0, 0, 0]),
+            np.array([2, 0, 0]),
+            np.array([2, 2, 0]),
+            np.array([0, 0, 0]),
+        ]
+
+    k_values_scalar, k_values, xticks_label, xticks_pos = (
+        functions.path_k_space(path, amount_k_values, 0.5)
+    )
+    q_values = give_grid_vectors_d(functions.give_reciprocal_lv(material.lattice_vectors)[:dimension], amount_k_values)
+    
+    from LSW import current_Hamiltonian_to_use
+    H, spin_creation, spin_anihil, bog_trafo = current_Hamiltonian_to_use(config, material=material, k_=q_values[:,0,0])
+    H, spin_creation, spin_anihil, bog_trafo3 = current_Hamiltonian_to_use(config, material=material, k_=q_values[0,:,0])
+    H, spin_creation, spin_anihil, bog_trafo4 = current_Hamiltonian_to_use(config, material=material, k_=q_values[0,:,:])
+    
+    H2, spin_creation2, spin_anihil2, bog_trafo2 = current_Hamiltonian_to_use(config, material=material, k_=q_values)
+    print(np.any(bog_trafo!=bog_trafo2[:,0,0]))
+    print(np.any(bog_trafo3!=bog_trafo2[0,:,0]))
+    print(np.any(bog_trafo4!=bog_trafo2[0,:,:]))
+
+def test_3D_slider_plot():
+    plt.ion()
+    #from LSW import slider_plot_3D
+    # Example data
+    x = np.linspace(-5, 5, 100)
+    y = np.linspace(-5, 5, 100)
+    z= np.linspace(-5, 5, 100)
+    X, Y, Z = np.meshgrid(x, y, z)
+    I = np.sin(np.sqrt(X**2 + Y**2 + Z**2))  # Example function for intensity
+
+    # Create a 3D slider plot
+    figs=[]
+    figs.append(functions.plot_3d_grid_slider(I, "test 1"))
+    figs.append(functions.plot_3d_grid_slider(I, "test 2"))
+    
+    plt.show(block =   True)  # Keep the plot open until closed by the user
 
 def test_current_Hamiltonian(
     config: Config, k_array: np.ndarray, Bz, Ba_z, material: Material, spins: List[float] = [], J_bonds_general: List[List[float]] = [], dist_bonds_general: List[List[float]] = [],
@@ -220,5 +281,8 @@ def test_grid_spectral_weight_computation(config:Config):
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
-    from LSW import call_main
-    call_main()
+    # from LSW import call_main
+    # call_main()
+    #test_3D_slider_plot()
+    import Configurations
+    test_the_Hamiltonian_on_grids_of_k(config = Configurations.config_experimental())

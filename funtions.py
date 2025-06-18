@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from numpy import linalg as la
 from typing import List
-from matplotlib.colors import LogNorm
+from matplotlib.colors import LogNorm, Normalize
 from matplotlib import gridspec
 # Removed the top-level import of Config to avoid circular import
 import json 
@@ -12,6 +12,8 @@ from datetime import datetime
 from mpl_toolkits.mplot3d import Axes3D
 from Configurations import Config
 from scipy.signal import fftconvolve
+
+from funtions import np
 #from LSW import Atom
 
 
@@ -111,10 +113,89 @@ def path_k_space(k_points, total_steps, a, steps=None):
     
     return k_scalars,k_vectors, xticks_labels, xticks_pos
 
-def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
-              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True):
+
+def plot_3d_grid_slider(grid, 
+                        title="3D Grid Viewer", 
+                        xlabel="X", ylabel="Y", intensity="Intensity", 
+                        axis_labels=None,  # list of 3 strings
+                        useLogNorm=False, range_from_max=1000,
+                        xticks_pos=[], xticks_labels=[],
+                        k_values_scalar=None, w_values=None):
+    """
+    Plots a 3D grid using a 2D heatmap and a slider for the third dimension.
     
-    fig=plt.figure(title)
+    Parameters:
+        grid: np.ndarray of shape (A, B, C)
+        axis_labels: optional list of 3 labels for the three axes
+        k_values_scalar: values for X-axis
+        w_values: values for Y-axis
+    """
+    from matplotlib.widgets import Slider
+    assert grid.ndim == 3, "Grid must be 3D (Z, Y, X)"
+    dim = grid.shape
+
+    if np.iscomplexobj(grid):
+        print("Warning: Grid contains complex values. Discarding imaginary part.")
+        grid = np.real(grid)
+    # Setup figure and axes
+    fig, ax = plt.subplots()
+    plt.subplots_adjust(bottom=0.25)
+
+    slider_ax = plt.axes([0.2, 0.1, 0.65, 0.03])
+    slider = Slider(slider_ax, 'Slice', 0, dim[0] - 1, valinit=0, valstep=1)
+
+    z_idx = 0  # initial slice
+    
+
+    if k_values_scalar is None:
+        k_values_scalar = np.arange(dim[2] + 1)
+    if w_values is None:
+        w_values = np.arange(dim[1] + 1)
+
+    if useLogNorm:
+        norm = LogNorm(vmin=np.max(grid) / range_from_max, vmax=np.max(grid))
+    else:
+        norm = None
+    vmin = np.min(np.real(grid))
+    vmax = np.max(np.real(grid))
+    
+    norm = LogNorm(vmin, vmax) if useLogNorm else Normalize(vmin, vmax)
+    
+    mesh = ax.pcolormesh(k_values_scalar, w_values, grid[:,:,z_idx], 
+                     cmap='viridis', shading='auto',
+                     norm=norm)
+    cbar = fig.colorbar(mesh, ax=ax, label=intensity)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    if xticks_pos and xticks_labels:
+        ax.set_xticks(xticks_pos)
+        ax.set_xticklabels(xticks_labels)
+
+    # Slider update logic
+    def update(val):
+        z = int(slider.val)
+        mesh.set_array(grid[z].ravel())
+        fig.canvas.draw_idle()
+
+    slider.on_changed(update)
+    ax.set_title(f"{title} – Slice 0")
+    
+    fig.show()
+    plt.pause(0.001) 
+    
+    return fig
+    
+
+
+def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
+              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, prevent_reusing_fig=False):
+    if prevent_reusing_fig:
+        fig = plt.figure( figsize=(10, 6))
+        fig.canvas.manager.set_window_title(title)
+    else:
+        fig = plt.figure(title, figsize=(10, 6))
+    
     if np.iscomplexobj(grid):
         print("Warning: Grid contains complex values. Discarding imaginary part.")
         grid = np.real(grid)
@@ -166,7 +247,7 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
             dos_whole_k_space = True
         else:   
             dos = sum_k_dependency(grid)
-        fig = plt.figure(title, figsize=(10, 6))
+        
         gs = gridspec.GridSpec(1, 2, width_ratios=[4, 1], wspace=0.05)
 
         # Main grid plot
@@ -494,3 +575,32 @@ if __name__ == "__main__":
     from LSW import call_main
 
     call_main()
+
+
+def give_grid_vectors_d(vectors, steps):
+    """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with steps size"""
+    steps_list = [steps for _ in range(len(vectors))]
+    while len(vectors) < 3:
+        vectors.append(np.array([0, 0, 0]))
+        steps_list.append(1)
+    result = np.zeros((steps_list[0], steps_list[1], steps_list[2], len(vectors[0])))
+    # vectors_left=len(vectors)
+    spacing = []
+    for s in steps_list:
+        spacing.append(np.linspace(0, 1, s))
+    for i, v1 in enumerate(spacing[0]):
+        for j, v2 in enumerate(spacing[1]):
+            for k, v3 in enumerate(spacing[2]):
+                temp = v1 * vectors[0] + v2 * vectors[1] + v3 * vectors[2]
+                result[i, j, k] = temp
+    return result
+
+
+def give_reciprocal_lv(lv):
+    V = np.dot(lv[0], np.cross(lv[1], lv[2]))
+    result = [
+        np.array(2 * np.pi / V * np.cross(lv[1], lv[2])),
+        np.array(2 * np.pi / V * np.cross(lv[2], lv[0])),
+        np.array(2 * np.pi / V * np.cross(lv[0], lv[1])),
+    ]
+    return result

@@ -25,11 +25,14 @@ import json
 from datetime import datetime
 import os
 
+from funtions import give_grid_vectors_d
+from funtions import give_reciprocal_lv
+
 
 DEBUG = True
 COMPUTATION_INFO = {}
 # values I am extracting at some point but dont want to carry through all functions --> shpould only be sued for debuggin pupose
-VALUES_TO_SAVE = {"Bog_trafo_of_k": [], "Hamiltonian_not_diagonalised": []}
+VALUES_TO_SAVE = {"Bog_trafo_of_k": [], "Hamiltonian_not_diagonalised": [], "figs": []} #figs saving figures so they are not garabged by the garbage collector
 DEBUGGING_INFO = {"Attention unreasonably high state -> cut off": True}
 
 
@@ -269,7 +272,7 @@ def general_Ham_types_AFM_FM_paper_comp(
     u = np.array([material.atoms[i][0].u for i in range(N)])
     S = np.array([material.atoms[i][0].S for i in range(N)])
 
-    shape_H_parts = ( *k_.shape[:-1],N, N)
+    shape_H_parts = ( *k_.shape[:-1],N, N) #-1 since last dimension is the vector itself
     shape_k_parts = k_.shape[:-1]
     A = np.zeros(shape_H_parts, dtype=complex)
     mA = np.zeros(shape_H_parts, dtype=complex)
@@ -281,6 +284,7 @@ def general_Ham_types_AFM_FM_paper_comp(
     #for direct comparison to comp project
     #k_=np.array([-1.99,-1.99,0])
     # bonds
+    interaction_summed = np.zeros(shape_k_parts, dtype=complex)
     for bond in material.bonds:
         # TODO: this has to be checked if the indices mathch the positions
         i, j = bond.atom0.index, bond.atom1.index
@@ -296,7 +300,11 @@ def general_Ham_types_AFM_FM_paper_comp(
             """takes k as arbitrary array of k-vectors (some grid) and returns the interaction term for the given bond"""
             #TODO: this must be checked for other lattices!
             #removed the pi here because for me this is already in the k-values
-            return np.exp(- 1j * (np.tensordot(k, material.lattice_vectors@d, axes=([-1], [0]))))
+            
+            #multiplying the last axis of the k-values (the actual vectors) with the lattice vectors
+            q = material.lattice_vectors @ d  # shape (3,)
+            result = np.exp(-1j * np.einsum('...i,i->...', k, q))
+            return result
 
         interaction = interaction_func(
             J=J_bond, d=bond_distance, rot_matrix=bond.r_matrix, k=k_
@@ -304,6 +312,17 @@ def general_Ham_types_AFM_FM_paper_comp(
         interaction_mk = interaction_func(
             J=J_bond, d=bond_distance, rot_matrix=bond.r_matrix, k=-k_
         )  
+        interaction_summed += interaction
+        
+        # if len(interaction.shape)==3: 
+        #     #functions.plot_grid(interaction_summed[:,:,0], title="interaction summed", xlabel="k_x", ylabel="k_y", prevent_reusing_fig=True)
+        #     VALUES_TO_SAVE["figs"].append(functions.plot_3d_grid_slider(np.real(interaction), title=f"re interaction from bond: {bond.dij}", xlabel="k_x", ylabel="k_y"))
+        #     VALUES_TO_SAVE["figs"].append(functions.plot_3d_grid_slider(np.imag(interaction), title=f"im interaction from bond: {bond.dij}", xlabel="k_x", ylabel="k_y"))
+        # if len(shape_k_parts)==1:
+        #     plt.figure(f"interaction of bond: {bond.dij}")
+        #     plt.plot(np.real(interaction), label = "real part")
+        #     plt.plot(np.imag(interaction), label="imaginary part")
+        #     plt.legend()
 
         # interaction =
 
@@ -368,6 +387,14 @@ def general_Ham_types_AFM_FM_paper_comp(
             # TODO: add Zeeman terms
             # C[i,i]+=-(Delta*np.sign(S[i])+w_a+0.001)
             # H[i+N][i+N]+=(Delta*np.sign(S[i])+w_a+0.001)
+    
+    # if len(interaction.shape)==3: 
+    #     #functions.plot_grid(interaction_summed[:,:,0], title="interaction summed", xlabel="k_x", ylabel="k_y", prevent_reusing_fig=True)
+        
+    #     #functions.plot_3d_grid_slider(interaction_summed, title="interaction summed", xlabel="k_x", ylabel="k_y")
+    #     functions.plot_3d_grid_slider(np.abs(interaction_summed), title="interaction summed", xlabel="k_x", ylabel="k_y")
+    
+    
     if use_rotation_Paper_4:
         if debug:
             print("new k")
@@ -399,6 +426,8 @@ def general_Ham_types_AFM_FM_paper_comp(
             (*shape_k_parts,2*N,2*N), dtype=complex)
             
         momentum_shape = H.shape[:-2]  # handles (kx,), (kx, ky), or (kx, ky, kz)
+        
+        #solving the Hamiltonian
         for index in np.ndindex(momentum_shape):
             H_ = H[*index,:, : ]
             
@@ -419,7 +448,9 @@ def general_Ham_types_AFM_FM_paper_comp(
             eigvecs_grid[*index,:, : ] = eigvecs
             eigvals_grid[*index,:] = eigvals
             state_cr = eigvecs @ state_cr
-
+        # if len(shape_k_parts) == 3:
+        #     functions.plot_3d_grid_slider(eigvals_grid[..., 0], title="eigenvalues", xlabel="k_x", ylabel="k_y")
+        
         VALUES_TO_SAVE["Bog_trafo_of_k"].append(eigvecs_grid)
         VALUES_TO_SAVE["Hamiltonian_not_diagonalised"].append(H)
 
@@ -427,9 +458,13 @@ def general_Ham_types_AFM_FM_paper_comp(
 
 
 def current_Hamiltonian_to_use(
-    config: Config, k_, Bz, Ba_z, material:Material,spins:List[float]=[], J_bonds_general:List[List[float]]=[], dist_bonds_general:List[List[float]]=[]
+    config: Config, k_,  material:Material, Bz=0, Ba_z=0, spins:List[float]=[], J_bonds_general:List[List[float]]=[], dist_bonds_general:List[List[float]]=[]
 ,use_looping_over_k_for_old_H=True
 ):
+    if Bz == 0:
+        Bz = config.Bz
+    if Ba_z == 0:
+        Ba_z = config.Ba_z
     #for testing on spectral weight grid system
     # from testing_functionalities import test_current_Hamiltonian
     # J_bonds,bonds_distances, spins = material.creating_bonds_dist_lists_types_new_system_bonds()
@@ -794,7 +829,7 @@ def main(config: Config):
 
     # additional analysis that can be done
 
-    grid_fineness = len(k_values)
+    grid_fineness = config.amount_k_values
 
     q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], grid_fineness)
 
@@ -862,6 +897,7 @@ def main(config: Config):
             print("calculating new pref_grid")
             pref_grid = create_bog_pref_grid(
                 config=config,
+                q_values=q_values,
                 k_values=k_values,
                 w_values=w_values,
                 J_bonds_general=J_bonds_general,
@@ -871,7 +907,7 @@ def main(config: Config):
                 dimension=dimension,
                 Bz=Bz,
                 Ba_z=Ba_z,
-                q_values=q_values,
+                
                 material=material,
             )
         calculate_convolutions_of_bog_trafo_pref_grid(config, pref_grid, q_values)
@@ -880,8 +916,8 @@ def main(config: Config):
 
     
     plotting_additional_values()
-    plt.show()
-    print("finished")
+    #plt.show()
+   
 
 
 def create_bog_pref_grid(
@@ -949,18 +985,35 @@ def create_bog_pref_grid(
                                 state_an=np.array([1] + [0 for _ in range(H.shape[-1] - 1)]),
                                 w=np.array(w_values),
                             )
+            # for i in range(pref_grid.shape[-1]):
+            #     #change so that the whole matrix is returned
+                
+            #     #probelm here: pref_grid should always be 3d in k_values (for d<3) shapes are just 1 but my spectral_weight_grid and bog_trafo have just dimension dim for the k_values
+            #     bog_slice = (None,) + (...,) + (None,) * (3 - dimension) + (0, i)
+            #     spec_slice = (...,) + (None,) * (3 - dimension)
+            #     #assert bog_trafo[bog_slice].shape == spectral_weight_grid[spec_slice].shape, "Shape mismatch!" -->they dont match since bog doesnt have a w dependence
             
-            for i in range(pref_grid.shape[-1]):
-                #probelm here: pref_grid should always be 3d in k_values (for d<3) shapes are just 1 but my spectral_weight_grid and bog_trafo have just dimension dim for the k_values
-                bog_slice = (None,) + (...,) + (None,) * (3 - dimension) + (0, i)
-                spec_slice = (...,) + (None,) * (3 - dimension)
-                #assert bog_trafo[bog_slice].shape == spectral_weight_grid[spec_slice].shape, "Shape mismatch!" -->they dont match since bog doesnt have a w dependence
+            #     pref_grid[...,i] = (
+            #         spectral_weight_grid[spec_slice] * bog_trafo[bog_slice] * normalisation_conv #elementwise multiplication 
+            #     )
+            #     functions.plot_grid(spectral_weight_grid[:,:,0,0], "spectral weight grid", useLogNorm=config.use_Log_Norm)
+            #     functions.plot_grid(bog_trafo[:,:,0,0,0], useLogNorm=config.use_Log_Norm, range_from_max=10e3, xlabel="k_x", ylabel="k_y", title="bogoliubov transformation grid")
+        
+            # Expand pref_grid to include all (i, j) combinations without looping
             
-                pref_grid[...,i] = (
-                    spectral_weight_grid[spec_slice] * bog_trafo[bog_slice] * normalisation_conv #elementwise multiplication 
-                )
-                functions.plot_grid(spectral_weight_grid[:,:,0,0], "spectral weight grid", useLogNorm=config.use_Log_Norm)
-                functions.plot_grid(bog_trafo[:,:,0,0,0], useLogNorm=config.use_Log_Norm, range_from_max=10e10, xlabel="k_x", ylabel="k_y", title="bogoliubov transformation grid")
+            #new axis (W), all existing ones(K), new axis too match dimensions(additional K), last two axes (2N,2N)
+            bog_slice = (None,) + (...,) + (None,) * (3 - dimension) + (slice(None), slice(None))
+            #all existing ones (W,K), new axis too match dimensions(additional K)
+            spec_slice = (...,) + (None,) * (3 - dimension)
+            
+            # Perform elementwise multiplication for all (i, j) combinations
+            pref_grid = (
+                spectral_weight_grid[spec_slice][..., None, None] * bog_trafo[bog_slice] * normalisation_conv
+            )
+            
+            # Plot the grids for visualization
+            functions.plot_grid(spectral_weight_grid[:, :, 0, 0], "spectral weight grid", useLogNorm=config.use_Log_Norm)
+            functions.plot_grid(bog_trafo[:, :, 0, 0, 0], useLogNorm=config.use_Log_Norm, range_from_max=10e3, xlabel="k_x", ylabel="k_y", title="bogoliubov transformation grid")
         else:
 
             print("shape q_values: " + str(np.shape(q_values)))
@@ -998,11 +1051,11 @@ def create_bog_pref_grid(
         # fill_spectral_grid(q_values,w_values,spectral_weight_grid,J_bonds_general,dist_bonds_general,spins,Bz,Ba_z)
         # print(functions.turn_comp_info_into_str(COMPUTATION_INFO))
     coordinates = (w_values, q_values[:, 0, 0], q_values[0, :, 0], q_values[0, 0, :])
-    spectral_weight_grid = np.real(
-        (pref_grid[:, :, :, :, 0] + pref_grid[:, :, :, :, 1]) ** 2
+    u_v_squared_grid = np.real(
+        (pref_grid[:, :, :, :, 0,0] + pref_grid[:, :, :, :, 0,1]) ** 2
     )
     functions.plot_grid(
-        spectral_weight_grid[:, :, 0, 0], "(u+v)^2 grid", useLogNorm=config.use_Log_Norm
+        u_v_squared_grid[:, :, 0, 0], "(u+v)^2 grid", useLogNorm=config.use_Log_Norm
     )
 
     functions.save_grid_to_file(
@@ -1015,7 +1068,7 @@ def create_bog_pref_grid(
 
     steps = int(grid_fineness / 2)
     if dimension == 1:
-        spectral_weight_grid_along_path = spectral_weight_grid[:, :, 0, 0].T
+        spectral_weight_grid_along_path = u_v_squared_grid[:, :, 0, 0].T
     if dimension == 2:
         spectral_weight_grid_along_path, *_ = functions.path_through_k_grid(
             startpoint=np.array([0, 0, 0]),
@@ -1025,7 +1078,7 @@ def create_bog_pref_grid(
                 np.array([-1, -1, 0]),
             ],
             steps=[steps, steps, steps],
-            grid=spectral_weight_grid,
+            grid=u_v_squared_grid,
         )
     if dimension == 3:
         spectral_weight_grid_along_path, *_ = functions.path_through_k_grid(
@@ -1037,11 +1090,11 @@ def create_bog_pref_grid(
                 np.array([-1, -1, -1]),
             ],
             steps=[steps, steps, steps, steps],
-            grid=spectral_weight_grid,
+            grid=u_v_squared_grid,
         )
 
     functions.plot_grid(
-        spectral_weight_grid_along_path.T,
+        spectral_weight_grid_along_path,
         "path through spectral weight grid (without convoluting)",
         useLogNorm=config.use_Log_Norm,
     )
@@ -1052,24 +1105,30 @@ def create_bog_pref_grid(
 
 
 def calculate_convolutions_of_bog_trafo_pref_grid(
-    config: Config, pref_grids: np.ndarray, q_values_grid
+    config: Config, pref_grids_matrix: np.ndarray, q_values_grid
 ):
-    terms_to_calculate = [0]
+    """Calculates the convolutions of the pref grids for the spectral weight grid.
+    pref_grids: np.ndarray
+        The pref grids of shape (W, kx, ky, kz, 2N, 2N) --> given as the complete matrix"""
+    terms_to_calculate = config.terms_to_calculate_in_pref_conv
+    
+    whole_grid_slice = slice(None), slice(None), slice(None), slice(None)
+    pref_grids_column = pref_grids_matrix[*whole_grid_slice,0,:]
     results = []
     if 0 in terms_to_calculate:
-        results.append(np.abs(np.sum(pref_grids, axis=-1)) ** 2)
+        results.append(np.abs(np.sum(pref_grids_column, axis=-1)) ** 2)
 
     if 1 in terms_to_calculate:
-        temp = np.abs(np.sum(pref_grids, axis=-1)) ** 2
+        temp = np.abs(np.sum(pref_grids_column, axis=-1)) ** 2
         results.append(
             functions.convolute_grids(temp, temp, dimension=config.dimension)
         )
 
     # TODO: generalise for more than 2x2 case
     if 2 in terms_to_calculate:
-        if pref_grids.shape[-1] == 2:
-            u_grid_abs_sqrd = np.abs(pref_grids[:, :, :, :, 0]) ** 2
-            v_grid_abs_sqrd = np.abs(pref_grids[:, :, :, :, 1]) ** 2
+        if pref_grids_column.shape[-1] == 2:
+            u_grid_abs_sqrd = np.abs(pref_grids_column[:, :, :, :, 0]) ** 2
+            v_grid_abs_sqrd = np.abs(pref_grids_column[:, :, :, :, 1]) ** 2
             conv_uuv = functions.convolute_grids(
                 u_grid_abs_sqrd,
                 u_grid_abs_sqrd,
@@ -1086,16 +1145,22 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
             )
 
             results.append((conv_uuv + conv_vvu))
-
+    #implementation of paper: this is still missing the rotation terms in the middle but this should give 1 for now
+    if 3 in terms_to_calculate:
+        pref_grids_herm_conj = np.conjugate(pref_grids_matrix.swapaxes(-2, -1))
+        temp_result=np.einsum('...ij,...jk->...ik', pref_grids_herm_conj, pref_grids_matrix)
+        results.append(temp_result[:,:,:,:,0,0])
     names_ = [
         "intensities_one_magnon",
         "intensities_two_magnon",
         "intensities_three_magnon",
+        "S_alpha_beta from paper 4 (missing rotation terms)",
     ]
     names = [names_[i] for i in terms_to_calculate]
+    
     for i, intensity_result in enumerate(results):
         print(np.sum(intensity_result))
-        steps = int(len(pref_grids[1][0]) / 2)
+        steps = int(len(pref_grids_column[1][0]) / 2)
 
         # took out since this d_k is absorbed in the delta function
         # if config.use_normalisation_of_sepctral_weight:
@@ -1123,7 +1188,7 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
             result_along_path,
             names[i],
             useLogNorm=config.use_Log_Norm,
-            range_from_max=10e20,
+            range_from_max=10e3,
             xticks_pos=xticks_pos,
             xticks_labels=xticks_labels,
             w_values=config.additional_values["w_values"],
@@ -2628,16 +2693,6 @@ def convoluted_intensities(k_values, w_values, intensities):
     return conv_intensities
 
 
-def give_reciprocal_lv(lv):
-    V = np.dot(lv[0], np.cross(lv[1], lv[2]))
-    result = [
-        np.array(2 * np.pi / V * np.cross(lv[1], lv[2])),
-        np.array(2 * np.pi / V * np.cross(lv[2], lv[0])),
-        np.array(2 * np.pi / V * np.cross(lv[0], lv[1])),
-    ]
-    return result
-
-
 def give_grid_vectors_old(vectors, steps):
     result = [np.array([0, 0, 0])]
     # vectors_left=len(vectors)
@@ -2647,24 +2702,6 @@ def give_grid_vectors_old(vectors, steps):
             for i in range(1, steps):
                 temp_results.append(r + (i / steps) * vectors[j])
         result = result + temp_results
-    return result
-
-
-def give_grid_vectors_d(vectors, steps):
-    steps_list = [steps for _ in range(len(vectors))]
-    while len(vectors) < 3:
-        vectors.append(np.array([0, 0, 0]))
-        steps_list.append(1)
-    result = np.zeros((steps_list[0], steps_list[1], steps_list[2], len(vectors[0])))
-    # vectors_left=len(vectors)
-    spacing = []
-    for s in steps_list:
-        spacing.append(np.linspace(0, 2, s))
-    for i, v1 in enumerate(spacing[0]):
-        for j, v2 in enumerate(spacing[1]):
-            for k, v3 in enumerate(spacing[2]):
-                temp = v1 * vectors[0] + v2 * vectors[1] + v3 * vectors[2]
-                result[i, j, k] = temp
     return result
 
 
@@ -2706,7 +2743,12 @@ def call_main():
     config = Configurations.config_main()
     config = Configurations.config_experimental()
 
+    plt.ion() #for interactive plotting
     main(config)
+    #plt.ioff() #turn off interactive plotting
+    print("")
+    plt.show(block = True)
+    print("finished")
 
 
 if __name__ == "__main__":
