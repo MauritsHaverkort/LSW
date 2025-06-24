@@ -278,9 +278,38 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
     if save_path:
         plt.savefig(save_path, bbox_inches='tight')
 
-def path_through_k_grid(startpoint, directions, steps, grid, max_value_k=None, q_grid=None):
+def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, directions=None, steps=None, dimension=None):
     """
     Takes a startpoint, a list of directions and the number of steps in each direction and returns a grid with the values of the original grid at each point and w-value (y-axis)"""
+    
+    if startpoint is None or directions is None or steps is None:
+        if dimension is None:
+            raise ValueError("Either startpoint, directions and steps must be given or dimension must be given")
+        else:
+            #these are the standard paths through the k-grid
+            if dimension == 2:
+                startpoint=np.array([0, 0, 0])
+                directions=[
+                    np.array([1, 0, 0]),
+                    np.array([0, 1, 0]),
+                    np.array([-1, -1, 0]),
+                ]
+            elif dimension == 3:
+                startpoint=np.array([0, 0, 0])
+                directions=[
+                    np.array([1, 0, 0]),
+                    np.array([0, 1, 0]),
+                    np.array([0, 0, 1]),
+                    np.array([-1, -1, -1]),
+                ]
+            elif dimension == 1:
+                startpoint=np.array([0, 0, 0])
+                directions=[
+                    np.array([1, 0, 0]),
+                    np.array([-1, 0, 0]),
+                ]
+                
+            steps = [int(len(grid[1][0]) / 2)]*len(directions)
     
     path=[startpoint]
     result=[]

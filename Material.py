@@ -15,6 +15,17 @@ class Material:
         self.lattice_vectors = np.array(lattice_vectors) if lattice_vectors is not None else np.array([])
         self.N = len(atoms) if atoms is not None else 0
         
+        mat_nx = np.array(
+            [
+                [0, -self.normal_vector_to_rotation_plane[2], self.normal_vector_to_rotation_plane[1]],
+                [self.normal_vector_to_rotation_plane[2], 0, -self.normal_vector_to_rotation_plane[0]],
+                [-self.normal_vector_to_rotation_plane[1], self.normal_vector_to_rotation_plane[0], 0],
+            ]
+        )
+        self.mat_R2 = np.outer(self.normal_vector_to_rotation_plane, self.normal_vector_to_rotation_plane)
+        self.mat_R1 = (np.eye(3) - 1j * mat_nx - self.mat_R2) / 2
+
+        
 
     def set_bond_atoms(self, atoms:List[List[Atom]], bonds:List[Bond]):
         """Sets the atoms and bonds of the material."""
@@ -101,3 +112,14 @@ class Material:
         self.bonds_distances = bonds_distances
         self.spins = spins
         return J_bonds,bonds_distances, spins
+    
+    
+    def interaction_e_ikd(self, d, k):
+        """takes k as arbitrary array of k-vectors (some grid) and returns the interaction term for the given bond"""
+        #TODO: this must be checked for other lattices!
+        #removed the pi here because for me this is already in the k-values
+        
+        #multiplying the last axis of the k-values (the actual vectors) with the lattice vectors
+        q = self.lattice_vectors @ d  # shape (3,)
+        result = np.exp(-1j * np.einsum('...i,i->...', k, q))
+        return result

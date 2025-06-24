@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 import scipy.linalg as la
 from scipy.fft import fftn, ifftn
 from scipy.signal import fftconvolve
@@ -296,21 +297,13 @@ def general_Ham_types_AFM_FM_paper_comp(
         # else:
         #     nu=1
         # interaction=0
-        def interaction_func(J, d, rot_matrix, k):
-            """takes k as arbitrary array of k-vectors (some grid) and returns the interaction term for the given bond"""
-            #TODO: this must be checked for other lattices!
-            #removed the pi here because for me this is already in the k-values
-            
-            #multiplying the last axis of the k-values (the actual vectors) with the lattice vectors
-            q = material.lattice_vectors @ d  # shape (3,)
-            result = np.exp(-1j * np.einsum('...i,i->...', k, q))
-            return result
+        
 
-        interaction = interaction_func(
-            J=J_bond, d=bond_distance, rot_matrix=bond.r_matrix, k=k_
+        interaction = material.interaction_e_ikd(
+            d=bond_distance, k=k_
         )  
-        interaction_mk = interaction_func(
-            J=J_bond, d=bond_distance, rot_matrix=bond.r_matrix, k=-k_
+        interaction_mk = material.interaction_e_ikd(
+            d=bond_distance, k=-k_
         )  
         interaction_summed += interaction
         
@@ -428,25 +421,28 @@ def general_Ham_types_AFM_FM_paper_comp(
         momentum_shape = H.shape[:-2]  # handles (kx,), (kx, ky), or (kx, ky, kz)
         
         #solving the Hamiltonian
-        for index in np.ndindex(momentum_shape):
-            H_ = H[*index,:, : ]
+        for k_index in np.ndindex(momentum_shape):
+            H_ = H[*k_index,:, : ]
             
             eigvals, eigvecs = la.eig(Gamma @ H_)
             
             if debug:
-                print(f"k = {index}")
+                print(f"k = {k_index}")
                 print("H_ =\n", H_)
 
-            H_diag_grid[*index,:, :] = Gamma @ np.diag(eigvals)
+            H_diag_grid[*k_index,:, :] = Gamma @ np.diag(eigvals)
 
             if use_eigvecs_correction:
-                temp2 = herm_conj(eigvecs) @ Gamma @ eigvecs
+                temp2 = (herm_conj(eigvecs) @ Gamma @ eigvecs).round(8) #rounding is essential to discard small imaginary parts here!
+                temp2 += np.eye(temp2.shape[0], dtype=complex) * 1e-8  # add small value to avoid division by zero
                 normalisation_factor = 1 / np.sqrt(temp2)
-                for i in range(eigvecs.shape[1]):
+                #the normaisation is only done with the positive eigenvalues (see comp)
+                for i in range(N):
                     eigvecs[:, i] = normalisation_factor[i, i] * eigvecs[:, i]
+                    eigvecs[:, i+N] = normalisation_factor[i, i] * eigvecs[:, i+N]
 
-            eigvecs_grid[*index,:, : ] = eigvecs
-            eigvals_grid[*index,:] = eigvals
+            eigvecs_grid[*k_index,:, : ] = eigvecs
+            eigvals_grid[*k_index,:] = eigvals
             state_cr = eigvecs @ state_cr
         # if len(shape_k_parts) == 3:
         #     functions.plot_3d_grid_slider(eigvals_grid[..., 0], title="eigenvalues", xlabel="k_x", ylabel="k_y")
@@ -910,7 +906,7 @@ def main(config: Config):
                 
                 material=material,
             )
-        calculate_convolutions_of_bog_trafo_pref_grid(config, pref_grid, q_values)
+        calculate_convolutions_of_bog_trafo_pref_grid(config, pref_grid, q_values, material=material)
 
     functions.save_config_to_json(config)
 
@@ -918,7 +914,98 @@ def main(config: Config):
     plotting_additional_values()
     #plt.show()
    
+def sqw_components_calc(material: Material, config: Config):
+        """
+        This computes the coefficients of the individual S(q,w)' components to make up the complete S(q,w) function. --> paper 4 equation 40 --> done via coefficents for efficiency
+        
+        return [[alpha, beta], ... ] if S(q,w)^(alpha, beta} is non-trivial
+        return [[(idx, coeff),...], ...],
 
+        """
+        sqw_prime_components = [[tau, alpha, beta] for tau in range(3) for alpha in range(config.dimension) for beta in range(config.dimension)]
+        
+        # print(sqw_prime_components)
+        xx, xy, xz, yx, yy, yz, zx, zy, zz = sp.symbols("xx xy xz yx yy yz zx zy zz")
+        sqw_prime_array = np.array([[xx, xy, xz], [yx, yy, yz], [zx, zy, zz]])
+
+        sqw_prime = np.zeros_like(sqw_prime_array)
+        sqw_prime_plus_tau = np.zeros_like(sqw_prime_array)
+        sqw_prime_minus_tau = np.zeros_like(sqw_prime_array)
+
+        for sqw_prime_comp in sqw_prime_components:
+            tau_idx, alpha_idx, beta_idx = sqw_prime_comp
+            #this creates a matrix of of the form of sqw_prime_array but only with the dimensions that are used rest remains zero
+            match tau_idx:
+                case 0:
+                    sqw_prime[alpha_idx, beta_idx] = sqw_prime_array[alpha_idx, beta_idx]
+                case 1:
+                    sqw_prime_plus_tau[alpha_idx, beta_idx] = sqw_prime_array[alpha_idx, beta_idx]
+                case 2:
+                    sqw_prime_minus_tau[alpha_idx, beta_idx] = sqw_prime_array[alpha_idx, beta_idx]
+
+        sqw_components_coeff = []
+
+        if material.tau == (0, 0, 0):  # FM
+            sqw_components = []
+            sqw = sqw_prime
+            for sqw_component in sqw_prime_components:
+                sqw_component_coeff = []
+                _, alpha_idx, beta_idx = sqw_component
+                sqw_components.append([alpha_idx, beta_idx])
+                #for all combinations of alpha and beta (in result S) gives the coefficients of all combinations of alpha and beta (of the input S')
+                for i in range(3):
+                    for j in range(3):
+                        coeff = sqw[alpha_idx, beta_idx].coeff(sqw_prime_array[i, j])
+                        if coeff:  # non-zero coefficient
+                            for tau_a_b_idx, item in enumerate(sqw_prime_components):
+                                #this basicall just searches for then index of the tau_ab_idxs --> so that the coeff is appended to the correct list  
+                                #For FM we only have the tau=0 components
+                                if item == [0, i, j]:
+                                    sqw_component_coeff.append([tau_a_b_idx, coeff])
+                sqw_components_coeff.append(sqw_component_coeff)
+            # self.sqw_components = sqw_components
+
+        else:  # AFM
+            sqw = sqw_prime @ material.mat_R2
+            sqw_plus_tau = sqw_prime_plus_tau @ material.mat_R1
+            sqw_minus_tau = sqw_prime_minus_tau @ np.conj(material.mat_R1)
+
+            sqw_components = []
+            for i in range(3):
+                for j in range(3):
+                    if np.any([sqw[i, j], sqw_plus_tau[i, j], sqw_minus_tau[i, j]]):
+                        sqw_components.append([i, j])
+                    else:  # do nothing if all zeros
+                        pass
+            #now only iterating through the non-zero components (alpha beta)
+            for sqw_component in sqw_components:
+                sqw_component_coeff = []
+                alpha_idx, beta_idx = sqw_component
+                for i in range(3):
+                    for j in range(3):
+                        coeff = sqw[alpha_idx, beta_idx].coeff(sqw_prime_array[i, j])
+                        if coeff:
+                            for tau_a_b_idx, item in enumerate(sqw_prime_components):
+                                if item == [0, i, j]:
+                                    sqw_component_coeff.append([tau_a_b_idx, coeff])
+                        #do the same for the plus and minus tau components
+                        coeff_plus_tau = sqw_plus_tau[alpha_idx, beta_idx].coeff(
+                            sqw_prime_array[i, j]
+                        )
+                        if coeff_plus_tau:
+                            for tau_a_b_idx, item in enumerate(sqw_prime_components):
+                                if item == [1, i, j]:
+                                    sqw_component_coeff.append([tau_a_b_idx, coeff_plus_tau])
+                        coeff_minus_tau = sqw_minus_tau[alpha_idx, beta_idx].coeff(
+                            sqw_prime_array[i, j]
+                        )
+                        if coeff_minus_tau:
+                            for tau_a_b_idx, item in enumerate(sqw_prime_components):
+                                if item == [2, i, j]:
+                                    sqw_component_coeff.append([tau_a_b_idx, coeff_minus_tau])
+                sqw_components_coeff.append(sqw_component_coeff)
+            # print(sqw_components_coeff)
+        return sqw_components, sqw_components_coeff
 
 def create_bog_pref_grid(
     config: Config,
@@ -937,7 +1024,10 @@ def create_bog_pref_grid(
 ):
     """
     creates the grid for the spectral weight (also u,v grid computation is currently implemented)
+    q_values: the grid points in k-space where the spectral weight is calculated --> has to be 3D!
     """
+    
+    assert len(q_values.shape) == 4, "q_values should be a 3D grid of k-vectors"
     
     use_direct_grid_computation = config.use_direct_grid_calculation
     load_saved_grid = config.load_saved_grid
@@ -980,10 +1070,12 @@ def create_bog_pref_grid(
                     )
             #shape: (W,*k_shape)
             spectral_weight_grid = calc_spectral_weight_grid(
+                                #config=config,
                                 H=H,
                                 state_cr=np.array([1] + [0 for _ in range(H.shape[-1] - 1)]),
                                 state_an=np.array([1] + [0 for _ in range(H.shape[-1] - 1)]),
                                 w=np.array(w_values),
+                                Self_energy=1j*config.Gamma,
                             )
             # for i in range(pref_grid.shape[-1]):
             #     #change so that the whole matrix is returned
@@ -1002,9 +1094,10 @@ def create_bog_pref_grid(
             # Expand pref_grid to include all (i, j) combinations without looping
             
             #new axis (W), all existing ones(K), new axis too match dimensions(additional K), last two axes (2N,2N)
-            bog_slice = (None,) + (...,) + (None,) * (3 - dimension) + (slice(None), slice(None))
+            # changed since I dont need to insert the k-dimensions since the k-grid is already given in 3D
+            bog_slice = (None,) + (...,) + (slice(None), slice(None)) #+ (None,) * (3 - dimension) 
             #all existing ones (W,K), new axis too match dimensions(additional K)
-            spec_slice = (...,) + (None,) * (3 - dimension)
+            spec_slice = (...,) #+ (None,) * (3 - dimension)
             
             # Perform elementwise multiplication for all (i, j) combinations
             pref_grid = (
@@ -1042,6 +1135,7 @@ def create_bog_pref_grid(
                                 state_cr=np.array([1] + [0 for _ in range(len(H) - 1)]),
                                 state_an=np.array([1] + [0 for _ in range(len(H) - 1)]),
                                 w=w_values[w_index],
+                                Self_energy= 1j*config.Gamma
                             )
                             for i in range(pref_grid.shape[-1]):
                                 pref_grid[w_index, v1, v2, v3, i] = (
@@ -1052,8 +1146,10 @@ def create_bog_pref_grid(
         # print(functions.turn_comp_info_into_str(COMPUTATION_INFO))
     coordinates = (w_values, q_values[:, 0, 0], q_values[0, :, 0], q_values[0, 0, :])
     u_v_squared_grid = np.real(
+        
         (pref_grid[:, :, :, :, 0,0] + pref_grid[:, :, :, :, 0,1]) ** 2
     )
+    #if config.dimension == 3:
     functions.plot_grid(
         u_v_squared_grid[:, :, 0, 0], "(u+v)^2 grid", useLogNorm=config.use_Log_Norm
     )
@@ -1101,11 +1197,81 @@ def create_bog_pref_grid(
 
     return pref_grid
 
-
-
+def create_form_factor_matrix(material: Material, config:Config, q_values:np.ndarray):
+    """create the form factor matrix as in paper 4 (took from comp, took out form factor, changed some things to match my way structure)"""
+    n_sqw_prime= 0
+    N =material.N 
+    shape_k = q_values.shape[:-1]
+    matY = np.zeros( (*shape_k,) + (N, N),
+            dtype="complex",
+        )
+    matZ = np.zeros_like(matY, dtype="complex")
+    matV = np.zeros_like(matY, dtype="complex")
+    matW = np.zeros_like(matY, dtype="complex")
+    mat = np.zeros(
+        (n_sqw_prime,) + (*shape_k,) + (2 * N, 2 * N),
+        dtype="complex",
+    )
+    #TODO: calculate for all alpha, beta
+    alpha, beta = 0,0
+    for i in range(N):  # number of ions
+        
+        ati = material.atoms[i][0]  # get the first atom of the type TODO: check this always only one atom per type?
+        si = ati.S
+        ui = ati.u
+        #gi = ati.g
+        ti = ati.position
+        # * np.array(
+        #     [self.Sample.a_eff, self.Sample.b_eff, self.Sample.c_eff]
+        # )
+        #ff_i = Atoms.form_factor(self.q_mesh, ati.ff_params, gi)
+        exp_i = material.interaction_e_ikd(ti, q_values)
+        for j in range(N):
+            atj = material.atoms[i][0]
+            sj = atj.S
+            uj = atj.u
+            #gj = atj.g
+            tj = atj.position
+            
+            # * np.array(
+            #    [self.Sample.a_eff, self.Sample.b_eff, self.Sample.c_eff]
+            #) --> not needed effective lattice parameters are for me added in the interaction function 
+            #ff_j = Atoms.form_factor(self.q_mesh, atj.ff_params, gj)
+            exp_j = material.interaction_e_ikd(tj,q_values)
+            
+            FORM_FACTOR = False
+            if FORM_FACTOR:
+                print("FORM_FACTOR not added")
+                # prefactor = (
+                #     gi
+                #     * gj
+                #     / 4
+                #     * np.sqrt(si * sj)
+                #     * (ff_i * ff_j).real
+                #     * exp_i
+                #     * np.conj(exp_j)
+                # )
+            else:  # no magnetic form factor, for testing
+                prefactor = (
+                    np.sqrt(si * sj) * exp_i * np.conj(exp_j)
+                )  # test YZWV
+            matY[ :, :, :, i, j] = prefactor * ui[alpha] * np.conj(uj[beta])
+            matZ[ :, :, :, i, j] = prefactor * ui[alpha] * uj[beta]
+            matV[ :, :, :, i, j] = (
+                prefactor * np.conj(ui[alpha]) * np.conj(uj[beta])
+            )
+            matW[ :, :, :, i, j] = prefactor * np.conj(ui[alpha]) * uj[beta]
+    # mat[ :, :, :, :, :] = np.block(
+    #     [
+    #         [matY[ :, :, :, :, :], matZ[ :, :, :, :, :]],
+    #         [matV[ :, :, :, :, :], matW[ :, :, :, :, :]],
+    #     ]
+    # )
+    mat = np.block([[matY, matZ], [matV, matW]])
+    return mat
 
 def calculate_convolutions_of_bog_trafo_pref_grid(
-    config: Config, pref_grids_matrix: np.ndarray, q_values_grid
+    config: Config, pref_grids_matrix: np.ndarray, q_values_grid, material:Material=None
 ):
     """Calculates the convolutions of the pref grids for the spectral weight grid.
     pref_grids: np.ndarray
@@ -1147,8 +1313,11 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
             results.append((conv_uuv + conv_vvu))
     #implementation of paper: this is still missing the rotation terms in the middle but this should give 1 for now
     if 3 in terms_to_calculate:
+        #experimental create the V matrix (paper 4)
+        #T^+ T
+        mat_form_factors = create_form_factor_matrix(material=material, config=config, q_values=q_values_grid)
         pref_grids_herm_conj = np.conjugate(pref_grids_matrix.swapaxes(-2, -1))
-        temp_result=np.einsum('...ij,...jk->...ik', pref_grids_herm_conj, pref_grids_matrix)
+        temp_result=np.einsum('...ij,...jk,...kl->...il', pref_grids_herm_conj, mat_form_factors, pref_grids_matrix)
         results.append(temp_result[:,:,:,:,0,0])
     names_ = [
         "intensities_one_magnon",
@@ -1173,14 +1342,15 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
             q_values_grid[0, 0, :],
         )
         result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
-            startpoint=np.array([0, 0, 0]),
-            directions=[
-                np.array([1, 0, 0]),
-                np.array([0, 1, 0]),
-                np.array([0, 0, 1]),
-                np.array([-1, -1, -1]),
-            ],
-            steps=[steps, steps, steps, steps],
+            # startpoint=np.array([0, 0, 0]),
+            # directions=[
+            #     np.array([1, 0, 0]),
+            #     np.array([0, 1, 0]),
+            #     np.array([0, 0, 1]),
+            #     np.array([-1, -1, -1]),
+            # ],
+            # steps=[steps, steps, steps, steps],
+            dimension=config.dimension, #this is taking the standard path through the k-grid
             grid=intensity_result,
             q_grid=q_values_grid,
         )
@@ -1207,7 +1377,7 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
     # plt.figure("DOS")
     # plt.plot(functions.sum_k_dependency(grid= conv))
 
-def calc_spectral_weight_grid(H: np.ndarray, state_cr, w: np.ndarray, Self_energy=0 + 0.1j, state_an=None):
+def calc_spectral_weight_grid(H: np.ndarray, state_cr, w: np.ndarray, Self_energy=0, state_an=None):
     """
     Calculates the spectral weight A(k, w) for a grid of k-values and an array of w-values.
 
@@ -1227,6 +1397,9 @@ def calc_spectral_weight_grid(H: np.ndarray, state_cr, w: np.ndarray, Self_energ
         A: np.ndarray
             Spectral weight of shape (W, *k_shape)
     """
+    # if Self_energy == 0:
+    #     Self_energy = 1j*config.Gamma
+    
     k_shape = H.shape[:-2]
     N = H.shape[-1]
     W_shape = w.shape[0] #int
@@ -2021,16 +2194,17 @@ def tryout_extract_u_v_on_lattice():
 
 
 def plotting_additional_values():
-    plt.figure("Bgogliobuv")
+    plt.figure("Bogogliubov")
     B_trafo = np.array(VALUES_TO_SAVE["Bog_trafo_of_k"][-1])
     for i in range(B_trafo.shape[-1]):
-        try:
-            sliceB = (slice(None),) + (0,) * (len(B_trafo.shape) - 3) + (0, i) #if it is a grid that is given draw only the first axis of the grid
-            temp = B_trafo[sliceB]
-            plt.plot(temp, label=f"B_trafo_{i}")
-        except IndexError:
-            print("IndexError: B_trafo does not have the expected shape.")
-            return
+        for j in range(B_trafo.shape[-2]):
+            try:
+                sliceB = (slice(None),) + (0,) * (len(B_trafo.shape) - 3) + (i, j) #if it is a grid that is given draw only the first axis of the grid
+                temp = B_trafo[sliceB]
+                plt.plot(temp, label=f"B_trafo_{i}_{j}")
+            except IndexError:
+                print("IndexError: B_trafo does not have the expected shape.")
+                return
     plt.legend()
         
 
@@ -2240,6 +2414,7 @@ def create_grid_spectral_weight_u_v(
                                 state_cr=np.array([1, 0]),
                                 state_an=np.array([1, 0]),
                                 w=w_values[w_index],
+                                Self_energy=0 + config.Gamma*1j,
                             )
 
                             u_v_grid[w_index, v1, v2, v3, 0] = (

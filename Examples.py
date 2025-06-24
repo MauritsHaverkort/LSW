@@ -13,7 +13,7 @@ import funtions as functions
 def example_1_General_D_FM_AFM_bonds(J1, J2, a, a1, S1, S2, d=3):
 
     lv = [np.array([a1, 0, 0]), np.array([0, a1, 0]), np.array([0, 0, a1])]
-    normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane
+    normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     if S1 * S2 < 0:
         tau = np.array(
             [0.5, 0.5, 0.5]

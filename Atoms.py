@@ -68,4 +68,3 @@ class Atom:
                 neighbour[i].neighbours.append(self)
                 neighbour[i].J_bonds.append(J_bond[i])
                 
-    

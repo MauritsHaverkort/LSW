@@ -34,6 +34,7 @@ class Config:
     a: float  # lattice constant
     Bz: float
     Ba_z: float
+    Gamma: float
     additional_info: dict
     plot_info: dict
     timestamp: str
@@ -83,18 +84,19 @@ def config_main():
         #simulation parameters
         amount_k_values=40,
         amount_w_values=40,
-        dimension=3,
+        dimension=2,
         S = 2.5,  
         a = 0.5, #lattice constant
         Bz = 0,
         Ba_z = 0,
+        Gamma = 0.5,
         lattice_vectors = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
         state_cr_input_untransformed = np.array([1,1]),
         state_an_input_untransformed = np.array([1,1]),
         load_saved_grid=True,
         double_convolution=False, 
         additional_values = {},
-        terms_to_calculate_in_pref_conv=[0,1,2,3],  # List of terms to calculate, e.g., ["S+", "S-", "Sz", "S^2"]
+        terms_to_calculate_in_pref_conv=[0,1,2,3],  # List of terms to calculate
     )
     return config
 
@@ -104,8 +106,8 @@ def config_experimental():
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = 80
-    config_tryout_paper.amount_w_values = 80
+    config_tryout_paper.amount_k_values = 40
+    config_tryout_paper.amount_w_values = 40
     
     config_tryout_paper.calc_conv_intensities = False
     config_tryout_paper.calc_u_v_convolutions = False
