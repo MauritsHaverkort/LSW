@@ -1,0 +1,51 @@
+596ms : done with energies along path
+2015ms : calculated/ loaded T (pref) grid
+4784ms : done with all convolutions
+501ms : done with energies along path
+1880ms : calculated/ loaded T (pref) grid
+4493ms : done with all convolutions
+474ms : done with energies along path
+1925ms : calculated/ loaded T (pref) grid
+2054ms : before slicing sqw components for plotting
+0ms : after slicing sqw components for plotting
+2577ms : done with all convolutions
+554ms : done with energies along path
+1836ms : calculated/ loaded T (pref) grid
+2126ms : before slicing sqw components for plotting
+2ms : after slicing sqw components for plotting
+3067ms : done with all convolutions
+
+1020ms : done with energies along path
+2450ms : calculated/ loaded T (pref) grid
+2470ms : before slicing sqw components for plotting
+2ms : after slicing sqw components for plotting
+4231ms : done with all convolutions
+581ms : done with all plotting
+1646ms : done with energies along path | Δ RAM: +3727.3 KB
+17509ms : calculated/ loaded T (pref) grid | Δ RAM: +36968.3 KB
+3092ms : before slicing sqw components for plotting | Δ RAM: +396353.2 KB
+428ms : after slicing sqw components for plotting | Δ RAM: +31.8 KB
+6703ms : done with all convolutions | Δ RAM: -377758.1 KB
+3771ms : done with all plotting | Δ RAM: -29467.0 KB
+
+816ms : done with energies along path | Δ RAM: +0.0 KB
+3547ms : calculated/ loaded T (pref) grid | Δ RAM: +0.0 KB
+2689ms : before slicing sqw components for plotting | Δ RAM: +0.0 KB
+1ms : after slicing sqw components for plotting | Δ RAM: +0.0 KB
+2703ms : done with all convolutions | Δ RAM: +0.0 KB
+373ms : done with all plotting/n | Δ RAM: +0.0 KB
+
+572ms : done with energies along path | Δ RAM: +0.0 KB
+7754ms : calculated/ loaded T (pref) grid | Δ RAM: +0.0 KB
+17046ms : before slicing sqw components for plotting | Δ RAM: +0.0 KB
+2ms : after slicing sqw components for plotting | Δ RAM: +0.0 KB
+4170ms : done with all convolutions | Δ RAM: +0.0 KB
+588ms : done with all plotting/n | Δ RAM: +0.0 KB
+562ms : done with energies along path | Δ RAM: +0.0 KB
+6151ms : calculated/ loaded T (pref) grid | Δ RAM: +0.0 KB
+52ms : done mat_form_factors | Δ RAM: +0.0 KB
+12870ms : done with computing the sqw prime elements (biggest einsum) | Δ RAM: +0.0 KB
+2345ms : before slicing sqw components for plotting | Δ RAM: +0.0 KB
+1ms : after slicing sqw components for plotting | Δ RAM: +0.0 KB
+3741ms : done with all convolutions | Δ RAM: +0.0 KB
+576ms : done with all plotting/n | Δ RAM: +0.0 KB

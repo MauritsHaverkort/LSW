@@ -3,10 +3,15 @@ from datetime import datetime
 from typing import List  # Import List for type hints
 from dataclasses import dataclass
 import numpy as np
+import Debug_timing
+
 
 
 @dataclass
 class Config:
+    debug_timer: Debug_timing.Debug_timing
+    debug_timing: bool
+    
     diagonalise_before_using: bool
     use_general_Ham_automated_bonds: bool
     use_higher_order_corrections: bool
@@ -52,7 +57,10 @@ class Config:
     
 
 def config_main():
+    from Debug_timing import Debug_timing as Debug_timing
     config = Config(
+        debug_timer=Debug_timing(),
+        debug_timing=True,
         #not currently used
         diagonalise_before_using=False, 
         use_general_Ham_automated_bonds=False, 
@@ -82,14 +90,14 @@ def config_main():
         use_old_example_version=False,
         use_direct_grid_calculation=True,
         #simulation parameters
-        amount_k_values=40,
-        amount_w_values=40,
-        dimension=2,
+        amount_k_values=20,
+        amount_w_values=20,
+        dimension=3,
         S = 2.5,  
         a = 0.5, #lattice constant
         Bz = 0,
         Ba_z = 0,
-        Gamma = 0.5,
+        Gamma = 0.1,
         lattice_vectors = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
         state_cr_input_untransformed = np.array([1,1]),
         state_an_input_untransformed = np.array([1,1]),
@@ -106,8 +114,8 @@ def config_experimental():
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = 40
-    config_tryout_paper.amount_w_values = 40
+    config_tryout_paper.amount_k_values = 30
+    config_tryout_paper.amount_w_values = 30
     
     config_tryout_paper.calc_conv_intensities = False
     config_tryout_paper.calc_u_v_convolutions = False

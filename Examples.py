@@ -16,11 +16,11 @@ def example_1_General_D_FM_AFM_bonds(J1, J2, a, a1, S1, S2, d=3):
     normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     if S1 * S2 < 0:
         tau = np.array(
-            [0.5, 0.5, 0.5]
+            [0.5 for _ in range(d)]+[0 for _ in range(3-d)]
         )  # in direction of all lattice vectors the unit cell is turned by 180° every time (AFM)
     else:
         tau = np.array([0, 0, 0])  # FM no rotation
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector)
+    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -193,3 +193,7 @@ def example_2_BCC_FM_AFM(J11, J12, J22, pos_atom_2=[], lv=[], S1=1, S2=-1, dimen
     # TODO think about how to make less confusing: what atoms have to be added when exactly
     all_atoms = all_atoms + [atoms[0], atoms[1]]
     return all_atoms
+
+if __name__ == "__main__":
+    import LSW
+    LSW.call_main()

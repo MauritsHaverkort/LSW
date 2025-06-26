@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from typing import List  # Import List for type hints
+import Debug_timing
 import funtions as functions
 from funtions import *
 
@@ -429,7 +430,7 @@ def calculate_complete_RIXS_spectrum(
             #rotation matrix----------------------------------------------------------------------------------------
             ROTMatrix = Matrix(rotation_matrix_from_vectors(axis_of_scattering_operator_quantisation, axis_of_spin_quantisation))
             axis_of_rotation = np.cross(axis_of_scattering_operator_quantisation, axis_of_spin_quantisation)
-            debug_timer =functions.Debug_timing()
+            debug_timer =Debug_timing.Debug_timing()
             
             def give_eff_scattering_operator_polarisation_dependent(epsilon_in = Matrix([1, 0, 0]),
                                 epsilon_out = Matrix([1, 0, 0])):

@@ -14,24 +14,6 @@ from Configurations import Config
 from scipy.signal import fftconvolve
 
 from funtions import np
-#from LSW import Atom
-
-
-class Debug_timing:
-    def __init__(self):
-        self.ref_timestamp = int(time.time() * 1000)
-        self.debug_info = ""
-    
-    def print_difference(self, debug_info, do_print):
-        new_timestamp = int(time.time() * 1000)
-        time_diff = new_timestamp-self.ref_timestamp
-
-        self.ref_timestamp = new_timestamp
-        if do_print:
-            print(str(time_diff)+"ms :"+str(debug_info))
-        
-        return new_timestamp
-
 def turn_comp_info_into_str(comp_info):
     result=""
     for key, value in comp_info.items():
@@ -255,9 +237,16 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
         if not useLogNorm:
             image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto')
         else:
-            image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto',
+            try:
+                image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto',
                                 norm=LogNorm(np.max(grid) / range_from_max, np.max(grid)))
-        fig.colorbar(image, ax=ax0, label=intensity)
+            except Exception as e:
+                print("Log Norm failed in plot_grid")
+                image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto')
+        try:
+            fig.colorbar(image, ax=ax0, label=intensity)
+        except Exception as e:
+            print("Colorbar failed in plot_grid")
         ax0.set_xlabel(xlabel)
         ax0.set_ylabel(ylabel)
 
