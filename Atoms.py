@@ -3,26 +3,44 @@ from typing import List
 import funtions as functions
 from rotation import rotation_matrix_from_vectors, rotation_matrix_from_axis_angle
 
-#just so that no atom index is used twice by accident
-ATOM_INDEX=0
 
-def give_next_index():
-    global ATOM_INDEX
-    ATOM_INDEX +=1
-    return ATOM_INDEX-1
 
 class Atom:
+    
+    atom_index = 0  # Static variable to keep track of the atom index
+    @staticmethod
+    def give_next_index():
+        Atom.atom_index += 1
+        return Atom.atom_index - 1
+
+    @staticmethod
+    def initialize_atom_index():
+        """Resets the atom index to 0, so that no atom index is used twice by accident"""
+        Atom.atom_index = 0
+        
     def __init__(self, position,type, J_bonds=None, neighbours: List["Atom"]=None, S=1, spin_dir=None):
+        """
+        spin_dir: direction of the spin, default is z-axis, is normalised to unit length
+        position: position of the atom in the unit cell
+        type: type of the atom, used to distinguish different atoms in the system
+        J_bonds: list of J-bonds to the neighbours (for old version)
+        neighbours: list of neighbours of the atom, used to calculate the Hamiltonian (for old version)
+        S: spin size of the atom, default is 1
+        
+        """
         self.position=position
         self.neighbours = neighbours if neighbours is not None else []  #creating a new list
         self.type=type
         self.J_bonds=J_bonds if J_bonds is not None else []
-        self.index=give_next_index()
+        self.index=Atom.give_next_index()
         self.S=S
-        self.dir = spin_dir if spin_dir is not None else np.array([0,0,1])  #direction of the atom z by default
+        self.dir = spin_dir/np.linalg.norm(spin_dir) if spin_dir is not None else np.array([0,0,1])  #direction of the atom z by default
         self.rotation = rotation_matrix_from_vectors(np.array([0,0,1]), self.dir)  #rotation matrix to align the atom with the z-axis
         self.v = self.rotation[:,2]
         self.u= (self.rotation[:,0] + 1j*self.rotation[:,1])
+    
+    
+    
     def j_coupling_function(self, distance, correlation_length):
         return np.exp(-distance/correlation_length)
 

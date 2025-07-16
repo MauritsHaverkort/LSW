@@ -110,8 +110,8 @@ def test_RIXS_prefactor_calculations_experimental_non_squared():
                                               ,give_eff_scattering_operator_polarisation_dependent=test_term))
 
 def test_the_Hamiltonian_on_grids_of_k(config:Config):
-    from Examples import example_1_General_D_FM_AFM_bonds
-    material:Material = example_1_General_D_FM_AFM_bonds(1,1,1,0.5,1,-1)
+    from Examples import General_D_FM_AFM_simple_cubic
+    material:Material = General_D_FM_AFM_simple_cubic(1,1,1,0.5,1,-1)
     dimension = 3
     amount_k_values = 100
     # 1d

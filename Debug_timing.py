@@ -35,7 +35,7 @@ class Debug_timing:
         if do_print:
             print(f"{time_diff}ms : {debug_info} | Δ RAM: {mem_diff_kb:+.1f} KB")
             with open("debug_timing_log.txt", "a", encoding="utf-8") as log_file:
-                log_file.write(f"{time_diff}ms : {debug_info} | Δ RAM: {mem_diff_kb:+.1f} KB\n")
+                log_file.write(f"{time_diff}ms | Δ RAM: {mem_diff_kb:+.1f} KB --> {debug_info} \n")
 
         return new_timestamp
 

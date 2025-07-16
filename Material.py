@@ -8,6 +8,9 @@ class Material:
     def __init__(self, dimension: int,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
+        
+        Atom.initialize_atom_index()  # Reset atom index to 0
+        
         self.atoms:List[List[Atom]] = atoms  # List to store atoms
         self.bonds:List[Bond] = bonds  # List to store bonds
         self.tau = tau
@@ -110,7 +113,7 @@ class Material:
         for bond in self.bonds:
             atom0 = bond.atom0
             atom1 = bond.atom1
-            bonds_distances[atom0.type][atom1.type].append(bond.dij)
+            bonds_distances[atom0.type][atom1.type].append(bond.d_absolut)
             J_bonds[atom0.type][atom1.type].append(la.trace(bond.j)/3)
         self.J_bonds = J_bonds
         self.bonds_distances = bonds_distances

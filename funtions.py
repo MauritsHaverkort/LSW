@@ -27,6 +27,57 @@ def array_to_str(array):
             result+=""
     return result
 
+import numpy as np
+
+def analyze_matrix(matrix):
+    # Convert to NumPy array for convenience
+    arr = np.array(matrix, dtype=object)  # object dtype allows for mixed types (e.g., None)
+
+    print("=== Matrix Analysis ===")
+
+    # Check for None
+    has_none = np.any(arr == None)  # noqa: E711
+    print(f"Contains None values: {has_none}")
+
+    # Remove None for numeric analysis
+    arr_no_none = arr[arr != None]  # noqa: E711
+
+    # Convert to complex for safety
+    arr_complex = np.array(arr_no_none, dtype=np.complex128)
+
+    # Check for imaginary components
+    imag_part = np.imag(arr_complex)
+    has_imag = np.any(imag_part != 0)
+    max_imag = np.max(np.abs(imag_part)) if has_imag else 0
+    print(f"Contains imaginary values: {has_imag}")
+    if has_imag:
+        print(f"Largest imaginary component: {max_imag}")
+
+    # Check for NaNs
+    has_nan = np.any(np.isnan(arr_complex))
+    print(f"Contains NaN values: {has_nan}")
+
+    # Check for negative real values
+    real_part = np.real(arr_complex)
+    has_negative = np.any(real_part < 0)
+    print(f"Contains negative values: {has_negative}")
+
+    # Filter out NaNs for stats
+    numeric_valid = real_part[~np.isnan(real_part)]
+
+    if numeric_valid.size > 0:
+        min_val = np.min(numeric_valid)
+        max_val = np.max(numeric_valid)
+        mean_val = np.mean(numeric_valid)
+        print(f"Min value: {min_val}")
+        print(f"Max value: {max_val}")
+        print(f"Average (mean): {mean_val}")
+    else:
+        print("No valid numeric values for min/max/mean.")
+
+    print("========================\n")
+
+
 def cut_array_by_one(arr, dimensions_to_exclude=[]):
     """
     Cuts the last element of each dimension of the array, except if the dimension is already 1. also one can give dimensions to exclude as a list"""
@@ -171,16 +222,25 @@ def plot_3d_grid_slider(grid,
 
 
 def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
-              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, prevent_reusing_fig=False):
+              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, prevent_reusing_fig=False, plot_also_imaginary_part=True):
+    """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
+    
+    if np.iscomplexobj(grid):
+        if plot_also_imaginary_part:
+            #recall the function to plot the imaginary part
+            plot_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity=intensity, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
+                      xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False)
+        else:
+            print("Warning: Grid contains complex values. Discarding imaginary part.")
+        grid = np.real(grid)
+    
     if prevent_reusing_fig:
         fig = plt.figure( figsize=(10, 6))
         fig.canvas.manager.set_window_title(title)
     else:
         fig = plt.figure(title, figsize=(10, 6))
     
-    if np.iscomplexobj(grid):
-        print("Warning: Grid contains complex values. Discarding imaginary part.")
-        grid = np.real(grid)
+    
     if useStandardAxis:
         xlabel = "k values in 1/a"
         ylabel = "energy units of J"
@@ -266,10 +326,86 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
 
     if save_path:
         plt.savefig(save_path, bbox_inches='tight')
+    
+    return fig
 
-def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, directions=None, steps=None, dimension=None):
+def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="Isosurface Plot", xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", save_path=None):
+    
+    import plotly.graph_objects as go
+
+    values = np.real(values)
+
+    # Get shape
+    nx, ny, nz = values.shape
+    x, y, z = np.linspace(0, 1, nx), np.linspace(0, 1, ny), np.linspace(0, 1, nz)
+    X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+
+    fig = go.Figure(data=go.Isosurface(
+        x=X.flatten(),
+        y=Y.flatten(),
+        z=Z.flatten(),
+        value=values.flatten(),
+        isomin=np.min(values),
+        isomax=np.max(values)*isomax_percentage_of_max,
+        surface_count=surface_count,
+        colorscale='Viridis',
+        caps=dict(x_show=False, y_show=False, z_show=False)
+    ))
+
+    fig.update_layout(
+        title=title,
+        scene=dict(
+            xaxis_title=xlabel,
+            yaxis_title=ylabel,
+            zaxis_title=zlabel
+        )
+    )
+
+    if save_path:
+        fig.write_html(save_path)
+
+    return fig
+
+
+
+def plot_path_through_grid(path):
+    """
+    Plots a 3D scatter plot of the path through the grid.
+    Assumes grid is an array-like of shape (N, 3) or (3, N).
+    Axes are set to have equal spacing.
+    """
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+    fig = plt.figure("Path Through Grid (3D)")
+    ax = fig.add_subplot(111, projection='3d')
+    path = np.array(path)
+    if path.shape[0] == 3 and path.shape[1] != 3:
+        # Shape (3, N) -> transpose to (N, 3)
+        path = path.T
+    ax.scatter(path[:, 0], path[:, 1], path[:, 2], c='black', marker='o')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    # Set equal aspect ratio for all axes
+    max_range = np.array([path[:, 0].max() - path[:, 0].min(),
+                          path[:, 1].max() - path[:, 1].min(),
+                          path[:, 2].max() - path[:, 2].min()]).max() / 2.0
+
+    mid_x = (path[:, 0].max() + path[:, 0].min()) * 0.5
+    mid_y = (path[:, 1].max() + path[:, 1].min()) * 0.5
+    mid_z = (path[:, 2].max() + path[:, 2].min()) * 0.5
+
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+    
+
+def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, no_w_values=False):
     """
     Takes a startpoint, a list of directions and the number of steps in each direction and returns a grid with the values of the original grid at each point and w-value (y-axis)"""
+    if no_w_values:
+        #adding a dummy dimension if no_w_values is True
+        grid = grid[np.newaxis, ...]
     
     if startpoint is None or directions is None or steps is None:
         if dimension is None:
@@ -297,9 +433,9 @@ def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, di
                     np.array([1, 0, 0]),
                     np.array([-1, 0, 0]),
                 ]
-                
-            steps = [int(len(grid[1][0]) / 2)]*len(directions)
-    
+
+            steps = [int(grid.shape[1] / 2)]*len(directions)
+
     path=[startpoint]
     result=[]
     xticks_pos=[]
@@ -320,8 +456,19 @@ def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, di
     #the last point is added
     add_xticks_pos_labels()
     for p in path:
-        result.append(grid[:,p[0],p[1],p[2]])
-    return np.array(result).T, xticks_pos, xticks_labels
+        try:
+            result.append(grid[:,p[0],p[1],p[2]])
+        except IndexError as e:
+            print(f"IndexError: {e} at point {p}. This point is out of bounds for the grid with shape {grid.shape}.")
+            return None, None, None
+    if plot_path:
+        plot_path_through_grid(path)
+    
+    if not no_w_values:
+        #if no_w_values is True, the grid has only one dimension --> there is no need to transpose
+        result = np.array(result).T
+    
+    return result, xticks_pos, xticks_labels
 
 def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=None):
     
@@ -457,6 +604,40 @@ def load_grid_from_file(filename="grid.npz"):
     return grid, coords
 
 
+def save_figures_as_images_to_pdf(
+    figures,
+    filename: str = "output.pdf",
+    figures_per_page: int = 4,
+    dpi: int = 100,
+    page_title_prefix: str = "Page"
+):
+    from matplotlib.backends.backend_pdf import PdfPages
+    with PdfPages(filename) as pdf:
+        for i in range(0, len(figures), figures_per_page):
+            figs_subset = figures[i:i + figures_per_page]
+            n = len(figs_subset)
+
+            fig, axs = plt.subplots(nrows=n, ncols=1, figsize=(8.5, 11), dpi=dpi)
+
+            if n == 1:
+                axs = [axs]
+
+            fig.suptitle(f"{page_title_prefix} {i // figures_per_page + 1}", fontsize=16)
+
+            for ax, fig_src in zip(axs, figs_subset):
+                buf = io.BytesIO()
+                fig_src.savefig(buf, format='png', dpi=dpi)
+                buf.seek(0)
+
+                img = plt.imread(buf)
+                ax.imshow(img)
+                ax.axis('off')  # Hide axes around image
+                buf.close()
+
+            plt.tight_layout(rect=[0, 0, 1, 0.95])
+            pdf.savefig(fig)
+            plt.close(fig)
+
 def save_config_to_json(config, filename: str = None):
     from LSW import Configurations  # Local import to avoid circular dependency
     config:Configurations = config  # Ensure config is of type Config
@@ -470,8 +651,13 @@ def save_config_to_json(config, filename: str = None):
     
     # Save the dictionary to a JSON file
     with open(filename, "w") as json_file:
-        json.dump(config_dict, json_file, indent=4, default=lambda o: o.tolist())
-    
+        #TODO: fix the json error for the dtype object
+        try:
+            json.dump(config_dict, json_file, indent=4, default=lambda o: "Unsupported type" if isinstance(o, np.dtype) else o.tolist()
+                      )
+        except Exception as e:
+            print(f"Error saving configuration to {filename}: {e}")
+
     print(f"Configuration saved to {filename}")
 
 def find_files_with_keywords(directory:str, keywords: List[str]) -> List[str]:
@@ -596,8 +782,13 @@ if __name__ == "__main__":
 
 
 def give_grid_vectors_d(vectors, steps):
-    """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with steps size"""
-    steps_list = [steps for _ in range(len(vectors))]
+    """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with the corresponding number of steps."""
+    if isinstance(steps, int):
+        steps = [steps] * len(vectors)
+    else:
+        if len(steps) != len(vectors):
+            raise ValueError("Number of steps must match number of vectors.")
+    steps_list = steps
     while len(vectors) < 3:
         vectors.append(np.array([0, 0, 0]))
         steps_list.append(1)

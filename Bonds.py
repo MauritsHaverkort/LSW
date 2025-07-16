@@ -42,8 +42,8 @@ class Bond(object):
         self.unit_cell_of_atom_1 = np.array(unit_cell_of_atom_1)
         self.s0 = self.atom0.S
         self.s1 = self.atom1.S
-        self.dij = np.round(self.atom1.position - self.atom0.position + self.unit_cell_of_atom_1 - self.unit_cell_of_atom_0, 3)
-        self.dmn = np.round(self.unit_cell_of_atom_1 - self.unit_cell_of_atom_0, 3)
+        self.d_absolut = np.round(self.atom1.position - self.atom0.position + self.unit_cell_of_atom_1 - self.unit_cell_of_atom_0, 3)
+        self.d_of_unit_cells = np.round(self.unit_cell_of_atom_1 - self.unit_cell_of_atom_0, 3)
 
         if np.array(j).ndim:
             self.j = j
@@ -51,4 +51,10 @@ class Bond(object):
             self.j = j * np.eye(3)
 
         tau = 2 * np.pi * np.array(material.tau)
-        self.r_matrix = np.round(rotation.rot_vec(np.dot(tau, self.dmn), material.normal_vector_to_rotation_plane), 3)
+        self.r_matrix = np.round(rotation.rot_vec(np.dot(tau, self.d_of_unit_cells), material.normal_vector_to_rotation_plane), 3)
+        test=0
+        
+if __name__ == "__main__":
+    # Example usage
+    import LSW
+    LSW.call_main()
