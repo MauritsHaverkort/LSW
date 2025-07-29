@@ -277,6 +277,15 @@ def test_grid_spectral_weight_computation(config:Config):
                 Bz=config.Bz,
             )
     
+def test_path_relative_points():
+    size = [200,200,200]
+    q_values_grid = functions.give_grid_vectors_d(
+        functions.give_reciprocal_lv(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])),
+        steps=size,
+        amount_BZ=1
+    )
+    result = functions.path_through_grid_from_relative_points(q_grid=q_values_grid, relative_points=np.array([[0,0,0],[1/2,1/2,0],[0,0,0]]))
+    print("")
 
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
@@ -284,5 +293,6 @@ if __name__ == "__main__":
     # from LSW import call_main
     # call_main()
     #test_3D_slider_plot()
-    import Configurations
-    test_the_Hamiltonian_on_grids_of_k(config = Configurations.config_experimental())
+    #import Configurations
+    #test_the_Hamiltonian_on_grids_of_k(config = Configurations.config_experimental())
+    test_path_relative_points()

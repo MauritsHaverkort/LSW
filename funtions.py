@@ -1,9 +1,11 @@
+import io
+import math
 import time
 import numpy as np
 from matplotlib import pyplot as plt
 from numpy import linalg as la
 from typing import List
-from matplotlib.colors import LogNorm, Normalize
+from matplotlib.colors import LogNorm, Normalize, SymLogNorm
 from matplotlib import gridspec
 # Removed the top-level import of Config to avoid circular import
 import json 
@@ -185,10 +187,10 @@ def plot_3d_grid_slider(grid,
     if w_values is None:
         w_values = np.arange(dim[1] + 1)
 
-    if useLogNorm:
-        norm = LogNorm(vmin=np.max(grid) / range_from_max, vmax=np.max(grid))
-    else:
-        norm = None
+    # if useLogNorm:
+    #     norm = LogNorm(vmin=np.max(grid) / range_from_max, vmax=np.max(grid))
+    # else:
+    #     norm = None
     vmin = np.min(np.real(grid))
     vmax = np.max(np.real(grid))
     
@@ -224,7 +226,7 @@ def plot_3d_grid_slider(grid,
 def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
               xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, prevent_reusing_fig=False, plot_also_imaginary_part=True):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
-    
+    grid = np.array(grid)
     if np.iscomplexobj(grid):
         if plot_also_imaginary_part:
             #recall the function to plot the imaginary part
@@ -250,23 +252,6 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
             xticks_pos = config.plot_info["x_ticks_pos"]
             w_values = config.plot_info["y_ticks_label"]
 
-    if len(w_values) != 0:     
-        if len(w_values) != grid.shape[0]+1:
-                w_values = np.array(w_values)
-                # Extend w_values with equal spacing until it matches grid.shape[1]
-                if len(w_values) < grid.shape[0]+1:
-                    step = w_values[1] - w_values[0] if len(w_values) > 1 else 1
-                    num_to_add = grid.shape[0]+1 - len(w_values)
-                    last_value = w_values[-1]
-                    extension = [last_value + step * (i + 1) for i in range(num_to_add)]
-                    w_values = np.concatenate([w_values, extension])
-    
-        
-    # #grid is giving in the form (Y,X)!!!
-    if k_values_scalar is None:
-        k_values_scalar = np.arange(grid.shape[1]+1)
-    if len(w_values) == 0:
-        w_values = np.arange(grid.shape[0]+1)
     # if not useLogNorm:
     #     image=plt.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto' )
     # else:
@@ -282,24 +267,90 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
     # fig.colorbar(image, label=intensity)  
     # plt.xlabel(xlabel)
     # plt.ylabel(ylabel)
-    if use_dos:
-        dos_whole_k_space = False
-        if dos_grid is not None:
-            dos = sum_k_dependency(dos_grid)
-            dos_whole_k_space = True
-        else:   
-            dos = sum_k_dependency(grid)
+    
         
-        gs = gridspec.GridSpec(1, 2, width_ratios=[4, 1], wspace=0.05)
+    gs = gridspec.GridSpec(1, 2, width_ratios=[4, 1], wspace=0.05)
 
-        # Main grid plot
-        ax0 = plt.subplot(gs[0])
+    # Main grid plot
+    ax0 = plt.subplot(gs[0])
+    
+    ax0.set_title(title)
+    # if the grid is 2D, plot it as a 2D heatmap
+    if len(grid.shape)==2:
+        if len(w_values) != 0:     
+            if len(w_values) != grid.shape[0]+1:
+                    w_values = np.array(w_values)
+                    # Extend w_values with equal spacing until it matches grid.shape[1]
+                    if len(w_values) < grid.shape[0]+1:
+                        step = w_values[1] - w_values[0] if len(w_values) > 1 else 1
+                        num_to_add = grid.shape[0]+1 - len(w_values)
+                        last_value = w_values[-1]
+                        extension = [last_value + step * (i + 1) for i in range(num_to_add)]
+                        w_values = np.concatenate([w_values, extension])
+        
+        if use_dos:
+            dos_whole_k_space = False
+            if dos_grid is not None:
+                dos = sum_k_dependency(dos_grid)
+                dos_whole_k_space = True
+            else:   
+                dos = sum_k_dependency(grid)
+                    
+            # Side DOS plot
+            ax1 = plt.subplot(gs[1], sharey=ax0)
+            ax1.plot(dos, w_values[:-1])  # exclude last edge of w_values for bin alignment
+            if dos_whole_k_space:
+                ax1.set_xlabel("DOS (whole k-space or other)")
+            else:
+                ax1.set_xlabel("DOS")
+            ax1.yaxis.set_tick_params(labelleft=False)  # Hide y-axis labels to avoid duplication
+            ax1.grid(True)
+                
+        
+        
+            
+        # #grid is giving in the form (Y,X)!!!
+        if k_values_scalar is None:
+            k_values_scalar_ = np.arange(grid.shape[1]+1)
+
+            #making the spacing correct
+            k_values_scalar = [0]
+            xticks_pos_new=[]
+            if xticks_labels and xticks_pos:
+                for i in range(len(xticks_labels)):
+                    #converting string back to array
+                    x = xticks_labels[i]-xticks_labels[i-1] if i > 0 else xticks_labels[i]
+                    steps = (xticks_pos[i]-xticks_pos[i-1]) if i > 0 else xticks_pos[i]
+                    for j in range(steps):
+                        k_values_scalar.append(k_values_scalar[-1] + np.linalg.norm(x)/steps)
+                    xticks_pos_new.append(k_values_scalar[-1])
+            #x_ticks pos was just the scalar value (index of calculated point) now it is the float value of the actual position
+            xticks_pos = xticks_pos_new
+            #k_values_scalar has to be one larger than the grid.shape[1]
+            k_values_scalar.append(k_values_scalar[-1] + np.round(np.linalg.norm(x)/steps))
+            
+            k_values_scalar = np.array(k_values_scalar)
+
+        if len(w_values) == 0:
+            w_values = np.arange(grid.shape[0]+1)
         if not useLogNorm:
             image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto')
         else:
             try:
-                image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto',
-                                norm=LogNorm(np.max(grid) / range_from_max, np.max(grid)))
+                image = ax0.pcolormesh(
+                        k_values_scalar,
+                        w_values,
+                        grid,
+                        cmap='viridis',
+                        shading='auto',
+                        norm=SymLogNorm(
+                            linthresh=1e-5,          # linear range around zero
+                            linscale=1.0,            # scale of the linear range
+                            vmin=np.min(grid),
+                            vmax=np.max(grid),
+                            base=10
+                        )
+                    )
             except Exception as e:
                 print("Log Norm failed in plot_grid")
                 image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto')
@@ -310,19 +361,17 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
         ax0.set_xlabel(xlabel)
         ax0.set_ylabel(ylabel)
 
-        if xticks_pos and xticks_labels:
-            ax0.set_xticks(xticks_pos)
-            ax0.set_xticklabels(xticks_labels)
+    # if it is 1D, plot it as a line plot
+    elif len(grid.shape)==1:
+        ax0.plot(grid)
+    else: 
+        raise ValueError("Grid must be 1D or 2D for plotting. Current shape: {}".format(grid.shape))
+    if xticks_pos and xticks_labels:
+        ax0.set_xticks(xticks_pos)
+        ax0.set_xticklabels(xticks_labels)
 
-        # Side DOS plot
-        ax1 = plt.subplot(gs[1], sharey=ax0)
-        ax1.plot(dos, w_values[:-1])  # exclude last edge of w_values for bin alignment
-        if dos_whole_k_space:
-            ax1.set_xlabel("DOS (whole k-space or other)")
-        else:
-            ax1.set_xlabel("DOS")
-        ax1.yaxis.set_tick_params(labelleft=False)  # Hide y-axis labels to avoid duplication
-        ax1.grid(True)
+
+
 
     if save_path:
         plt.savefig(save_path, bbox_inches='tight')
@@ -366,50 +415,180 @@ def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="
 
     return fig
 
+def plot_max_x_projection(values, title="Max X Projection", xlabel="W", ylabel="kx", zlabel="ky", save_path=None, log_scale=True):
+    import plotly.graph_objects as go
+
+    values = np.real(values)
+    nx, ny, nz = values.shape
+    x = np.linspace(0, 1, nx)
+    y = np.linspace(0, 1, ny)
+    z = np.linspace(0, 1, nz)
+
+    # For each (y, z), find x index of max value along x
+    x_max_indices = np.argmax(values, axis=0)
+
+    if log_scale:
+        # Use log scale for the maximum values
+        x_max_values = np.log(np.max(values, axis=0) + 1e-10)
+    else:
+        # Use linear scale for the maximum values
+        x_max_values = np.max(values, axis=0)
+
+    # Convert indices to real x coordinates
+    x_coords = x[x_max_indices]
+
+    # Create coordinate arrays
+    Y, Z = np.meshgrid(y, z, indexing='ij')
+    Y_flat = Y.flatten()
+    Z_flat = Z.flatten()
+    X_flat = x_coords.flatten()
+    V_flat = x_max_values.flatten()
+
+    # Create scatter plot
+    scatter = go.Scatter3d(
+        x=X_flat,
+        y=Y_flat,
+        z=Z_flat,
+        mode='markers',
+        marker=dict(
+            size=4,
+            color=V_flat,
+            colorscale='Viridis',
+            colorbar=dict(title='Max Value') if not log_scale else dict(title='Log(Max Value)'),
+            opacity=0.8
+        )
+    )
+
+    # Create wireframe box
+    wireframe = go.Mesh3d(
+        x=[0, 0, 0, 0, 1, 1, 1, 1],
+        y=[0, 0, 1, 1, 0, 0, 1, 1],
+        z=[0, 1, 0, 1, 0, 1, 0, 1],
+        i=[0, 0, 0, 1, 1, 2, 4, 5, 6, 3, 3, 7],
+        j=[1, 2, 4, 3, 5, 3, 5, 4, 7, 2, 7, 6],
+        k=[2, 4, 5, 2, 6, 7, 7, 6, 5, 6, 6, 4],
+        color='gray',
+        opacity=0.1,
+        showscale=False
+    )
+
+    fig = go.Figure(data=[scatter, wireframe])
+    fig.update_layout(
+        title=title,
+        scene=dict(
+            xaxis_title=xlabel,
+            yaxis_title=ylabel,
+            zaxis_title=zlabel
+        )
+    )
+
+    if save_path:
+        fig.write_html(save_path)
+
+    return fig
 
 
-def plot_path_through_grid(path):
+def plot_path_through_grid(path, q_grid=None, material=None):
     """
     Plots a 3D scatter plot of the path through the grid.
     Assumes grid is an array-like of shape (N, 3) or (3, N).
     Axes are set to have equal spacing.
+    If material is provided, the lattice vectors are also drawn to visualize the grid structure.
     """
     from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+    
     fig = plt.figure("Path Through Grid (3D)")
     ax = fig.add_subplot(111, projection='3d')
+    if material is not None:
+        lv = material.lattice_vectors if material is not None else None
+        rec_lv = give_reciprocal_lv(lv=lv)
+        for r in rec_lv:
+            # Draw the reciprocal lattice vectors
+            ax.quiver(0, 0, 0, r[0], r[1], r[2], color='blue', arrow_length_ratio=0.1)
+        for r in lv:
+            
+            # Draw the reciprocal lattice vectors
+            ax.quiver(0, 0, 0, r[0], r[1], r[2], color='red', arrow_length_ratio=0.1)
+
     path = np.array(path)
     if path.shape[0] == 3 and path.shape[1] != 3:
         # Shape (3, N) -> transpose to (N, 3)
         path = path.T
-    ax.scatter(path[:, 0], path[:, 1], path[:, 2], c='black', marker='o')
+    points = q_grid[path[:, 0], path[:, 1], path[:, 2]] if q_grid is not None else path
+    ax.scatter(points[:, 0], points[:, 1], points[:, 2], c='black', marker='o')
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
 
     # Set equal aspect ratio for all axes
-    max_range = np.array([path[:, 0].max() - path[:, 0].min(),
-                          path[:, 1].max() - path[:, 1].min(),
-                          path[:, 2].max() - path[:, 2].min()]).max() / 2.0
+    max_range = np.array([points[:, 0].max() - points[:, 0].min(),
+                          points[:, 1].max() - points[:, 1].min(),
+                          points[:, 2].max() - points[:, 2].min()]).max() / 2.0
 
-    mid_x = (path[:, 0].max() + path[:, 0].min()) * 0.5
-    mid_y = (path[:, 1].max() + path[:, 1].min()) * 0.5
-    mid_z = (path[:, 2].max() + path[:, 2].min()) * 0.5
+    mid_x = (points[:, 0].max() + points[:, 0].min()) * 0.5
+    mid_y = (points[:, 1].max() + points[:, 1].min()) * 0.5
+    mid_z = (points[:, 2].max() + points[:, 2].min()) * 0.5
 
     ax.set_xlim(mid_x - max_range, mid_x + max_range)
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
-    
 
-def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, no_w_values=False):
+def path_through_grid_from_relative_points(relative_points, q_grid:np.ndarray):
     """
-    Takes a startpoint, a list of directions and the number of steps in each direction and returns a grid with the values of the original grid at each point and w-value (y-axis)"""
+    Takes a list of relative points and returns startpoint, directions and steps to go through the grid.
+    """
+    relative_points = np.array(relative_points)
+    
+    absoulte_points = np.einsum("ij,j->ij",relative_points,q_grid.shape[:-1])
+    # Check if absolute points are close to whole numbers
+    if not np.allclose(absoulte_points, np.round(absoulte_points), atol=1e-6):
+        assert False, "realtive points dont match actual grid points. Please check the relative points or the amount of k-values (should be divisible by the realtive positions)." 
+    else:
+        absoulte_points = np.round(absoulte_points).astype(int)
+    startpoint = absoulte_points[0]
+    directions = []
+    steps = []
+    for i in range(1, len(absoulte_points)):
+        direction = absoulte_points[i] - absoulte_points[i-1]
+        # Find the greatest common divisor (GCD) of all three components
+        # Use abs to avoid negative GCDs
+        def gcd3(a, b, c):
+            return np.gcd(np.gcd(abs(a), abs(b)), abs(c)) 
+        divisor = gcd3(direction[0], direction[1], direction[2]) if not np.all(direction == 0) else 1
+        if divisor == 0:
+            divisor = 1
+
+        directions.append(direction // divisor)
+        steps.append(divisor)
+    return startpoint, directions, steps
+        
+        
+        
+
+def path_through_k_grid( grid, max_value_k=None, q_grid=None,relative_grid_points = None, startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, material=None, no_w_values=False):
+    """
+    Takes a startpoint, a list of directions and the number of steps in each direction and returns a grid with the values of the original grid at each point and w-value (y-axis)
+    If relative_grid_points are given, it calculates the startpoint, directions and steps from them.
+    If no startpoint, directions and steps or relative_grid_points are given, it uses the standard paths through the k-grid.
+    If no_w_values is True, it goes only throgh the k-values and adds a dummy dimension to the grid.
+    If max_value_k is given, it is used to calculate the xticks labels. 
+    plot_path is used to plot the path through the grid, if material is given, the lattice vectors are also plotted.
+    
+    return: result, xticks_pos, xticks_labels
+    result: the values of the grid at each point in the path
+    """
+
+    if relative_grid_points is not None:
+        #if relative_grid_points is given, it is used to calculate the startpoint, directions and steps
+        startpoint, directions, steps = path_through_grid_from_relative_points(relative_grid_points, q_grid)
+    
     if no_w_values:
         #adding a dummy dimension if no_w_values is True
         grid = grid[np.newaxis, ...]
     
     if startpoint is None or directions is None or steps is None:
         if dimension is None:
-            raise ValueError("Either startpoint, directions and steps must be given or dimension must be given")
+            raise ValueError("Either startpoint, directions and steps must be given or dimension or relative_grid_points must be given.")
         else:
             #these are the standard paths through the k-grid
             if dimension == 2:
@@ -462,8 +641,8 @@ def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, di
             print(f"IndexError: {e} at point {p}. This point is out of bounds for the grid with shape {grid.shape}.")
             return None, None, None
     if plot_path:
-        plot_path_through_grid(path)
-    
+        plot_path_through_grid(path, q_grid=q_grid, material=material) #taking only the k-part of the grid for plotting
+
     if not no_w_values:
         #if no_w_values is True, the grid has only one dimension --> there is no need to transpose
         result = np.array(result).T
@@ -471,7 +650,7 @@ def path_through_k_grid( grid, max_value_k=None, q_grid=None,startpoint=None, di
     return result, xticks_pos, xticks_labels
 
 def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=None):
-    
+    """takes two or three grids of shape (w,k*dim) and convolves them in the k-dimensions."""
     conv_degree=2
     if double_convolution:
         conv_degree=3
@@ -608,22 +787,26 @@ def save_figures_as_images_to_pdf(
     figures,
     filename: str = "output.pdf",
     figures_per_page: int = 4,
-    dpi: int = 100,
-    page_title_prefix: str = "Page"
+    dpi: int = 200,
+    page_title_prefix: str = "Page",
+    material= None
 ):
     from matplotlib.backends.backend_pdf import PdfPages
+    
+    material_description = f"{material.name} \n with tau={material.tau}" if material is not None else "Material Description Not Provided"
+    
     with PdfPages(filename) as pdf:
         for i in range(0, len(figures), figures_per_page):
             figs_subset = figures[i:i + figures_per_page]
             n = len(figs_subset)
-
-            fig, axs = plt.subplots(nrows=n, ncols=1, figsize=(8.5, 11), dpi=dpi)
-
-            if n == 1:
-                axs = [axs]
-
-            fig.suptitle(f"{page_title_prefix} {i // figures_per_page + 1}", fontsize=16)
-
+            ncols = 2
+            fig, axs = plt.subplots(nrows=math.ceil(n/ncols), ncols=ncols, figsize=(8.5, 11), dpi=dpi)
+            if len(axs)> len(figs_subset):
+                axs = axs[:len(figs_subset)]
+            axs = axs.flatten() #if n > 1 else [axs]  # Flatten if more than one figure, else keep as single Axes
+           
+            fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
+            
             for ax, fig_src in zip(axs, figs_subset):
                 buf = io.BytesIO()
                 fig_src.savefig(buf, format='png', dpi=dpi)
@@ -781,8 +964,10 @@ if __name__ == "__main__":
     call_main()
 
 
-def give_grid_vectors_d(vectors, steps):
+def give_grid_vectors_d(vectors, steps, amount_BZ=1):
     """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with the corresponding number of steps."""
+    if amount_BZ != 1:
+        vectors = [v * amount_BZ for v in vectors]
     if isinstance(steps, int):
         steps = [steps] * len(vectors)
     else:
@@ -797,11 +982,17 @@ def give_grid_vectors_d(vectors, steps):
     spacing = []
     for s in steps_list:
         spacing.append(np.linspace(0, 1, s))
-    for i, v1 in enumerate(spacing[0]):
-        for j, v2 in enumerate(spacing[1]):
-            for k, v3 in enumerate(spacing[2]):
-                temp = v1 * vectors[0] + v2 * vectors[1] + v3 * vectors[2]
-                result[i, j, k] = temp
+    #spacing = np.array(spacing)
+    # Use broadcasting and einsum to generate the grid efficiently
+    grid_shape = (steps_list[0], steps_list[1], steps_list[2], len(vectors[0]))
+    # Create meshgrid for the spacing values
+    v1, v2, v3 = np.meshgrid(spacing[0], spacing[1], spacing[2], indexing='ij')
+    # Stack to shape (..., 3)
+    coeffs = np.stack([v1, v2, v3], axis=-1)  # shape: (s0, s1, s2, 3)
+    vectors_arr = np.stack(vectors, axis=0)   # shape: (3, d)
+    # Use einsum to multiply and sum: coeffs[...,i] * vectors_arr[i,:] -> (..., d)
+    result = np.einsum('...i,ij->...j', coeffs, vectors_arr)
+    
     return result
 
 

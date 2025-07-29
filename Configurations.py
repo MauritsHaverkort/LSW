@@ -28,6 +28,7 @@ class Config:
     use_hamiltonian_paper_experimental: bool
     use_direct_grid_calculation: bool
     cut_diverging_spectral_weights: bool
+    use_my_calculation_TT_switched: bool
     use_explicit_calculation_of_u_v_for_uv_grid: bool
     calc_u_v_convolutions:bool
     calc_pref_convolutions: bool
@@ -35,6 +36,7 @@ class Config:
     path_through_grid_startpoint: np.ndarray
     path_through_grid_directions: List[np.ndarray]  # List of direction vectors for the path through the grid
     path_through_grid_steps: List[int]  # List of steps for each direction in the path through the grid
+    relative_grid_points_path: List[np.ndarray]
     
     path_for_energy_calc: List[np.ndarray]
     
@@ -42,12 +44,14 @@ class Config:
     path_load_pref_convolutions: str
     amount_k_values: List[int]
     amount_w_values: int
+    amount_BZ: int # Number of Brillouin zones to include in plot, default is 1
     dimension: int
     S: int
     a: float  # lattice constant
     Bz: float
     Ba_z: float
     Gamma: float
+    plots_to_show_print: dict  # Dictionary to store information which plots to show, e.g., {"k_w_plot": True, "k_Bz_plot": False}
     additional_info: dict
     plot_info: dict
     timestamp: str
@@ -62,6 +66,7 @@ class Config:
     
     #dicts
     additional_values: dict #these are values that should be universal for a certain configuration but only computed in the code
+    warnings: set
     
 
 def config_main():
@@ -96,17 +101,20 @@ def config_main():
 
         use_hamiltonian_paper_experimental = False,
         use_rotation_Paper_4 = True,
+        use_my_calculation_TT_switched = False,
         
         path_for_energy_calc= None,
         path_through_grid_directions= None,
         path_through_grid_startpoint= None,
         path_through_grid_steps=None,  # List of steps for each direction in the path through the grid
+        relative_grid_points_path = None,  # Relative points for the path through the grid, e.g., [[0,0,0],[1,1,0],[0,-1,0]]
 
         use_old_example_version=False,
         use_direct_grid_calculation=True,
         #simulation parameters
         amount_k_values=20,
         amount_w_values=20,
+        amount_BZ=1,  # Number of Brillouin zones to include in plot, default is 1
         dimension=2,
         S = 2.5,  
         a = 0.5, #lattice constant
@@ -120,6 +128,15 @@ def config_main():
         double_convolution=False, 
         additional_values = {},
         terms_to_calculate_in_pref_conv=[0,1,2,3],  # List of terms to calculate
+        plots_to_show_print={
+            "Hamiltonian_parts_plot": (True,True),
+            "T_parts_plot": (False,True),
+            "max_x_projection_sqw": (False,False),
+            "energy_dependent_part": (True,True),
+            "structure_plot": (True,False),
+            "path_plot": (True,True),
+            },
+        warnings=set(),  # Set to store warnings that are printed in the end
     )
     return config
 
@@ -129,9 +146,11 @@ def config_experimental():
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = [30,30,30]
+    config_tryout_paper.amount_k_values = [100,100,1]
+    config_tryout_paper.amount_BZ = 1
     config_tryout_paper.amount_w_values = 30
     config_tryout_paper.dtype_complex = np.complex128
+    
     
     config_tryout_paper.calc_conv_intensities = False
     config_tryout_paper.calc_u_v_convolutions = False
@@ -139,6 +158,7 @@ def config_experimental():
     config_tryout_paper.calc_pref_convolutions = True
     config_tryout_paper.use_direct_grid_calculation = True
     config_tryout_paper.use_old_example_version = False
+    config_tryout_paper.use_my_calculation_TT_switched = True
     
     config_tryout_paper.use_Log_Norm = True
     config_tryout_paper.terms_to_calculate_in_pref_conv = [3]
@@ -152,7 +172,11 @@ def config_experimental():
     config_tryout_paper.path_through_grid_directions = [np.array([1,1,0])]
     config_tryout_paper.path_through_grid_steps = config_tryout_paper.amount_k_values
     
+    #non supercell
+    config_tryout_paper.relative_grid_points_path =  [np.array([0,0,0]),np.array([1/2,0,0]),np.array([1/2,1/2,0]),np.array([0,0,0])]
+    
     #supercell 2d path
+    #config_tryout_paper.relative_grid_points_path =  [np.array([0,0,0]),np.array([1/2,1/2,0]),np.array([0,1,0]),np.array([0,0,0])]
     # config_tryout_paper.path_through_grid_startpoint = np.array([0,0,0])
     
     # config_tryout_paper.path_through_grid_directions = [np.array([1,1,0]),np.array([-1,1,0]),np.array([0,-1,0])]

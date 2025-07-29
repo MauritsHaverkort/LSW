@@ -5,7 +5,7 @@ from Atoms import Atom
 from Bonds import Bond  
 
 class Material:
-    def __init__(self, dimension: int,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None):
+    def __init__(self, dimension: int,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given"):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
         
@@ -18,8 +18,10 @@ class Material:
         self.lattice_vectors = np.array(lattice_vectors) if lattice_vectors is not None else np.array([])
         self.N = len(atoms) if atoms is not None else 0
         self.dimension = dimension  # Dimension of the material
+        self.name = name
         
-        self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(3)]
+        #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(3)]
+        self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(3) for beta in range(3) for tau in range(3)]
         
         
         mat_nx = np.array(
@@ -127,6 +129,6 @@ class Material:
         #removed the pi here because for me this is already in the k-values
         
         #multiplying the last axis of the k-values (the actual vectors) with the lattice vectors
-        q = self.lattice_vectors @ d  # shape (3,)
+        q = np.einsum("ji,j->i",self.lattice_vectors,d)  # shape (3,)
         result = np.exp(-1j * np.einsum('...i,i->...', k, q))
         return result

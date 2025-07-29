@@ -1,6 +1,12 @@
 import numpy as np
 import sympy as sp
+import sys
+import os
+
 import numpy.linalg as la
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import rotation
 
 def calc_spectrum(Dab,T):
     res = 0
@@ -84,7 +90,8 @@ def calc_spectrum_mine_matrix(alpha,beta,u,v,T:sp.Matrix, use_numerical=False, )
 
 if __name__ == "__main__":
     #print((8/3)**3)
-    R_prime = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    R_prime = rotation.rot_vec(0.2*np.pi, np.array([0,1,-1]))#np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+    sp.pprint(R_prime)
     u = R_prime[0]+1.j*R_prime[1]
     v = R_prime[2]
     
@@ -136,32 +143,42 @@ if __name__ == "__main__":
     theta = 0.56
     test_dict = {u_:np.cosh(theta)*np.exp(0.45*1.j), v_:np.sinh(theta)*np.exp(0.68*1.j)}
     test_dict_real = {u_:np.cosh(theta), v_:np.sinh(theta)}
+    
+    test_explicit = True
+    
     for i in range(2):
         for j in range(2):
             print(f"D[{i},{j}]:\n")
-            sp.pprint(D_4[i,j])
-            print(f"D_4[{i},{j}]:\n")
+            # sp.pprint(D_4[i,j])
+            # print(f"D_4[{i},{j}]:\n")
             expr1 = calc_spectrum(D_4[i,j], T)
             sp.pprint(expr1)
-            print(f"D_mine:\n")
-            sp.pprint(D_mine[i,j])
+            if test_explicit:
+                print(sp.simplify(expr1.subs(test_dict, evaluate=True)))
+                print(expr1.subs(test_dict_real, evaluate=True))
+            print(f"D_mine and T-> T^+:\n")
+            # sp.pprint(D_mine[i,j])
             expr1 = calc_spectrum(D_mine[i,j], T.adjoint())
             sp.pprint(expr1)
-            
-           # print(sp.simplify(expr1.subs(test_dict, evaluate=True)))
-            #print(expr1.subs(test_dict_real, evaluate=True))
+            if test_explicit:
+                print(sp.simplify(expr1.subs(test_dict, evaluate=True)))
+                print(expr1.subs(test_dict_real, evaluate=True))
             #print()
-            print("Spectrum mine:\n")
+            print("Spectrum mine by substituting the annihilation operators by 0:\n")
             expr2 = 4*calc_spectrum_mine(states[i], states[j], alpha, alpha_d)
             sp.pprint(expr2)
-            #print(sp.simplify(expr2.subs(test_dict, evaluate=True)))
-            #print(expr2.subs(test_dict_real, evaluate=True))
+            if test_explicit:
+                print(sp.simplify(expr2.subs(test_dict, evaluate=True)))
+                print(expr2.subs(test_dict_real, evaluate=True))
             
-            print("Spectrum mine matrix:\n")
+            print("\nSpectrum mine matrix:")
             expr3 = calc_spectrum_mine_matrix(i,j,u,v,T, use_numerical=False)
             sp.pprint(sp.factor(expr3))
-            #expr3 = calc_spectrum_mine_matrix(i,j,T.subs(test_dict, evaluate=True), use_numerical=True)
-            #print(expr3)
+            if test_explicit:
+                expr3 = calc_spectrum_mine_matrix(i,j,u,v,T.subs(test_dict, evaluate=True), use_numerical=True)
+                print(expr3)
+                expr3 = calc_spectrum_mine_matrix(i,j,u,v,T.subs(test_dict_real, evaluate=True), use_numerical=True)
+                print(expr3)
             
     
     

@@ -81,10 +81,11 @@ def NiO_supercell(config: Config, J=1, a=1, alignement=0):
     else:
         raise ValueError("Invalid alignment value. Must be 0, 1, or 2.")
     
-    theta = 0.2 * np.pi
+    spin_dir = np.array([0,0,1])
+    theta = 0.0* np.pi
     
     spin_dir = rotation.rot_vec(theta,np.array([1,0,0])) @ spin_dir
-    #spin_dir = np.array([0,0,1])
+    
     
     return D2_AFM_simple_cubic_supercell(config, J=J, a=a, S1=1, S2=-1, spin_dir=spin_dir)
 
@@ -128,10 +129,55 @@ def D2_with_FM(config:Config ,J=1, J2=0.1, a=1, alignement=0):
 
     spin_dir = np.array([0,0,1])
 
-    return D12_FM_AFM_simple_cubic_NNN_interactions(config=config,J=J, J2=J2, a=a, S1=1, S2=1, d=2, spin_dir=spin_dir, tau=np.array([0,0,0]))#tau=np.array([0.5]*d +[0]*(3-d)))
+    return D2_FM_AFM_simple_cubic_NNN_interactions(config=config,J_AFM=J, J_FM=J2, a=a, S=1, d=2, spin_dir=spin_dir)#tau=np.array([0.5]*d +[0]*(3-d)))
 
-def D12_FM_AFM_simple_cubic_NNN_interactions(config: Config, J, J2, a, S1, S2, d=2, spin_dir=np.array([0, 0, 1]), tau=np.array([0, 0, 0])):
+def D2_FM_AFM_simple_cubic_NNN_interactions(config: Config, J_AFM, J_FM, a, S, d=2, spin_dir=np.array([0, 0, 1])):
     #has to be done as supercell calculations ? 
+    assert d in [2], "Dimension must be 2"
+    
+    config.dimension = d
+    
+    #d = 2
+    lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
+    normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)
+    tau = np.array([0, 1/2, 0])   # in direction of all lattice vectors the unit cell is turned by 180° every time (AFM)
+    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=2)
+
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S, spin_dir=np.sign(S)*spin_dir),
+
+
+
+        # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+    ]
+    bonds = [
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 1, 0]), j=J_AFM
+        ),
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, -1, 0]), j=J_AFM
+        ),
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J_FM
+        ),
+        
+        
+        
+    ]
+    #bonds = [bonds[i] for i in range(d)]
+
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+
+    # all_atoms.append(atoms[0])
+    config.relative_grid_points_path =[np.array([0,0,0]),np.array([1/4,1/4,0]),np.array([0,1/2,0]),np.array([0,0,0])]
+    return material
+
+def D12_FM_AFM_simple_cubic_NNN_interactions_supercell(config: Config, J, J2, a, S1, S2, d=2, spin_dir=np.array([0, 0, 1]), tau=np.array([0, 0, 0])):
+    
     assert d in [1, 2], "Dimension must be either 1 or 2"
     
     config.dimension = d
@@ -147,11 +193,13 @@ def D12_FM_AFM_simple_cubic_NNN_interactions(config: Config, J, J2, a, S1, S2, d
     atoms = [
         Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=np.sign(S1)*spin_dir),
         
-        #FM connection
-        Atom(1/2*np.array([a, a, 0]), type=1, S=S2, spin_dir=np.sign(S2)*spin_dir),
+        #FM connections
+        Atom(1/2*np.array([a, 0, 0]), type=1, S=S2, spin_dir=np.sign(S2)*spin_dir),
+        
+        Atom(1/2*np.array([0, a, 0]), type=1, S=S2, spin_dir=np.sign(S2)*spin_dir),
         
         #AFM connection
-        Atom(np.array([a, 0, 0]), type=2, S=-S1, spin_dir=-np.sign(S1)*spin_dir),
+        Atom(1/2*np.array([a, a, 0]), type=2, S=-S1, spin_dir=-np.sign(S1)*spin_dir),
         
         
         
@@ -166,12 +214,18 @@ def D12_FM_AFM_simple_cubic_NNN_interactions(config: Config, J, J2, a, S1, S2, d
         Bond(
             material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, -1, 0]), j=J2
         ),
-        # Bond(
-        #     material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, 0, 0]), j=J2
-        # ),
-        # Bond(
-        #     material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, -1, 0]), j=J2
-        # ),
+        Bond(
+            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, 0, 0]), j=J2
+        ),
+        Bond(
+            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, -1, 0]), j=J2
+        ),
+        Bond(
+            material, atoms[0], atoms[2], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J
+        ),
+        Bond(
+            material, atoms[0], atoms[2], unit_cell_of_atom_1=np.array([-1, 1, 0]), j=J
+        ),
         Bond(
             material, atoms[0], atoms[2], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J
         ),
@@ -187,10 +241,11 @@ def D12_FM_AFM_simple_cubic_NNN_interactions(config: Config, J, J2, a, S1, S2, d
     # all_atoms.append(atoms[0])
     return material
 
+
 def General_D_FM_AFM_simple_cubic(J, a, S1, S2, d=3, spin_dir=np.array([0, 0, 1])):
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     #normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
-    
+    normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)  
     
     if S1 * S2 < 0:
         tau = np.array(
@@ -198,7 +253,7 @@ def General_D_FM_AFM_simple_cubic(J, a, S1, S2, d=3, spin_dir=np.array([0, 0, 1]
         )  # in direction of all lattice vectors the unit cell is turned by 180° every time (AFM)
     else:
         tau = np.array([0, 0, 0])  # FM no rotation
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d)
+    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="General_D_FM_AFM_simple_cubic")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -247,7 +302,7 @@ def D2_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     
-    material = Material(lattice_vectors=lv, tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2)
+    material = Material(lattice_vectors=lv, tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name="D2 AFM SC Supercell")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -281,6 +336,111 @@ def D2_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     # all_atoms.append(atoms[0])
     return material
 
+def spin_helix_tut30_D2(config: Config, J=1, a=1, S1=1, d=2, spin_dir=np.array([1, 0, 0]), tau=np.array([1/3, 1/3, 0])):
+    """
+    Creates a spin helix in trigonal lattice with specified parameters.
+
+    Parameters:
+    - config: Config object containing configuration settings.
+    - J: Interaction strength.
+    - a: Lattice constant.
+    - S1: Spin value for the first type of atom.
+    - d: Dimension of the system (2).
+    - spin_dir: Direction of the spin vector.
+    - tau: Translation vector for the unit cell.
+    
+    Returns:
+    - Material object representing the spin helix configuration.
+    """
+    
+    config.dimension = d
+    lv = [np.array([a, 0, 0]), rotation.rot_vec(2*2/6*np.pi,np.array([0,0,1]))@np.array([a, 0, 0]), np.array([0, 0, a])]
+    #normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
+    normal_vector = np.array([0, 0, 1])  # normal vector in the z-direction for a 2D system
+    
+    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix D2 (tut 30 SpinW)")
+
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        
+        ]
+    bonds = [
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J
+        ),
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 1, 0]), j=J
+        ),
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([0, 1, 0]), j=J
+        ),
+        
+        
+        
+    ]
+    #bonds = [bonds[i] for i in range(d)]
+
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    
+    config.relative_grid_points_path = [np.array([0, 0, 0]),np.array([1, 1, 0])]#[np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([1, 1, 0]), np.array([0, 0, 0])]
+
+    # all_atoms.append(atoms[0])
+    return material
+
+def spin_helix_sc_D(config: Config, J=1, a=1, S1=1, d=1, spin_dir=np.array([0, 0, 1]), tau=np.array([1/3, 0, 0])):
+    """
+    Creates a spin helix in a simple cubic lattice with specified parameters.
+    
+    Parameters:
+    - config: Config object containing configuration settings.
+    - J: Interaction strength.
+    - a: Lattice constant.
+    - S1: Spin value for the first type of atom.
+    - d: Dimension of the system (1).
+    - spin_dir: Direction of the spin vector.
+    - tau: Translation vector for the unit cell.
+    
+    Returns:
+    - Material object representing the spin helix configuration.
+    """
+    
+    config.dimension = d
+    lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
+    normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
+    
+    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix SC D")
+
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        
+        ]
+    bonds = [
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J
+        ),
+    ]
+    #bonds = [bonds[i] for i in range(d)]
+
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    
+    config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([0, 0, 0])]
+
+    # all_atoms.append(atoms[0])
+    return material
+
+
+
+
+
+
+
+
+
+# NOT in USE anymore-------------------------------------------------------------------------
 def example_1_General_D_FM_AFM(J1, J2, a, a1, S1, S2, d=3):
 
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
