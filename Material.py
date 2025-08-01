@@ -2,7 +2,8 @@ from typing import List
 import numpy as np
 import numpy.linalg as la
 from Atoms import Atom  
-from Bonds import Bond  
+from Bonds import Bond
+import rotation  
 
 class Material:
     def __init__(self, dimension: int,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given"):
@@ -123,7 +124,7 @@ class Material:
         return J_bonds,bonds_distances, spins
     
     
-    def interaction_e_ikd(self, d, k):
+    def interaction_e_minus_ikd(self, d, k):
         """takes k as arbitrary array of k-vectors (some grid) and returns the interaction term for the given bond"""
         #TODO: this must be checked for other lattices!
         #removed the pi here because for me this is already in the k-values
@@ -132,3 +133,7 @@ class Material:
         q = np.einsum("ji,j->i",self.lattice_vectors,d)  # shape (3,)
         result = np.exp(-1j * np.einsum('...i,i->...', k, q))
         return result
+
+    def rotation_matrix(self, phi):
+        """returns the rotation matrix for the given angle phi"""
+        return np.round(rotation.rot_vec(phi, self.normal_vector_to_rotation_plane), 3)

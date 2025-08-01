@@ -415,6 +415,31 @@ def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="
 
     return fig
 
+def plot_3D_scatter(Z, title="3D Scatter Plot", xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", save_path=None):
+    # Assuming eigvals_grid is already defined as a 4D array
+    Z = np.real(Z)  # Ensure Z is real for plotting
+
+    # Create coordinate grid
+    nx, ny = Z.shape
+    X, Y = np.meshgrid(np.arange(ny), np.arange(nx))
+
+    # Flatten for scatter plot
+    x = X.ravel()
+    y = Y.ravel()
+    z = Z.ravel()
+
+    # Create 3D scatter plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    sc = ax.scatter(x, y, z, marker='o')
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    plt.title('3D Scatter Plot')
+    
+    plt.show()
+
 def plot_max_x_projection(values, title="Max X Projection", xlabel="W", ylabel="kx", zlabel="ky", save_path=None, log_scale=True):
     import plotly.graph_objects as go
 
@@ -585,6 +610,7 @@ def path_through_k_grid( grid, max_value_k=None, q_grid=None,relative_grid_point
     if no_w_values:
         #adding a dummy dimension if no_w_values is True
         grid = grid[np.newaxis, ...]
+    assert grid.ndim == 4, "Grid must be 4D (w, kx, ky, kz) or 3D (kx, ky, kz) if no_w_values is True. Current shape: {}".format(grid.shape)
     
     if startpoint is None or directions is None or steps is None:
         if dimension is None:
@@ -784,6 +810,7 @@ def load_grid_from_file(filename="grid.npz"):
 
 
 def save_figures_as_images_to_pdf(
+    config:Config,
     figures,
     filename: str = "output.pdf",
     figures_per_page: int = 4,
@@ -793,7 +820,7 @@ def save_figures_as_images_to_pdf(
 ):
     from matplotlib.backends.backend_pdf import PdfPages
     
-    material_description = f"{material.name} \n with tau={material.tau}" if material is not None else "Material Description Not Provided"
+    material_description = f"{material.name}" if material is not None else "Material Description Not Provided"
     
     with PdfPages(filename) as pdf:
         for i in range(0, len(figures), figures_per_page):
@@ -806,7 +833,13 @@ def save_figures_as_images_to_pdf(
             axs = axs.flatten() #if n > 1 else [axs]  # Flatten if more than one figure, else keep as single Axes
            
             fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
-            
+            if len(config.warnings) != 0 and i==0: 
+                warning_str = ""
+                warning_str = f"config:{config.name}\n tau:{material.tau}\n normal: {material.normal_vector_to_rotation_plane} \n spin direction: {material.atoms[0][0].dir} \n"
+                for w in config.warnings:
+                    warning_str = warning_str + f"\n{w}"
+                fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')
+
             for ax, fig_src in zip(axs, figs_subset):
                 buf = io.BytesIO()
                 fig_src.savefig(buf, format='png', dpi=dpi)

@@ -287,6 +287,16 @@ def test_path_relative_points():
     result = functions.path_through_grid_from_relative_points(q_grid=q_values_grid, relative_points=np.array([[0,0,0],[1/2,1/2,0],[0,0,0]]))
     print("")
 
+def test_3D_scatter():
+    values = np.random.rand(100, 100)  # Generate random 3D points
+    functions.plot_3D_scatter(
+        values,
+        title="Random 3D Scatter Plot",
+        xlabel="X-axis",
+        ylabel="Y-axis",
+        zlabel="Z-axis"
+    )
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -295,4 +305,5 @@ if __name__ == "__main__":
     #test_3D_slider_plot()
     #import Configurations
     #test_the_Hamiltonian_on_grids_of_k(config = Configurations.config_experimental())
-    test_path_relative_points()
+    #test_path_relative_points()
+    test_3D_scatter()

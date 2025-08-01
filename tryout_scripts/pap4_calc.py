@@ -6,7 +6,7 @@ import os
 import numpy.linalg as la
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import rotation
+#import rotation
 
 def calc_spectrum(Dab,T):
     res = 0
@@ -21,7 +21,8 @@ def calc_spectrum(Dab,T):
     return sp.factor(res)
 
 def calc_spectrum_mine(state_1,state_2, alpha, alpha_d):
-    expr = np.conjugate(state_2)*state_1
+    #this was swapped since I am using the convention that Sab = <0|(Sa)^+ Sb|0>
+    expr = np.conjugate(state_1)*state_2
     expr = expr.subs({np.conjugate(alpha):alpha_d}, evaluate=True)
     expr = expr.subs({np.conjugate(alpha_d):alpha}, evaluate=True)
     
@@ -74,14 +75,14 @@ def calc_spectrum_mine_matrix(alpha,beta,u,v,T:sp.Matrix, use_numerical=False, )
     test_res = 0
     for i in range(2):
         for j in range(2):
-            test_res += T[1,i] * D_prime_a_i_j[alpha,i,j]
+            test_res += T[1,i] * D_prime_a_i_j[beta,i,j]
     
     for f in range(2):
         for j in range(2):
             for h in range(2):
                 for i in range(2):
                     #first one daggered
-                    res += np.conj(D_prime_a_i_j[beta,h,f]) * T_d[h,1] * T[1,i] * D_prime_a_i_j[alpha,i,j]
+                    res += np.conj(D_prime_a_i_j[alpha,h,f]) * T_d[h,1] * T[1,i] * D_prime_a_i_j[beta,i,j]
     #res = np.einsum("fh,h,i,ij->fj", D_prime_a_i_j[b],T_d[:,1],T[1,:],D_prime_a_i_j[a])
     #test = T_d[:,1]@D22_a_b[a,b]@T[1,:
     
@@ -89,8 +90,9 @@ def calc_spectrum_mine_matrix(alpha,beta,u,v,T:sp.Matrix, use_numerical=False, )
     
 
 if __name__ == "__main__":
-    #print((8/3)**3)
-    R_prime = rotation.rot_vec(0.2*np.pi, np.array([0,1,-1]))#np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+    
+    #R_prime = rotation.rot_vec(0.2*np.pi, np.array([0,1,-1]))#
+    R_prime = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     sp.pprint(R_prime)
     u = R_prime[0]+1.j*R_prime[1]
     v = R_prime[2]
@@ -103,8 +105,8 @@ if __name__ == "__main__":
     y_state = (a - a_d)/(2*1.j)
     
     #TODO: fix complex conjugate
-    dict= {a:u_*alpha + np.conjugate(v_)*alpha_d,
-    a_d: np.conj(u_)*alpha_d + np.conj(v_)*alpha}
+    dict= {a:u_*alpha + np.conj(v_)*alpha_d,
+    a_d: np.conj(u_)*alpha_d + v_*alpha}
     
     x_state = x_state.subs(dict, evaluate=True)
     y_state = y_state.subs(dict, evaluate=True)
@@ -133,10 +135,10 @@ if __name__ == "__main__":
     W = np.einsum("i,j->ij", np.conjugate(u), u)
     D_4 = D(Y, Z, V, W)
     #my matrix
-    Y = np.einsum("i,j->ij", np.conjugate(u),u)
+    Y = np.einsum("i,j->ij", u, np.conjugate(u))
     Z = np.einsum("i,j->ij", np.conjugate(u), np.conjugate(u))
     V = np.einsum("i,j->ij", u,u)
-    W = np.einsum("i,j->ij", u, np.conjugate(u))
+    W = np.einsum("i,j->ij", np.conjugate(u),u)
     D_mine = D(Y, Z, V, W)
     
     states = [x_state, y_state]
@@ -148,8 +150,9 @@ if __name__ == "__main__":
     
     for i in range(2):
         for j in range(2):
+            print("-------------------------------------------------------------------")
             print(f"D[{i},{j}]:\n")
-            # sp.pprint(D_4[i,j])
+            sp.pprint(D_4[i,j])
             # print(f"D_4[{i},{j}]:\n")
             expr1 = calc_spectrum(D_4[i,j], T)
             sp.pprint(expr1)
@@ -157,7 +160,7 @@ if __name__ == "__main__":
                 print(sp.simplify(expr1.subs(test_dict, evaluate=True)))
                 print(expr1.subs(test_dict_real, evaluate=True))
             print(f"D_mine and T-> T^+:\n")
-            # sp.pprint(D_mine[i,j])
+            sp.pprint(D_mine[i,j])
             expr1 = calc_spectrum(D_mine[i,j], T.adjoint())
             sp.pprint(expr1)
             if test_explicit:

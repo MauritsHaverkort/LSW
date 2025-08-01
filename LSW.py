@@ -41,30 +41,47 @@ DEBUGGING_INFO = {"Attention unreasonably high state -> cut off": True}
 
 #--------------------------------------------------In Use Functions--------------------------------------------------#
 
-def call_main():
-    config = Configurations.config_main()
-    config = Configurations.config_experimental()
 
-    plt.ion() #for interactive plotting
+def call_main():
     
-    #material = Examples.D2_with_FM(config, J2 = -0) 
-    #material = Examples.NiO_supercell(config)
-    #material = Examples.General_D_FM_AFM_simple_cubic(J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 1, 1]))
-    #material = Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1]))
-    #material = Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0]))
-    material = Examples.spin_helix_tut30_D2(config, J=1, a=1, S1=1, d=2)
-    main(config, material)
-    #plt.ioff() #turn off interactive plotting
-    print("")
-    config.debug_timer.print_difference("done with all plotting \n--------------DONE------------------", config.debug_timing)
-    print("before showing")
-    if len(config.warnings) != 0: 
-        print("\n\n-----------------------------WARNINGS----------------------------------:")
-        for w in config.warnings:
-            print(w)
-    #write results into output file
-    functions.save_figures_as_images_to_pdf(VALUES_TO_SAVE["figs_for_pdf"], filename="outputs/output.pdf", material=material)
-    plt.show(block = True)
+    config = Configurations.config_experimental("SpinW TT")
+    config.use_my_calculation_TT_switched = False
+    config_my_TT = Configurations.config_experimental("My TT")
+    config_my_TT.use_my_calculation_TT_switched = True
+    config_my_TT_SW_mat = Configurations.config_experimental("My TT but SpinW form factors")
+    config_my_TT_SW_mat.use_my_calculation_TT_switched = True
+    config_my_TT_SW_mat.use_SpinW_mat_form_factors = True
+
+    configs = [config, config_my_TT, config_my_TT_SW_mat]
+
+    for config in configs:
+        VALUES_TO_SAVE["figs_for_pdf"] = []
+        VALUES_TO_SAVE["Hamiltonian_not_diagonalised"] = []
+        VALUES_TO_SAVE["figs"] = []
+        VALUES_TO_SAVE["Bog_trafo_of_k"] = []
+        #plt.ion() #for interactive plotting
+        
+        #material = Examples.D2_with_FM(config, J2 = -0) 
+        #material = Examples.NiO_supercell(config)
+        #material = Examples.General_D_FM_AFM_simple_cubic(J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 1, 1]))
+        #material = Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1]))
+        #material = Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0]))
+        #material = Examples.spin_helix_tut30_D2(config, J=1, a=1, S1=1, d=2)
+        #material = Examples.D1_spin_spiral_inversion_sym_breaking(config)
+        material = Examples.spin_helix_tut30_D2_two_atoms(config)
+        main(config, material)
+        #plt.ioff() #turn off interactive plotting
+        print("")
+        config.debug_timer.print_difference("done with all plotting \n--------------DONE------------------", config.debug_timing)
+        print("before showing")
+        if len(config.warnings) != 0: 
+            print("\n\n-----------------------------WARNINGS----------------------------------:")
+            for w in config.warnings:
+                print(w)
+        #write results into output file
+        functions.save_figures_as_images_to_pdf(config, VALUES_TO_SAVE["figs_for_pdf"], filename=f"outputs/output_{config.name}.pdf", material=material)
+        #plt.show(block = True)
+        plt.close('all')  # Close all figures for next configuration
     
 
 
@@ -320,10 +337,10 @@ def general_Ham_types_AFM_FM_paper_comp_numba(
         # interaction=0
         
 
-        interaction = material.interaction_e_ikd(
+        interaction = material.interaction_e_minus_ikd(
             d=bond_distance, k=k_
         )  
-        interaction_mk = material.interaction_e_ikd(
+        interaction_mk = material.interaction_e_minus_ikd(
             d=bond_distance, k=-k_
         )  
         interaction_summed += interaction
@@ -535,10 +552,10 @@ def general_Ham_types_AFM_FM_paper_comp(
         # interaction=0
         
 
-        interaction = material.interaction_e_ikd(
+        interaction = material.interaction_e_minus_ikd(
             d=bond_distance, k=k_
         )  
-        interaction_mk = material.interaction_e_ikd(
+        interaction_mk = material.interaction_e_minus_ikd(
             d=bond_distance, k=-k_
         )  
         interaction_summed += interaction
@@ -595,7 +612,7 @@ def general_Ham_types_AFM_FM_paper_comp(
             )
             temp_B = u[i].T @ J_rot @ u[j]
             B[..., i, j] += (
-                -np.sqrt(np.abs(S[i] * S[j]))
+                np.sqrt(np.abs(S[i] * S[j]))
                 * u[i].T
                 @ J_rot
                 @ u[j]
@@ -603,7 +620,7 @@ def general_Ham_types_AFM_FM_paper_comp(
                 / 2
             )
             mB[..., i, j]+= (
-                -np.sqrt(np.abs(S[i] * S[j]))
+                np.sqrt(np.abs(S[i] * S[j]))
                 * u[i].T
                 @ J_rot
                 @ u[j]
@@ -659,7 +676,7 @@ def general_Ham_types_AFM_FM_paper_comp(
         #solving the Hamiltonian
         for k_index in np.ndindex(momentum_shape):
             H_ = H[*k_index,:, : ]
-            
+            #H_ = np.array([[H_[0,0], -H_[0,1]], [-H_[1,0], H_[1,1]]])  #swapping sign of off diagonals
             eigvals, eigvecs = la.eig(Gamma @ H_)
             
             if debug:
@@ -1506,7 +1523,10 @@ def create_form_factor_matrix(material: Material, config:Config, q_values:np.nda
         (3, 3) + (*shape_k,) + (2 * N, 2 * N),
         dtype=config.dtype_complex,
     )
-
+    prefactor_tensor = np.zeros(
+    (*shape_k,) + (2 * N, 2 * N),
+        dtype=config.dtype_complex,
+    )
     matY_without_prefactor = np.zeros( (3, 3) + (N, N),
             dtype=config.dtype_complex,
         )
@@ -1527,12 +1547,12 @@ def create_form_factor_matrix(material: Material, config:Config, q_values:np.nda
                 si = ati.S
                 ui = ati.u
                 #gi = ati.g
-                ti = ati.position
+                pos_i = ati.position
                 # * np.array(
                 #     [self.Sample.a_eff, self.Sample.b_eff, self.Sample.c_eff]
                 # )
                 #ff_i = Atoms.form_factor(self.q_mesh, ati.ff_params, gi)
-                exp_i = material.interaction_e_ikd(ti, q_values)
+                exp_minus_i_ri_q = material.interaction_e_minus_ikd(pos_i, q_values)
                 for j in range(N):
                     atoms_j = material.atoms[i][0]
                     s_j = atoms_j.S
@@ -1544,7 +1564,7 @@ def create_form_factor_matrix(material: Material, config:Config, q_values:np.nda
                     #    [self.Sample.a_eff, self.Sample.b_eff, self.Sample.c_eff]
                     #) --> not needed effective lattice parameters are for me added in the interaction function 
                     #ff_j = Atoms.form_factor(self.q_mesh, atj.ff_params, gj)
-                    exp_j = material.interaction_e_ikd(pos_j,q_values)
+                    exp_minus_i_rj_q = material.interaction_e_minus_ikd(pos_j,q_values)
                     
                     FORM_FACTOR = False
                     if FORM_FACTOR:
@@ -1559,9 +1579,11 @@ def create_form_factor_matrix(material: Material, config:Config, q_values:np.nda
                         #     * np.conj(exp_j)
                         # )
                     else:  # no magnetic form factor, for testing
+                        #the conj is swapped since the exp function is defined as exp(-i*k*d) in the interaction function
                         prefactor = (
-                            np.sqrt(si * s_j) * exp_i * np.conj(exp_j)
+                            np.sqrt(si * s_j) * np.conj(exp_minus_i_ri_q) * exp_minus_i_rj_q
                         )  # test YZWV
+                    prefactor_tensor[:, :, :, i, j] = prefactor
                     matY[ alpha, beta,:, :, :, i, j] = prefactor * ui[alpha] * np.conj(u_j[beta])
                     matZ[ alpha, beta,:, :, :, i, j] = prefactor * ui[alpha] * u_j[beta]
                     matV[ alpha, beta,:, :, :, i, j] = (
@@ -1577,8 +1599,9 @@ def create_form_factor_matrix(material: Material, config:Config, q_values:np.nda
                     matW_without_prefactor[ alpha, beta, i, j] =  np.conj(ui[alpha]) * u_j[beta]
 
     mat = np.block([[matY, matZ], [matV, matW]])
+    mat_mine = np.block([[matY, matV], [matZ, matW]])
     mat_without_prefactor = np.block([[matY_without_prefactor, matZ_without_prefactor], [matV_without_prefactor, matW_without_prefactor]])
-    return mat, prefactor, mat_without_prefactor
+    return mat, prefactor_tensor, mat_without_prefactor, mat_mine
 
 def calculate_convolutions_of_bog_trafo_pref_grid(
     config: Config,  q_values_grid,pref_grids_matrix: np.ndarray = None, material:Material=None, energy_dependent_part=None, T=None, eigvalue_grid:np.ndarray=None
@@ -1650,7 +1673,7 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
         
         #experimental create the V matrix (paper 4)
         #T^+ T
-        mat_form_factors,k_dependent_prefactor, mat_form_factors_without_k_prefactor = create_form_factor_matrix(material=material, config=config, q_values=q_values_grid)
+        mat_form_factors,k_dependent_prefactor, mat_form_factors_without_k_prefactor, mat_form_factors_mine = create_form_factor_matrix(material=material, config=config, q_values=q_values_grid)
         config.debug_timer.print_difference("done mat_form_factors", config.debug_timing)
         
         # single_one_matrices = create_single_1_matrices(2* material.N)
@@ -1720,12 +1743,16 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
                 
                 #changed here so that only the diagonal elements are safed
                 if not config.use_my_calculation_TT_switched:
-                    sqw_prime=np.einsum('t...ij,ab...jk,t...ki->tab...i', T_herm_conj, mat_form_factors, T)
+                    sqw_prime_k=np.einsum('t...ij,ab...jk,t...ki->tab...i', T_herm_conj, mat_form_factors, T)
                 else:
-                    sqw_prime_comp=np.einsum('t...ij,ab...jk,t...ki->tab...i', T_herm_conj, mat_form_factors, T)
-                    print("ATTENTION: experimental calculations!!!!")
                     config.warnings.add("using my calculation of T^+ T switched and form factor matrix complex conjugated")
-                    sqw_prime_k=np.einsum('t...ij,ab...jk,t...ki->tab...i', T, np.conjugate(mat_form_factors), T_herm_conj)
+                    
+                    sqw_prime_comp=np.einsum('t...ij,ab...jk,t...ki->tab...i', T_herm_conj, mat_form_factors, T)
+                    #mat_form_factors_mine = np.einsum('...jk,abjk->ab...jk', k_dependent_prefactor, np.conjugate(mat_form_factors_without_k_prefactor))
+                    if config.use_SpinW_mat_form_factors:
+                        sqw_prime_k=np.einsum('t...ij,ab...jk,t...ki->tab...i', T, mat_form_factors, T_herm_conj)
+                    else:
+                        sqw_prime_k = np.einsum('t...ij,ab...jk,t...ki->tab...i', T, mat_form_factors_mine, T_herm_conj)
                 sqw_prime = np.einsum('tab...i,tw...->tabw...i',sqw_prime_k, energy_dependent_part)
             else:
                 #this should have a problem with the normalisation --> energy dependent part (taking in twice basically)
@@ -1747,7 +1774,8 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
             )
             config.debug_timer.print_difference("done with calc sqw_components_coeff", config.debug_timing)
             
-            #sqw doesnt have the tau components anymore
+            #constructing sqw from the sqw_prime components 
+            #---------------------------------------------------------------
             sqw = np.zeros((3, 3, *sqw_prime[0, 0, 0].shape),dtype=config.dtype_complex)
             for sqw_comp_idx, (alpha, beta) in enumerate(sqw_components):
                 for sqw_prime_idx, coeff in sqw_components_coeff[sqw_comp_idx]:
@@ -1756,39 +1784,64 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
                     #add the corresponding component with its coefficient
                     sqw[alpha,beta] +=  config.dtype_complex(coeff) * sqw_prime[t,a,b]
                     #config.debug_timer.print_difference(f"added sqw component {sqw_comp_idx} with coeff {coeff} to sqw[{n1},{n2}]", config.debug_timing)
-
-            #take the energy dependent part only into account in the very end (since this is independent of tau a, and b)
-            #sqw = np.einsum('ab...ij,w...->abw...ij',sqw, energy_dependent_part)
+            sqw_summed = np.sum(sqw, axis=-1)  # sum over the last dimension (the eigenstates)
             
-            #last_term_to_calculate = terms_to_calculate[-1]-1
-            # terms_to_calculate.pop() #remove the last entry so that it can be added again later
             config.debug_timer.print_difference("done with calculation of sqw components", config.debug_timing)
-                
+            
+            #symmetrising the result (eq 38)
+            #---------------------------------------------------------------
+            
+            phi = np.array([]) # all the possible angles with which the first atom could be rotated
+        
+            for t_part in material.tau:
+                symmetrisations_steps_tau = int(np.round(1/t_part)) if t_part != 0 else 1 # for example 1/3 = 3 steps (0,120,240 degrees)
+                phi = np.append(phi, np.linspace(0, (symmetrisations_steps_tau-1)/symmetrisations_steps_tau * 2 * np.pi, symmetrisations_steps_tau)) # the last step is not included since it is the same as the first one
+            symmetrisations_steps = phi.shape[0]
+            rotation_matrix = np.zeros((3,3,symmetrisations_steps))
+            for i, angle in enumerate(phi):
+                rotation_matrix[..., i] = material.rotation_matrix(phi=angle)
+            #broadcasting the sqw_summed tensor in the axis of the angles, so that for each angle the same sqw_summed is used 
+            sqw_symmetrised = 1/symmetrisations_steps * np.einsum('abp,pbc...,cdp->ad...',  rotation_matrix,np.broadcast_to(sqw_summed[None, ...], (symmetrisations_steps_tau,)+sqw_summed.shape),rotation_matrix.swapaxes(0,1))
+
+            
+            #decide what should be plotted
+            #-----------------------------------------------------------------
             for sqw_components_idx, (alpha,beta) in enumerate(sqw_components):#enumerate([[0,0]]):
             #for sqw_components_idx, (n1,n2) in enumerate([[0,0]]):
                 #for i in range(1):
-                for i in range(material.N, 2*material.N):
-                    #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
-                    term = sqw[alpha, beta,:, :, :, :, i]
-                    if np.any(term >= 10e-5):
-                        results_debug.append(term)
-                        names_debug.append(f"S_{alpha}_{beta}_N={i} from paper 4")
-                    else: 
-                        config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
+                if False: #if I want the individual terms 
+                    for i in range(material.N, 2*material.N):
+                        #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
+                        term = sqw[alpha, beta,:, :, :, :, i]
+                        if np.any(term >= 10e-5):
+                            results_debug.append(term)
+                            names_debug.append(f"S_{alpha}_{beta}_N={i} from paper 4")
+                        #else: 
+                            #config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
+                term = sqw_symmetrised[alpha, beta]
+                if np.any(term >= 10e-5) and np.mean(abs(term)) > 10e-5:
+                    results_debug.append(term)
+                    names_debug.append(f"S_{alpha}_{beta}_N=summed from paper 4")
+        #------------------------tests and debugging plots------------------------
         if np.max(np.imag(T)) > 10e-5:
             config.warnings.add(f"Warning: Some T components have significant imaginary parts of {np.max(np.imag(T))}.")
+        if np.max(T-T_herm_conj) > 10e-5:
+            config.warnings.add(f"Warning: Some T components have significant differences between T and its hermitian conjugate of {np.max(T-T_herm_conj)}.")
         if np.max(np.imag(mat_form_factors_without_k_prefactor)) > 10e-5:
             config.warnings.add(f"Warning: Some mat_form_factors_without_k_prefactor components have significant imaginary parts of {np.max(np.imag(mat_form_factors_without_k_prefactor))}.")
-        if np.max(sqw_prime_comp-sqw_prime_k) > 10e-5:
-            config.warnings.add(f"Warning: Some sqw_prime components have significant differences between the two calculations of T^+ T switched and form factor matrix complex conjugated. biggest difference: {np.max(sqw_prime_comp-sqw_prime)}")
+        if config.use_my_calculation_TT_switched:
+            temp = np.sum(sqw_prime_comp,axis=-1)-np.sum(sqw_prime_k, axis=-1)
+            if np.max(temp) > 10e-5:
+                config.warnings.add(f":--------------FOUND DIFFERENCE------------: \nSome sqw_prime components have significant differences between the two calculations of T^+ T switched and form factor matrix complex conjugated. biggest difference: {np.round(np.max(temp), 5)}, mean : {np.round(np.mean(temp), 5)}")
         #LEAVE IN: Nice for debugging bog trafo components
         if config.plots_to_show_print["T_parts_plot"][0]:
-            fig=plt.figure(f"T components tau:{t} real")
-            fig2=plt.figure(f"T components tau:{t} imag")
-            if config.plots_to_show_print["T_parts_plot"][1]:
-                VALUES_TO_SAVE["figs_for_pdf"].append(fig)
-                VALUES_TO_SAVE["figs_for_pdf"].append(fig2)
+            
             for t in range(3):  
+                fig=plt.figure(f"T components tau:{t} real")
+                fig2=plt.figure(f"T components tau:{t} imag")
+                if config.plots_to_show_print["T_parts_plot"][1]:
+                    VALUES_TO_SAVE["figs_for_pdf"].append(fig)
+                    VALUES_TO_SAVE["figs_for_pdf"].append(fig2)
                 for i in range(2*material.N):
                     for j in range(2*material.N):
             # #print only the energy dependent part
@@ -1801,9 +1854,9 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
                             q_grid=q_values_grid,
                             no_w_values= True,
                         )
-                        VALUES_TO_SAVE["figs_for_pdf"].append(plt.figure(f"T components tau:{t} real"))
+                        plt.figure(f"T components tau:{t} real")
                         plt.plot(np.real(T_result_along_path), label=f"Re T_t{t}_i{i}_j{j}")
-                        VALUES_TO_SAVE["figs_for_pdf"].append(plt.figure(f"T components tau:{t} imag"))
+                        plt.figure(f"T components tau:{t} imag")
                         plt.plot(np.imag(T_result_along_path), label=f"Im T_t{t}_i{i}_j{j}")
                 plt.legend()
                 plt.figure(f"T components tau:{t} real")
@@ -1819,7 +1872,8 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
                     
                 plt.title(f"Hamiltonian along path. \n")
                 for i in range(H.shape[-1]):
-                    for j in [0]:#range(H.shape[-2]):
+                    for j in range(H.shape[-2]):
+                    #for j in range([0]): 
                 #plt.figure(f"q_shift {i} 2")
                         term, xticks_pos, xticks_labels = functions.path_through_k_grid(H[:,:,:,i,j], q_grid=q_values_grid, no_w_values=True, plot_path=False, relative_grid_points=config.relative_grid_points_path)
                         if np.any(np.round(term,3) != 0):
@@ -1873,7 +1927,8 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
         fig.show()
     elif config.plots_to_show_print["max_x_projection_sqw"][0]:
         config.warnings.add("dim = 1 so no max_x projection possible ")
-        
+    
+    #------------------------main plots------------------------
     names = [names_[i] for i in terms_to_calculate]
     
     #if not enough names are given
@@ -2338,6 +2393,9 @@ def general_Ham_types_FM(
 
 
 def herm_conj(U):
+    assert U.ndim == 2, "U must be a 2D array"
+    if U.shape[0] != U.shape[1]:
+        raise ValueError("U must be a square matrix")
     return np.conjugate(U).T
 
 

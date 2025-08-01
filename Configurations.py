@@ -9,6 +9,8 @@ import Debug_timing
 
 @dataclass
 class Config:
+    name: str 
+    
     debug_timer: Debug_timing.Debug_timing
     debug_timing: bool
     
@@ -29,6 +31,7 @@ class Config:
     use_direct_grid_calculation: bool
     cut_diverging_spectral_weights: bool
     use_my_calculation_TT_switched: bool
+    use_SpinW_mat_form_factors: bool
     use_explicit_calculation_of_u_v_for_uv_grid: bool
     calc_u_v_convolutions:bool
     calc_pref_convolutions: bool
@@ -72,6 +75,8 @@ class Config:
 def config_main():
     from Debug_timing import Debug_timing as Debug_timing
     config = Config(
+        name="Main Configuration",
+        
         debug_timer=Debug_timing(),
         debug_timing=True,
         
@@ -102,6 +107,7 @@ def config_main():
         use_hamiltonian_paper_experimental = False,
         use_rotation_Paper_4 = True,
         use_my_calculation_TT_switched = False,
+        use_SpinW_mat_form_factors = False,
         
         path_for_energy_calc= None,
         path_through_grid_directions= None,
@@ -129,7 +135,7 @@ def config_main():
         additional_values = {},
         terms_to_calculate_in_pref_conv=[0,1,2,3],  # List of terms to calculate
         plots_to_show_print={
-            "Hamiltonian_parts_plot": (True,True),
+            "Hamiltonian_parts_plot": (False,True),
             "T_parts_plot": (False,True),
             "max_x_projection_sqw": (False,False),
             "energy_dependent_part": (True,True),
@@ -140,13 +146,17 @@ def config_main():
     )
     return config
 
-def config_experimental():
+def config_experimental(name = ""):
     config_tryout_paper = Config(**vars(config_main()))
+    
+    config_tryout_paper.name = name if name else "Experimental Configuration"
+    
+    
     config_tryout_paper.use_hamiltonian_paper_experimental = True
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = [100,100,1]
+    config_tryout_paper.amount_k_values = [40,40,1]
     config_tryout_paper.amount_BZ = 1
     config_tryout_paper.amount_w_values = 30
     config_tryout_paper.dtype_complex = np.complex128
@@ -159,6 +169,7 @@ def config_experimental():
     config_tryout_paper.use_direct_grid_calculation = True
     config_tryout_paper.use_old_example_version = False
     config_tryout_paper.use_my_calculation_TT_switched = True
+    config_tryout_paper.use_SpinW_mat_form_factors = False
     
     config_tryout_paper.use_Log_Norm = True
     config_tryout_paper.terms_to_calculate_in_pref_conv = [3]
