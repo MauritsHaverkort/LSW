@@ -106,8 +106,8 @@ def NiO(config:Config ,J=1,a=1, alignement=0):
         raise ValueError("Invalid alignment value. Must be 0, 1, or 2.")
 
     #spin_dir = np.array([0,0,1])
-    
-    return General_D_FM_AFM_simple_cubic(J, a, S1=1, S2=-1, d=3, spin_dir=spin_dir)
+
+    return General_D_FM_AFM_simple_cubic(config, J, a, S1=1, S2=-1, d=3, spin_dir=spin_dir)
 
 def D2_with_FM(config:Config ,J=1, J2=0.1, a=1, alignement=0):
 
@@ -242,7 +242,9 @@ def D12_FM_AFM_simple_cubic_NNN_interactions_supercell(config: Config, J, J2, a,
     return material
 
 
-def General_D_FM_AFM_simple_cubic(J, a, S1, S2, d=3, spin_dir=np.array([0, 0, 1])):
+def General_D_FM_AFM_simple_cubic(config: Config, J, a, S1, S2, d=3, spin_dir=np.array([0, 0, 1])):
+    
+    config.dimension = d
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     #normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)  
@@ -290,6 +292,13 @@ def General_D_FM_AFM_simple_cubic(J, a, S1, S2, d=3, spin_dir=np.array([0, 0, 1]
     #                                                                         ], J=[J1,J2],pass_actual_vector=False, lv=lv)
 
     material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    match config.dimension:
+        case 1:
+            config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
+        case 2:
+            config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([0, 0, 0])]
+        case 3:
+            config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([1/2, 1/2, 1/2]), np.array([0, 0, 0])]
 
     # all_atoms.append(atoms[0])
     return material
@@ -455,7 +464,8 @@ def spin_helix_tut30_D2_two_atoms(config: Config, J=1, J2=1, factor_pos_atom_2=0
     return material
 
 
-def D1_spin_spiral_inversion_sym_breaking(config: Config, J=1, J2=1, a=1,fraction_pos_atom2=0.3, S1=1, d=1, spin_dir=np.array([0, 0, 1]), tau=np.array([1/4, 0, 0])):
+
+def D1_spin_spiral_inversion_sym_breaking(config: Config, J_btw_chains=1, J_NN=-1,J_NNN=1, a=1,fraction_pos_atom2=0.3, S1=1, d=1, spin_dir=np.array([0.0001, 0.0001, 1]), tau=np.array([1/4, 0, 0])):
     """
     Creates a spin spiral in a simple cubic lattice with specified parameters.
     
@@ -472,9 +482,9 @@ def D1_spin_spiral_inversion_sym_breaking(config: Config, J=1, J2=1, a=1,fractio
     - Material object representing the spin spiral configuration.
     """
     
-    config.dimension = d
+    config.dimension = 1
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
-    normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)
+    normal_vector = np.array([0,1,0])
     material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Spiral D1")
 
     # Create atoms with specific bonds
@@ -487,10 +497,19 @@ def D1_spin_spiral_inversion_sym_breaking(config: Config, J=1, J2=1, a=1,fractio
     
     bonds = [
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J
+            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J_btw_chains
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, 0, 0]), j=J2
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J_NN
+        ),
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([2, 0, 0]), j=J_NNN
+        ),
+        Bond(
+            material, atoms[1], atoms[1], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J_NN
+        ),
+        Bond(
+            material, atoms[1], atoms[1], unit_cell_of_atom_1=np.array([2, 0, 0]), j=J_NNN
         ),
         
     ]

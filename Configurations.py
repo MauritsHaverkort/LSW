@@ -49,6 +49,7 @@ class Config:
     amount_w_values: int
     amount_BZ: int # Number of Brillouin zones to include in plot, default is 1
     dimension: int
+    amount_tau_values:int
     S: int
     a: float  # lattice constant
     Bz: float
@@ -122,6 +123,7 @@ def config_main():
         amount_w_values=20,
         amount_BZ=1,  # Number of Brillouin zones to include in plot, default is 1
         dimension=2,
+        amount_tau_values=3,
         S = 2.5,  
         a = 0.5, #lattice constant
         Bz = 0,
@@ -159,6 +161,7 @@ def config_experimental(name = ""):
     config_tryout_paper.amount_k_values = [40,40,1]
     config_tryout_paper.amount_BZ = 1
     config_tryout_paper.amount_w_values = 30
+    config_tryout_paper.amount_tau_values = 5
     config_tryout_paper.dtype_complex = np.complex128
     
     

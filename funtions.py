@@ -687,7 +687,7 @@ def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=N
     tiling_shape=(2,)*dimension+(1,)*(3-dimension)
     #print(tiling_shape)
     for w_index in range(amount_w_values):
-        print(w_index)
+        #print(w_index)
         for w_index_2 in range(w_index, amount_w_values):
             #print(np.shape(np.tile(spectral_weight_grid[w_index_2],tiling_shape)))
             #print(np.shape(spectral_weight_grid[w_index_2]))

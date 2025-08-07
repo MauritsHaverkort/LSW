@@ -9761,3 +9761,1471 @@
 887ms | Δ RAM: +0.0 KB --> done with all convolutions 
 121ms | Δ RAM: +0.0 KB --> done with all plotting 
 --------------DONE------------------ 
+922ms | Δ RAM: +0.0 KB --> done with energies along path 
+12ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+12ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+11ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+227ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+4ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+468ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+104ms | Δ RAM: +0.0 KB --> done with all convolutions 
+150ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+5953ms | Δ RAM: +0.0 KB --> done with energies along path 
+12ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+8ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+4ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+448ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+82ms | Δ RAM: +0.0 KB --> done with all convolutions 
+131ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+9113ms | Δ RAM: +0.0 KB --> done with energies along path 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+6ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+5ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+447ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+75ms | Δ RAM: +0.0 KB --> done with all convolutions 
+95ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+408ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+2ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+49ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+311ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+702ms | Δ RAM: +0.0 KB --> done with all convolutions 
+75ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+6996ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+6ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+390ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+598ms | Δ RAM: +0.0 KB --> done with all convolutions 
+106ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+12136ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+1ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+6ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+1ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+280ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+466ms | Δ RAM: +0.0 KB --> done with all convolutions 
+84ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+363ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+35ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+331ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+672ms | Δ RAM: +0.0 KB --> done with all convolutions 
+115ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+379ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+26ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+291ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+722ms | Δ RAM: +0.0 KB --> done with all convolutions 
+72ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+6425ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+10ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+7ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+387ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+673ms | Δ RAM: +0.0 KB --> done with all convolutions 
+83ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+11518ms | Δ RAM: +0.0 KB --> done with energies along path 
+14ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+14ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+8ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+298ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+461ms | Δ RAM: +0.0 KB --> done with all convolutions 
+69ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+494ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+33ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+259ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+55ms | Δ RAM: +0.0 KB --> done with all convolutions 
+64ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+2894ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+3ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+373ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+61ms | Δ RAM: +0.0 KB --> done with all convolutions 
+68ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+5150ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+7ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+272ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+58ms | Δ RAM: +0.0 KB --> done with all convolutions 
+62ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+334ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+32ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+4ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+306ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+58ms | Δ RAM: +0.0 KB --> done with all convolutions 
+194ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+337ms | Δ RAM: +0.0 KB --> done with energies along path 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+3ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+260ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+54ms | Δ RAM: +0.0 KB --> done with all convolutions 
+66ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+304ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+3ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+29ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+262ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+644ms | Δ RAM: +0.0 KB --> done with all convolutions 
+70ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+320ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+31ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+274ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+734ms | Δ RAM: +0.0 KB --> done with all convolutions 
+73ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+312ms | Δ RAM: +0.0 KB --> done with energies along path 
+12ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+27ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+280ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+55ms | Δ RAM: +0.0 KB --> done with all convolutions 
+66ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+324ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+31ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+290ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+72ms | Δ RAM: +0.0 KB --> done with all convolutions 
+78ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+352ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+30ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+1ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+353ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+53ms | Δ RAM: +0.0 KB --> done with all convolutions 
+77ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+391ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+321ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+802ms | Δ RAM: +0.0 KB --> done with all convolutions 
+78ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+386ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+72193ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+96ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+16791ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+6474991ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+126061ms | Δ RAM: +0.0 KB --> done with all convolutions 
+286ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+567ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+253ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+280ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+60ms | Δ RAM: +0.0 KB --> done with all convolutions 
+82ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+357ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+31ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+295ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+708ms | Δ RAM: +0.0 KB --> done with all convolutions 
+65ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+335ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+1ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+276ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+771ms | Δ RAM: +0.0 KB --> done with all convolutions 
+76ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+371ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+3ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+272ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+52ms | Δ RAM: +0.0 KB --> done with all convolutions 
+64ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+302ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+1ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+265ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+684ms | Δ RAM: +0.0 KB --> done with all convolutions 
+84ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+345ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+266ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+701ms | Δ RAM: +0.0 KB --> done with all convolutions 
+66ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+340ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+273ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+775ms | Δ RAM: +0.0 KB --> done with all convolutions 
+79ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+321ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+32ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+319ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+816ms | Δ RAM: +0.0 KB --> done with all convolutions 
+136ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+7110ms | Δ RAM: +0.0 KB --> done with energies along path 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+6ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+1ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+424ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+712ms | Δ RAM: +0.0 KB --> done with all convolutions 
+87ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+13383ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+20ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+10ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+9ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+4ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+550ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1136ms | Δ RAM: +0.0 KB --> done with all convolutions 
+113ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+382ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+3ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+36ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+304ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+94ms | Δ RAM: +0.0 KB --> done with all convolutions 
+86ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+2868ms | Δ RAM: +0.0 KB --> done with energies along path 
+12ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+10ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+7ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+269ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+55ms | Δ RAM: +0.0 KB --> done with all convolutions 
+67ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+4984ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+5ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+340ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+67ms | Δ RAM: +0.0 KB --> done with all convolutions 
+98ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+423ms | Δ RAM: +0.0 KB --> done with energies along path 
+18ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+15ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+21ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+34ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+308ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+942ms | Δ RAM: +0.0 KB --> done with all convolutions 
+77ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+8305ms | Δ RAM: +0.0 KB --> done with energies along path 
+13ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+16ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+12ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+10ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+6ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+282ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+931ms | Δ RAM: +0.0 KB --> done with all convolutions 
+84ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+16595ms | Δ RAM: +0.0 KB --> done with energies along path 
+26ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+17ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+15ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+5ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+362ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1280ms | Δ RAM: +0.0 KB --> done with all convolutions 
+99ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+474ms | Δ RAM: +0.0 KB --> done with energies along path 
+13ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+37ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+272ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+810ms | Δ RAM: +0.0 KB --> done with all convolutions 
+71ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+7860ms | Δ RAM: +0.0 KB --> done with energies along path 
+18ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+4ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+399ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+849ms | Δ RAM: +0.0 KB --> done with all convolutions 
+88ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+15411ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+4ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+317ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1119ms | Δ RAM: +0.0 KB --> done with all convolutions 
+114ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+333ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+5ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+65ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+292ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+726ms | Δ RAM: +0.0 KB --> done with all convolutions 
+78ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+7201ms | Δ RAM: +0.0 KB --> done with energies along path 
+16ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+6ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+6ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+296ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+773ms | Δ RAM: +0.0 KB --> done with all convolutions 
+75ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+14046ms | Δ RAM: +0.0 KB --> done with energies along path 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+14ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+13ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+10ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+4ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+393ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+885ms | Δ RAM: +0.0 KB --> done with all convolutions 
+113ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+444ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+372ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+638ms | Δ RAM: +0.0 KB --> done with energies along path 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+10ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+398ms | Δ RAM: +0.0 KB --> done with energies along path 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+12ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+13ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+7ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+424ms | Δ RAM: +0.0 KB --> done with energies along path 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+337ms | Δ RAM: +0.0 KB --> done with energies along path 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+358ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+7ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+417ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+386ms | Δ RAM: +0.0 KB --> done with energies along path 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+395ms | Δ RAM: +0.0 KB --> done with energies along path 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+382ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+3830ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+66ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+21554ms | Δ RAM: +0.0 KB --> done with all convolutions 
+114ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+559ms | Δ RAM: +0.0 KB --> done with energies along path 
+13ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+9ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+7ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4180ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+71ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+675ms | Δ RAM: +0.0 KB --> done with all convolutions 
+107ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+357ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+314ms | Δ RAM: +0.0 KB --> done with energies along path 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+1ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4066ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+4ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+75ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1812ms | Δ RAM: +0.0 KB --> done with all convolutions 
+97ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+299ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4698ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+33ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+4ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+105ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+7177ms | Δ RAM: +0.0 KB --> done with all convolutions 
+176ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+391ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+12ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+4076ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+55ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+73ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+7707ms | Δ RAM: +0.0 KB --> done with all convolutions 
+134ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+300ms | Δ RAM: +0.0 KB --> done with energies along path 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+1ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+256ms | Δ RAM: +0.0 KB --> done with energies along path 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+1ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+972ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+56ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+327ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1013ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+46ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+398ms | Δ RAM: +0.0 KB --> done with energies along path 
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1317ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+49ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+292ms | Δ RAM: +0.0 KB --> done with energies along path 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+1ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+997ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+26ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+3ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+73ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+565ms | Δ RAM: +0.0 KB --> done with all convolutions 
+88ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+271ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1059ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+28ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+67ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+508ms | Δ RAM: +0.0 KB --> done with all convolutions 
+106ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+276ms | Δ RAM: +0.0 KB --> done with energies along path 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+317ms | Δ RAM: +0.0 KB --> done with energies along path 
+69ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+62ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+14ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+77ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+14ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+7789ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+55ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+5ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+126ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+571ms | Δ RAM: +0.0 KB --> done with all convolutions 
+75ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+286ms | Δ RAM: +0.0 KB --> done with energies along path 
+87ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+59ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+56ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+15ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+67ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+40ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+7ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+122ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+264ms | Δ RAM: +0.0 KB --> done with all convolutions 
+91ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+311ms | Δ RAM: +0.0 KB --> done with energies along path 
+70ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+69ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+70ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+13ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8863ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+86ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+6ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+128ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+587ms | Δ RAM: +0.0 KB --> done with all convolutions 
+120ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+690953ms | Δ RAM: +0.0 KB --> done with energies along path 
+218ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+43ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> brought both together 
+371ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+22ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+263ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+22ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> brought both together 
+20ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+7ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+264ms | Δ RAM: +0.0 KB --> done with energies along path 
+70ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+61ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+54ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+17ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+7612ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+117ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+9ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+147ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+632ms | Δ RAM: +0.0 KB --> done with all convolutions 
+156ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+256ms | Δ RAM: +0.0 KB --> done with energies along path 
+63ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+63ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+67ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+17ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+95ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+6ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+661ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+658ms | Δ RAM: +0.0 KB --> done with all convolutions 
+83ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+286ms | Δ RAM: +0.0 KB --> done with energies along path 
+65ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+61ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+60ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+11ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+80ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+7ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+485ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+269ms | Δ RAM: +0.0 KB --> done with all convolutions 
+136ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+288ms | Δ RAM: +0.0 KB --> done with energies along path 
+73ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+93ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+17ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+13ms | Δ RAM: +0.0 KB --> brought both together 
+112ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+25ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> brought both together 
+23ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+7ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+68ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+60ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+13ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+626ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+326ms | Δ RAM: +0.0 KB --> done with all convolutions 
+128ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+284ms | Δ RAM: +0.0 KB --> done with energies along path 
+66ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+61ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+58ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+11ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+71ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+6ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+458ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+3049ms | Δ RAM: +0.0 KB --> done with all convolutions 
+110ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+291ms | Δ RAM: +0.0 KB --> done with energies along path 
+69ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+17ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+66ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+14ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+65ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+14ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+14ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+8227ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+94ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+9ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+493ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+3700ms | Δ RAM: +0.0 KB --> done with all convolutions 
+105ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+248ms | Δ RAM: +0.0 KB --> done with energies along path 
+68ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+14ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+63ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+56ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+12ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+42ms | Δ RAM: +0.0 KB --> done with computing the sqw prime elements (biggest einsum) 
+30ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+7ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+455ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+3080ms | Δ RAM: +0.0 KB --> done with all convolutions 
+109ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+439ms | Δ RAM: +0.0 KB --> done with energies along path 
+68ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+17ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> brought both together 
+67ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> brought both together 
+62ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> brought both together 
+19ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+7547ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+352ms | Δ RAM: +0.0 KB --> done with energies along path 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+197ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+858686ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+13ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+2542ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+840ms | Δ RAM: +0.0 KB --> done with energies along path 
+11ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+311ms | Δ RAM: +0.0 KB --> done with energies along path 
+27ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+301ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+6ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+5ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> brought both together 
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+301ms | Δ RAM: +0.0 KB --> done with energies along path 
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+10ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+4ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> brought both together 
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+217ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+54ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+2ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+443ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+3463ms | Δ RAM: +0.0 KB --> done with all convolutions 
+96ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+289ms | Δ RAM: +0.0 KB --> done with energies along path 
+63ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+15ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+62ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+55ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+11ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> brought both together 
+14ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+7145ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+80ms | Δ RAM: +0.0 KB --> done with calc sqw_components_coeff 
+7ms | Δ RAM: +0.0 KB --> done with calculation of sqw components 
+156ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+3305ms | Δ RAM: +0.0 KB --> done with all convolutions 
+76ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+418ms | Δ RAM: +0.0 KB --> done with energies along path 
+402ms | Δ RAM: +0.0 KB --> done with energies along path 
+312ms | Δ RAM: +0.0 KB --> done with energies along path 
+324ms | Δ RAM: +0.0 KB --> done with energies along path 

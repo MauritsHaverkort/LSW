@@ -63,12 +63,13 @@ def call_main():
         
         #material = Examples.D2_with_FM(config, J2 = -0) 
         #material = Examples.NiO_supercell(config)
-        #material = Examples.General_D_FM_AFM_simple_cubic(J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 1, 1]))
+        material = Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 0, 1]))
         #material = Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1]))
         #material = Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0]))
         #material = Examples.spin_helix_tut30_D2(config, J=1, a=1, S1=1, d=2)
         #material = Examples.D1_spin_spiral_inversion_sym_breaking(config)
-        material = Examples.spin_helix_tut30_D2_two_atoms(config)
+        #material = Examples.spin_helix_tut30_D2_two_atoms(config)
+        
         main(config, material)
         #plt.ioff() #turn off interactive plotting
         print("")
@@ -80,7 +81,7 @@ def call_main():
                 print(w)
         #write results into output file
         functions.save_figures_as_images_to_pdf(config, VALUES_TO_SAVE["figs_for_pdf"], filename=f"outputs/output_{config.name}.pdf", material=material)
-        #plt.show(block = True)
+        plt.show(block = True)
         plt.close('all')  # Close all figures for next configuration
     
 
@@ -1368,7 +1369,20 @@ def create_bog_pref_grid(
             print("using direct grid computation")
             if use_calculation_of_plus_minus_Q:
                 tau_in_a_units = np.einsum("v,vi->i",material.tau, functions.give_reciprocal_lv(material.lattice_vectors))
-                for q_shift_index, q_shift in enumerate([np.array([0,0,0]), tau_in_a_units,-tau_in_a_units]):
+                q_shifts = []
+                #idea: 0, +tau, -tau, +2tau, -2tau, +3tau, -3tau, ...
+                for t in range(config.amount_tau_values):
+                    #check if even then negative
+                    if t % 2 == 0:
+                        sign = -1
+                    else:
+                        #odd then positive but add 1 to have even number so it can be divided by 2
+                        sign = 1
+                        t = t+1
+                    t=t/2
+                    q_shifts.append(tau_in_a_units * t*sign)
+                assert q_shifts[0] == np.array([0, 0, 0]), "first tau shift has to be zero"
+                for q_shift_index, q_shift in enumerate(q_shifts):
                     H, state_cr, state_an, bog_trafo = current_Hamiltonian_to_use(
                                 config,
                                 k_=q_values + q_shift,
@@ -1584,6 +1598,10 @@ def create_form_factor_matrix(material: Material, config:Config, q_values:np.nda
                             np.sqrt(si * s_j) * np.conj(exp_minus_i_ri_q) * exp_minus_i_rj_q
                         )  # test YZWV
                     prefactor_tensor[:, :, :, i, j] = prefactor
+                    prefactor_tensor[:, :, :, i+N, j] = prefactor
+                    prefactor_tensor[:, :, :, i, j+N] = prefactor
+                    prefactor_tensor[:, :, :, i+N, j+N] = prefactor
+                    
                     matY[ alpha, beta,:, :, :, i, j] = prefactor * ui[alpha] * np.conj(u_j[beta])
                     matZ[ alpha, beta,:, :, :, i, j] = prefactor * ui[alpha] * u_j[beta]
                     matV[ alpha, beta,:, :, :, i, j] = (
@@ -1601,7 +1619,11 @@ def create_form_factor_matrix(material: Material, config:Config, q_values:np.nda
     mat = np.block([[matY, matZ], [matV, matW]])
     mat_mine = np.block([[matY, matV], [matZ, matW]])
     mat_without_prefactor = np.block([[matY_without_prefactor, matZ_without_prefactor], [matV_without_prefactor, matW_without_prefactor]])
-    return mat, prefactor_tensor, mat_without_prefactor, mat_mine
+    mat_mine_without_prefactor = np.block([[matY_without_prefactor, matV_without_prefactor], [matZ_without_prefactor, matW_without_prefactor]])
+    assert np.all(mat == np.einsum('abij,...ij->ab...ij',mat_without_prefactor, prefactor_tensor)), "prefactor tensor does not match the mat"
+    assert np.all(mat_mine == np.einsum('abij,...ij->ab...ij',mat_mine_without_prefactor, prefactor_tensor)), "prefactor tensor does not match the mat mine"
+    
+    return mat, prefactor_tensor, mat_without_prefactor, mat_mine, mat_mine_without_prefactor
 
 def calculate_convolutions_of_bog_trafo_pref_grid(
     config: Config,  q_values_grid,pref_grids_matrix: np.ndarray = None, material:Material=None, energy_dependent_part=None, T=None, eigvalue_grid:np.ndarray=None
@@ -1609,7 +1631,7 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
     """Calculates the convolutions of the pref grids for the spectral weight grid.
     pref_grids: np.ndarray
         The pref grids of shape (W, kx, ky, kz, 2N, 2N) --> given as the complete matrix"""
-    
+    k_shape = q_values_grid.shape[:-1]
     if pref_grids_matrix is None:
         pref_grids_matrix = np.zeros(
             (3,) + np.shape(energy_dependent_part) + 2*(2 * material.N,), dtype=config.dtype_complex
@@ -1673,7 +1695,7 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
         
         #experimental create the V matrix (paper 4)
         #T^+ T
-        mat_form_factors,k_dependent_prefactor, mat_form_factors_without_k_prefactor, mat_form_factors_mine = create_form_factor_matrix(material=material, config=config, q_values=q_values_grid)
+        mat_form_factors,k_dependent_prefactor, mat_form_factors_without_k_prefactor, mat_form_factors_mine, mat_form_factors_mine_without_k_prefactor = create_form_factor_matrix(material=material, config=config, q_values=q_values_grid)
         config.debug_timer.print_difference("done mat_form_factors", config.debug_timing)
         
         # single_one_matrices = create_single_1_matrices(2* material.N)
@@ -1682,20 +1704,60 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
         # mat_form_factors = single_one_matrices[0]
         
         #experimental extracting the I a a^+ elements directly
-        if False:
+        if True:
             #Now I dont have ab, indices but instead a a^+ indices for less confusion they will be called c,d
             
             T_herm_conj = np.conjugate(T.swapaxes(-2, -1))
-            sqw_prime=np.einsum('t...lc,...,t...dl->tcd...l', T_herm_conj, k_dependent_prefactor, T)
+            if not config.use_my_calculation_TT_switched:
+                sqw_prime_of_a_ad=np.einsum('t...ld,...cd,t...cl->tcd...l', T_herm_conj, k_dependent_prefactor, T)
+            else:
+                config.warnings.add("using my calculation of T^+ T")
+                sqw_prime_of_a_ad=np.einsum('t...ld,...cd,t...cl->tcd...l', T_herm_conj, k_dependent_prefactor, T)
             # print("ATTENTION: experimental calculations!!!!")
             # sqw_prime=np.einsum('t...ij,ab...jk,t...kl->tab...il', T, np.conjugate(mat_form_factors), T_herm_conj)
-            sqw_prime = np.einsum('tcd...l,tw...->tcdw...l',sqw_prime, energy_dependent_part)
+            #adding the energy dependent part
+            sqw_prime_of_a_ad = np.einsum('tcd...l,tw...->tcdw...l',sqw_prime_of_a_ad, energy_dependent_part)
             
             #summing over all eigenvectors, (taking the trace in paper 4)
-            sqw_prime = np.einsum('tcd...l->tcd...',sqw_prime)
-            aa_conv = functions.convolute_grids(sqw_prime[0,0,0,:,:,:], sqw_prime[0,0,0,:,:,:], dimension=2)
-            #constructing the sqw_prime matrix dependent on x,y,z again
-            sqw_prime_ab = np.einsum('tcd...,abcd->tab...',sqw_prime, mat_form_factors_without_k_prefactor)
+            sqw_prime_of_a_ad = (1/sqw_prime_of_a_ad.shape[-1]) * np.einsum('tcd...l->tcd...',sqw_prime_of_a_ad)
+            #aa_conv = functions.convolute_grids(sqw_prime_of_a_ad[0,0,0,:,:,:], sqw_prime_of_a_ad[0,0,0,:,:,:], dimension=2)
+            
+            # constructing my four particle dependent Sqw'
+            sqw_prime_four_ad_a = np.zeros((3,material.N,4, material.N,4, 2*config.amount_w_values, *k_shape), dtype=config.dtype_complex)
+            # I am only calculating here all the convolutions that might be needed later so all convolutions from any i factor of a_i (a^+_i) to a_j (a^+_j)
+            if True:
+                orders_ad_a = np.array([[0,0],[0,1],[1,0],[1,1]], dtype=np.int8) #the orders of a and a^+ in the four particle dependent S matrix
+                for t in range(config.amount_tau_values):
+                    for i in range(material.N):
+                        for j in range(material.N):
+                            for order_idx, (is_ad_1, is_ad_2) in enumerate(orders_ad_a):
+                                for order_idx2, (is_ad_3, is_ad_4) in enumerate(orders_ad_a):
+                                    sqw_prime_four_ad_a[t,i,order_idx,j,order_idx2] = functions.convolute_grids(
+                                        sqw_prime_of_a_ad[t,2*i+is_ad_1,2*i+is_ad_2], 
+                                        sqw_prime_of_a_ad[t,2*j+is_ad_3,2*j+is_ad_4], dimension=config.dimension)
+                                    #temp = sqw_prime_four_ad_a[t,i,order_idx,j,order_idx2]
+                                    # if np.max(np.abs(temp)) > 1e-5: #and np.min(temp) >= 0:
+                                    #     results_debug.append(temp)
+                                    #     names_debug.append(f"sqw_prime_four_ad_a_{t}_{i}_{order_idx}_{j}_{order_idx2}")
+                config.debug_timer.print_difference("done with all convolutions of a and ad", config.debug_timing)
+                #constructing the 4 sqw_prime matrix dependent on x,y,z-------------------------------------------------------------
+                
+                #first trying to construxt the <z|xx> element
+                #idea: the z component only gives the second order of a and a^+ while the xx component contributes all order
+                res = np.einsum("tijo...->t...", sqw_prime_four_ad_a[:,:,1,:,:])
+                
+                #trying to construxt the <xx|xx> element
+                res = np.einsum("tiujo...->t...", sqw_prime_four_ad_a[:,:,:,:,:])
+                for t in range(config.amount_tau_values):
+                    results_debug.append(res[t])
+                    names_debug.append(f"sqw_prime_four_ad_a_xx_xx_t:{t}")
+               
+            
+            #constructing the sqw_prime matrix dependent on x,y,z again for testing
+            sqw_prime_of_xyz = np.einsum('tcd...,abcd->tab...',sqw_prime_of_a_ad, mat_form_factors_without_k_prefactor)
+            
+            
+
             # for sqw_components_idx, (n1,n2) in enumerate([[a,d] for a in range(2*material.N) for d in range(2*material.N)]): #[[0,0]]):
             #     #for i in range(2*material.N):
                 
@@ -1704,35 +1766,35 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
             #     names_debug.append(f"I'_{n1}_{n2}_N=summed over; of a and a^+")
             # 
             
-            sqw_components, sqw_components_coeff = sqw_components_calc(
-                material=material, config=config
-            )
-            config.debug_timer.print_difference("done with calc sqw_components_coeff", config.debug_timing)
+            # sqw_components, sqw_components_coeff = sqw_components_calc(
+            #     material=material, config=config
+            # )
+            # config.debug_timer.print_difference("done with calc sqw_components_coeff", config.debug_timing)
             
-            sqw_prime = sqw_prime_ab
             
-            #sqw doesnt have the tau components anymore
-            sqw = np.zeros((3, 3, *sqw_prime[0, 0, 0].shape),dtype=config.dtype_complex)
-            for sqw_comp_idx, (n1, n2) in enumerate(sqw_components):
-                for sqw_prime_idx, coeff in sqw_components_coeff[sqw_comp_idx]:
-                    t,a,b = material.sqw_prime_components[sqw_prime_idx]
-                    sqw[n1,n2] +=  config.dtype_complex(coeff) * sqw_prime[t,a,b]
-                    config.debug_timer.print_difference(f"added sqw component {sqw_comp_idx} with coeff {coeff} to sqw[{n1},{n2}]", config.debug_timing)
+            
+            # #sqw doesnt have the tau components anymore
+            # sqw = np.zeros((3, 3, *sqw_prime_of_xyz[0, 0, 0].shape),dtype=config.dtype_complex)
+            # for sqw_comp_idx, (n1, n2) in enumerate(sqw_components):
+            #     for sqw_prime_idx, coeff in sqw_components_coeff[sqw_comp_idx]:
+            #         t,a,b = material.sqw_prime_components[sqw_prime_idx]
+            #         sqw[n1,n2] +=  config.dtype_complex(coeff) * sqw_prime_of_xyz[t,a,b]
+            #         config.debug_timer.print_difference(f"added sqw component {sqw_comp_idx} with coeff {coeff} to sqw[{n1},{n2}]", config.debug_timing)
 
-            #take the energy dependent part only into account in the very end (since this is independent of tau a, and b)
-            #sqw = np.einsum('ab...ij,w...->abw...ij',sqw, energy_dependent_part)
+            # #take the energy dependent part only into account in the very end (since this is independent of tau a, and b)
+            # #sqw = np.einsum('ab...ij,w...->abw...ij',sqw, energy_dependent_part)
             
-            #last_term_to_calculate = terms_to_calculate[-1]-1
-            # terms_to_calculate.pop() #remove the last entry so that it can be added again later
-            config.debug_timer.print_difference("done with calculation of sqw components", config.debug_timing)
+            # #last_term_to_calculate = terms_to_calculate[-1]-1
+            # # terms_to_calculate.pop() #remove the last entry so that it can be added again later
+            # config.debug_timer.print_difference("done with calculation of sqw components", config.debug_timing)
                 
-            #for sqw_components_idx, (alpha,beta) in enumerate(sqw_components):#enumerate([[0,0]]):
-            for sqw_components_idx, (n1,n2) in enumerate(sqw_components):
-                #for i in range(1):
-                for i in range(material.N, 2*material.N):
-                    #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
-                    results_debug.append(sqw[n1, n2,:, :, :, :]) 
-                    names_debug.append(f"S_{n1}_{n2}_N=summed over from paper 4")
+            # #for sqw_components_idx, (alpha,beta) in enumerate(sqw_components):#enumerate([[0,0]]):
+            # for sqw_components_idx, (n1,n2) in enumerate(sqw_components):
+            #     #for i in range(1):
+            #     for i in range(material.N, 2*material.N):
+            #         #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
+            #         results_debug.append(sqw[n1, n2,:, :, :, :]) 
+            #         names_debug.append(f"S_{n1}_{n2}_N=summed over from paper 4")
         
         
         else:
@@ -1753,75 +1815,63 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
                         sqw_prime_k=np.einsum('t...ij,ab...jk,t...ki->tab...i', T, mat_form_factors, T_herm_conj)
                     else:
                         sqw_prime_k = np.einsum('t...ij,ab...jk,t...ki->tab...i', T, mat_form_factors_mine, T_herm_conj)
-                sqw_prime = np.einsum('tab...i,tw...->tabw...i',sqw_prime_k, energy_dependent_part)
+                sqw_prime_of_xyz = np.einsum('tab...i,tw...->tabw...i',sqw_prime_k, energy_dependent_part)
             else:
                 #this should have a problem with the normalisation --> energy dependent part (taking in twice basically)
                 pref_grids_herm_conj = np.conjugate(pref_grids_matrix.swapaxes(-2, -1))
-                sqw_prime=np.einsum('t...ij,ab...jk,t...kl->tab...il', pref_grids_herm_conj, mat_form_factors, pref_grids_matrix)
+                sqw_prime_of_xyz=np.einsum('t...ij,ab...jk,t...kl->tab...il', pref_grids_herm_conj, mat_form_factors, pref_grids_matrix)
                 
             #sqw_prime=np.einsum('t...ij,ab...jk,t...kl->tab...il', pref_grids_matrix, mat_form_factors, pref_grids_herm_conj)
             
+            #summing over all eigenvectors, (taking the trace in paper 4)
+            sqw_prime_of_xyz = (1/sqw_prime_of_a_ad.shape[-1])*np.einsum('tcd...l->tcd...',sqw_prime_of_xyz)
             config.debug_timer.print_difference("done with computing the sqw prime elements (biggest einsum)", config.debug_timing)
             
+            
             #for now just appending the tau a b = 0,0,0 component here
-            # for t in range(3):
+            # for t in range(config.amount_tau_values):
             #     results.append(sqw_prime[t,0,0,:,:,:,:,0,0])
                 
             # calculating the actual S_alpha_beta from paper 4
-            
-            sqw_components, sqw_components_coeff = sqw_components_calc(
-                material=material, config=config
-            )
-            config.debug_timer.print_difference("done with calc sqw_components_coeff", config.debug_timing)
-            
-            #constructing sqw from the sqw_prime components 
-            #---------------------------------------------------------------
-            sqw = np.zeros((3, 3, *sqw_prime[0, 0, 0].shape),dtype=config.dtype_complex)
-            for sqw_comp_idx, (alpha, beta) in enumerate(sqw_components):
-                for sqw_prime_idx, coeff in sqw_components_coeff[sqw_comp_idx]:
-                    # go from the index back to the values for tau, a, b
-                    t,a,b = material.sqw_prime_components[sqw_prime_idx]
-                    #add the corresponding component with its coefficient
-                    sqw[alpha,beta] +=  config.dtype_complex(coeff) * sqw_prime[t,a,b]
-                    #config.debug_timer.print_difference(f"added sqw component {sqw_comp_idx} with coeff {coeff} to sqw[{n1},{n2}]", config.debug_timing)
-            sqw_summed = np.sum(sqw, axis=-1)  # sum over the last dimension (the eigenstates)
-            
-            config.debug_timer.print_difference("done with calculation of sqw components", config.debug_timing)
-            
-            #symmetrising the result (eq 38)
-            #---------------------------------------------------------------
-            
-            phi = np.array([]) # all the possible angles with which the first atom could be rotated
         
-            for t_part in material.tau:
-                symmetrisations_steps_tau = int(np.round(1/t_part)) if t_part != 0 else 1 # for example 1/3 = 3 steps (0,120,240 degrees)
-                phi = np.append(phi, np.linspace(0, (symmetrisations_steps_tau-1)/symmetrisations_steps_tau * 2 * np.pi, symmetrisations_steps_tau)) # the last step is not included since it is the same as the first one
-            symmetrisations_steps = phi.shape[0]
-            rotation_matrix = np.zeros((3,3,symmetrisations_steps))
-            for i, angle in enumerate(phi):
-                rotation_matrix[..., i] = material.rotation_matrix(phi=angle)
-            #broadcasting the sqw_summed tensor in the axis of the angles, so that for each angle the same sqw_summed is used 
-            sqw_symmetrised = 1/symmetrisations_steps * np.einsum('abp,pbc...,cdp->ad...',  rotation_matrix,np.broadcast_to(sqw_summed[None, ...], (symmetrisations_steps_tau,)+sqw_summed.shape),rotation_matrix.swapaxes(0,1))
-
-            
-            #decide what should be plotted
-            #-----------------------------------------------------------------
-            for sqw_components_idx, (alpha,beta) in enumerate(sqw_components):#enumerate([[0,0]]):
-            #for sqw_components_idx, (n1,n2) in enumerate([[0,0]]):
-                #for i in range(1):
-                if False: #if I want the individual terms 
-                    for i in range(material.N, 2*material.N):
-                        #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
-                        term = sqw[alpha, beta,:, :, :, :, i]
-                        if np.any(term >= 10e-5):
-                            results_debug.append(term)
-                            names_debug.append(f"S_{alpha}_{beta}_N={i} from paper 4")
-                        #else: 
-                            #config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
-                term = sqw_symmetrised[alpha, beta]
-                if np.any(term >= 10e-5) and np.mean(abs(term)) > 10e-5:
-                    results_debug.append(term)
-                    names_debug.append(f"S_{alpha}_{beta}_N=summed from paper 4")
+        
+        #constructing sqw from the sqw_prime components 
+        #--------------------------------------------------------------- 
+        sqw, sqw_components = sqw_prime_to_sqw(config, sqw_prime_of_xyz, material=material)
+        #symmetrising the result (eq 38)
+        #---------------------------------------------------------------
+        
+        phi = np.array([]) # all the possible angles with which the first atom could be rotated
+    
+        for t_part in material.tau:
+            symmetrisations_steps_tau = int(np.round(1/t_part)) if t_part != 0 else 1 # for example 1/3 = 3 steps (0,120,240 degrees)
+            phi = np.append(phi, np.linspace(0, (symmetrisations_steps_tau-1)/symmetrisations_steps_tau * 2 * np.pi, symmetrisations_steps_tau)) # the last step is not included since it is the same as the first one
+        symmetrisations_steps = phi.shape[0]
+        rotation_matrix = np.zeros((3,3,symmetrisations_steps))
+        for i, angle in enumerate(phi):
+            rotation_matrix[..., i] = material.rotation_matrix(phi=angle)
+        #broadcasting the sqw tensor in the axis of the angles, so that for each angle the same sqw is used 
+        sqw_symmetrised = 1/symmetrisations_steps * np.einsum('abp,pbc...,cdp->ad...',  rotation_matrix,np.broadcast_to(sqw[None, ...], (symmetrisations_steps_tau,)+sqw.shape),rotation_matrix.swapaxes(0,1))
+        
+        
+        #decide what should be plotted
+        #-----------------------------------------------------------------
+        for sqw_components_idx, (alpha,beta) in enumerate(sqw_components):#enumerate([[0,0]]):
+        #for sqw_components_idx, (n1,n2) in enumerate([[0,0]]):
+            #for i in range(1):
+            if False: #if I want the individual terms 
+                for i in range(material.N, 2*material.N):
+                    #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
+                    term = sqw[alpha, beta,:, :, :, :, i]
+                    if np.any(term >= 10e-5):
+                        results_debug.append(term)
+                        names_debug.append(f"S_{alpha}_{beta}_N={i} from paper 4")
+                    #else: 
+                        #config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
+            term = sqw_symmetrised[alpha, beta]
+            if np.any(term >= 10e-5) and np.mean(abs(term)) > 10e-5:
+                results_debug.append(term)
+                names_debug.append(f"S_{alpha}_{beta}_N=summed from paper 4")
         #------------------------tests and debugging plots------------------------
         if np.max(np.imag(T)) > 10e-5:
             config.warnings.add(f"Warning: Some T components have significant imaginary parts of {np.max(np.imag(T))}.")
@@ -1836,7 +1886,7 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
         #LEAVE IN: Nice for debugging bog trafo components
         if config.plots_to_show_print["T_parts_plot"][0]:
             
-            for t in range(3):  
+            for t in range(config.amount_tau_values):  
                 fig=plt.figure(f"T components tau:{t} real")
                 fig2=plt.figure(f"T components tau:{t} imag")
                 if config.plots_to_show_print["T_parts_plot"][1]:
@@ -1938,7 +1988,7 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
     
     for i, intensity_result in enumerate(results + results_debug):
         
-        print(np.sum(intensity_result))
+        #print(np.sum(intensity_result))
         steps = int(len(pref_grids_column[1][0]) / 2)
 
         # took out since this d_k is absorbed in the delta function
@@ -2024,6 +2074,31 @@ def calculate_convolutions_of_bog_trafo_pref_grid(
 
     # plt.figure("DOS")
     # plt.plot(functions.sum_k_dependency(grid= conv))
+
+def sqw_prime_to_sqw(config: Config, sqw_prime: np.ndarray, material: Material, results_debug=None, names_debug=None):
+    for t in range(config.amount_tau_values):
+        for a in range(3):
+            for b in range(3):
+                results_debug.append(sqw_prime[t,a,b,:,:,:])
+                names_debug.append(f"sqw_prime_of_xyz_t{t}_a{a}_b{b}")
+               
+        sqw_components, sqw_components_coeff = sqw_components_calc(
+            material=material, config=config
+        )
+        config.debug_timer.print_difference("done with calc sqw_components_coeff", config.debug_timing)
+        
+        
+        sqw = np.zeros((3, 3, *sqw_prime[0, 0, 0].shape),dtype=config.dtype_complex)
+        for sqw_comp_idx, (alpha, beta) in enumerate(sqw_components):
+            for sqw_prime_idx, coeff in sqw_components_coeff[sqw_comp_idx]:
+                # go from the index back to the values for tau, a, b
+                t,a,b = material.sqw_prime_components[sqw_prime_idx]
+                #add the corresponding component with its coefficient
+                sqw[alpha,beta] +=  config.dtype_complex(coeff) * sqw_prime[t,a,b]
+                #config.debug_timer.print_difference(f"added sqw component {sqw_comp_idx} with coeff {coeff} to sqw[{n1},{n2}]", config.debug_timing)
+        
+        config.debug_timer.print_difference("done with calculation of sqw components", config.debug_timing)
+        return sqw, sqw_components
 
 def calc_spectral_weight_grid(H: np.ndarray, state_cr, w: np.ndarray, Self_energy=0, state_an=None):
     """
