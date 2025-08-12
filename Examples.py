@@ -16,7 +16,7 @@ def give_orthogonal_normal_vector(spin_dir: np.ndarray):
     return normal_vector
 
 # examples --> trying to do the supercell (J1 J2 model) in general d
-def General_D_FM_AFM_simple_cubic_J1_J2(J1, J2 ,a1, a, S1, S2, d=3):
+def General_D_FM_AFM_simple_cubic_J1_J2(config:Config,J1, J2 ,a1, a, S1, S2, d=3):
     
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
@@ -26,7 +26,7 @@ def General_D_FM_AFM_simple_cubic_J1_J2(J1, J2 ,a1, a, S1, S2, d=3):
         )  # in direction of all lattice vectors the unit cell is turned by 180° every time (AFM)
     else:
         tau = np.array([0, 0, 0])  # FM no rotation
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d)
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -141,7 +141,7 @@ def D2_FM_AFM_simple_cubic_NNN_interactions(config: Config, J_AFM, J_FM, a, S, d
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)
     tau = np.array([0, 1/2, 0])   # in direction of all lattice vectors the unit cell is turned by 180° every time (AFM)
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=2)
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=2)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -186,7 +186,7 @@ def D12_FM_AFM_simple_cubic_NNN_interactions_supercell(config: Config, J, J2, a,
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)
 
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=2)
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=2)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -255,7 +255,7 @@ def General_D_FM_AFM_simple_cubic(config: Config, J, a, S1, S2, d=3, spin_dir=np
         )  # in direction of all lattice vectors the unit cell is turned by 180° every time (AFM)
     else:
         tau = np.array([0, 0, 0])  # FM no rotation
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="General_D_FM_AFM_simple_cubic")
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="General_D_FM_AFM_simple_cubic")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -311,7 +311,7 @@ def D2_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     
-    material = Material(lattice_vectors=lv, tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name="D2 AFM SC Supercell")
+    material = Material(config=config,lattice_vectors=lv, tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name="D2 AFM SC Supercell")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -367,7 +367,7 @@ def spin_helix_tut30_D2(config: Config, J=1, a=1, S1=1, d=2, spin_dir=np.array([
     #normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     normal_vector = np.array([0, 0, 1])  # normal vector in the z-direction for a 2D system
     
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix D2 (tut 30 SpinW)")
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix D2 (tut 30 SpinW)")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -420,7 +420,7 @@ def spin_helix_tut30_D2_two_atoms(config: Config, J=1, J2=1, factor_pos_atom_2=0
     #normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     normal_vector = np.array([0, 0, 1])  # normal vector in the z-direction for a 2D system
     assert np.dot(spin_dir, normal_vector) == 0, "normal vector must be orthogonal to spin direction"
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix D2 (tut 30 SpinW two atoms)")
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix D2 (tut 30 SpinW two atoms)")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -465,7 +465,7 @@ def spin_helix_tut30_D2_two_atoms(config: Config, J=1, J2=1, factor_pos_atom_2=0
 
 
 
-def D1_spin_spiral_inversion_sym_breaking(config: Config, J_btw_chains=1, J_NN=-1,J_NNN=1, a=1,fraction_pos_atom2=0.3, S1=1, d=1, spin_dir=np.array([0.0001, 0.0001, 1]), tau=np.array([1/4, 0, 0])):
+def D1_spin_spiral_inversion_sym_breaking_90_degree(config: Config, J_btw_chains=1, J_NN=-1,J_NNN=1, a=1,fraction_pos_atom2=0.3, S1=1, d=1, spin_dir=np.array([0.0001, 0.0001, 1]), tau=np.array([1/4, 0, 0])):
     """
     Creates a spin spiral in a simple cubic lattice with specified parameters.
     
@@ -485,7 +485,7 @@ def D1_spin_spiral_inversion_sym_breaking(config: Config, J_btw_chains=1, J_NN=-
     config.dimension = 1
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = np.array([0,1,0])
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Spiral D1")
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Spiral D1")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -522,6 +522,55 @@ def D1_spin_spiral_inversion_sym_breaking(config: Config, J_btw_chains=1, J_NN=-
     # all_atoms.append(atoms[0])
     return material
 
+def D1_spin_spiral_inversion_sym_breaking_general_degree(config: Config, J1=-3.23607, J2=1, a=1,fraction_pos_atom2=0.3, S1=1, d=1, spin_dir=np.array([0, 0, 1]), tau=np.array([1/5, 0, 0])):
+    """
+    Creates a spin spiral in a simple cubic lattice with specified parameters.
+    
+    Parameters:
+    - config: Config object containing configuration settings.
+    - J: Interaction strength.
+    - a: Lattice constant.
+    - S1: Spin value for the first type of atom.
+    - d: Dimension of the system (1).
+    - spin_dir: Direction of the spin vector.
+    - tau: Translation vector for the unit cell.
+    
+    Returns:
+    - Material object representing the spin spiral configuration.
+    """
+    
+    config.dimension = 1
+    lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
+    normal_vector = np.array([1,0,0])
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Spiral D1")
+
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        
+        Atom(np.array([fraction_pos_atom2*a, 0, 0]), type=1, S=S1, spin_dir=rotation.rot_vec(theta=2*np.pi/10, n = normal_vector)@spin_dir),
+        ]
+    
+    bonds = [
+        Bond(
+            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J1
+        ),
+        Bond(
+            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J2
+        ),
+        
+    ]
+    #bonds = [bonds[i] for i in range(d)]
+
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    
+    config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
+
+    # all_atoms.append(atoms[0])
+    return material
+
+
 def spin_helix_sc_D(config: Config, J=1, a=1, S1=1, d=1, spin_dir=np.array([0, 0, 1]), tau=np.array([1/3, 0, 0])):
     """
     Creates a spin helix in a simple cubic lattice with specified parameters.
@@ -543,7 +592,7 @@ def spin_helix_sc_D(config: Config, J=1, a=1, S1=1, d=1, spin_dir=np.array([0, 0
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     
-    material = Material(lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix SC D")
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Helix SC D")
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []

@@ -239,6 +239,7 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
     if prevent_reusing_fig:
         fig = plt.figure( figsize=(10, 6))
         fig.canvas.manager.set_window_title(title)
+        
     else:
         fig = plt.figure(title, figsize=(10, 6))
     
@@ -821,7 +822,9 @@ def save_figures_as_images_to_pdf(
     from matplotlib.backends.backend_pdf import PdfPages
     
     material_description = f"{material.name}" if material is not None else "Material Description Not Provided"
-    
+    for fig in figures:
+        
+        fig.axes[0].set_title(f"{fig.canvas.manager.get_window_title()}")
     with PdfPages(filename) as pdf:
         for i in range(0, len(figures), figures_per_page):
             figs_subset = figures[i:i + figures_per_page]

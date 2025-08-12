@@ -21,6 +21,7 @@ from datetime import datetime
 from rotation import rotation_matrix_from_vectors, rotation_matrix_from_axis_angle
 from Material import Material
 from Configurations import Config
+import Configurations
 
 def test_RIXS_prefactor_calculations():
     from RIXS import calculate_prefactors_of_intensities
@@ -297,6 +298,33 @@ def test_3D_scatter():
         zlabel="Z-axis"
     )
 
+def test_sqw_compoents_new():
+    from LSW import sqw_components_calc_general_tau, sqw_components_calc
+    import Examples as Examples
+    config = Configurations.config_experimental()
+    material = Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 0, 1]))
+    material = Examples.D1_spin_spiral_inversion_sym_breaking_90_degree(config=config)
+    sqw_components, sqw_components_coeff = sqw_components_calc_general_tau(
+            material=material, config=config, amount_tau_values=3
+        )
+    sqw_components2, sqw_components_coeff2 = sqw_components_calc(
+            material=material, config=config
+        )
+    assert np.all(sqw_components == sqw_components2), "sqw_components are not equal"
+    assert np.all(sqw_components_coeff == sqw_components_coeff2), "sqw_components_coeff are not equal"
+    print("sqw_components and sqw_components_coeff are equal")
+
+def test_interaction():
+    import Examples as Examples
+    config = Configurations.config_experimental()
+    material = Examples.D1_spin_spiral_inversion_sym_breaking_90_degree(config=config)
+
+    d = [np.array([0.3, 0, 0]),np.array([-0.3, 0, 0])]
+    k = functions.give_grid_vectors_d(
+        functions.give_reciprocal_lv(material.lattice_vectors)[:1], 
+        steps=100
+    )
+    print(material.interaction_e_minus_ikd(d[0], k)+material.interaction_e_minus_ikd(d[1], k))
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -306,4 +334,6 @@ if __name__ == "__main__":
     #import Configurations
     #test_the_Hamiltonian_on_grids_of_k(config = Configurations.config_experimental())
     #test_path_relative_points()
-    test_3D_scatter()
+    #test_3D_scatter()
+    #test_sqw_compoents_new()
+    test_interaction()

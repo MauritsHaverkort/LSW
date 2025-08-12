@@ -17,6 +17,303 @@
                     #print(spin_creation)
                     #print(H_comp)
                     #print("AFM_general")
+
+#taken out 11.08.
+def first_part_of_main():
+    for param_2_index, param_2 in enumerate(
+        running_param_2
+    ):  # enumerate(np.linspace(0.5,2,3))
+        for a_index, a_factor in enumerate(a_values):  #
+
+            # Define variables
+
+            # here always initial bonds FM
+            J1 = -1  # constant J1
+            J2 = -1  # constant J2
+            a1 = a_factor  # lattice constants
+            a2 = 1 - a_factor
+
+            a = a1 + a2  # size of Brillouin zone
+
+            # H_shift=2
+
+            # Define simulation parameters
+
+            k_values = []
+            k_values_scalar = []
+            w_values = np.linspace(-1, 4, amount_w_values)
+            # 1d
+            if dimension == 1:
+                path = [np.array([0, 0, 0]), np.array([2, 0, 0]), np.array([0, 0, 0])]
+            # path: Gamma, X, M, L, Gamma
+            if dimension == 3:
+                path = [
+                    np.array([0, 0, 0]),
+                    np.array([2, 0, 0]),
+                    np.array([2, 2, 0]),
+                    np.array([2, 2, 2]),
+                    np.array([0, 0, 0]),
+                ]
+                # path = [
+                #     np.array([-1, -1, 0]),
+                #     np.array([1, 1, 0])
+                # ]
+            # path: (2d) Gamma X M Gamma
+            if dimension == 2:
+                path = [
+                    np.array([0, 0, 0]),
+                    np.array([2, 0, 0]),
+                    np.array([2, 2, 0]),
+                    np.array([0, 0, 0]),
+                ]
+            if config.path_for_energy_calc != None:
+                path = config.path_for_energy_calc
+
+            k_values_scalar, k_values, xticks_label, xticks_pos = (
+                functions.path_k_space(path, amount_k_values, a)
+            )
+
+            # bonds and couplings for old testing
+            if False:
+                bonds = [
+                    a1 * normalized_vector(np.array([1, 0, 0])),
+                    a1 * normalized_vector(np.array([0, 1, 0])),
+                    a1 * normalized_vector(np.array([0, 0, 1])),
+                ]
+                J = [-J1 for i in range(len(bonds))]
+                # adding the bonds in the opposite direction
+                temp = range(len(bonds))
+                for i in temp:
+                    bonds.append(-bonds[i] * a2 / a1)
+                    J.append(-J2)
+
+            """
+            k_dir=np.array([1,0,0])
+            for k_ in np.linspace(-0.5,0.5,amount_k_values):
+                k_values.append(k_dir*4*np.pi*k_/a)
+                k_values_scalar.append(4*np.pi*k_/a)
+            """
+
+            # k_values_scalar = np.linspace(0,1,len(k_values))
+
+            energies = []
+            states_cr_an = []
+            # eigvecs_k_test=[]
+
+            H_diag = []
+            H_not_diag = []
+            spin_creation = np.array([])
+            spin_anihil = np.array([])
+
+            # for general Hamiltonian
+            # old version
+
+            if config.use_old_example_version:
+                all_atoms, lv = Examples.example_1_General_D_FM_AFM(
+                    -J1, -J2, a, a1, S1=S, S2=-S, d=dimension
+                )
+
+                # Nickel, Copper example
+                # Ni - Ni FM exchange / Cu - Ni weak exchange weak FM
+                # all_atoms = example_2_BCC_FM_AFM(J11=0,J12=-1, J22=0,S1=-1,S2=1, dimension=2)
+
+                draw_atoms(all_atoms)
+
+                sorted_atoms = functions.sort_atoms_for_type(all_atoms)
+                material = Material(config=config,atoms=sorted_atoms, lattice_vectors=lv, dimension=config.dimension)
+                J_bonds_general, dist_bonds_general, spins = material.creating_bonds_dist_lists_types()
+                
+            else:
+                # material = Examples.General_D_FM_AFM_simple_cubic(
+                #     J=-J1,  a=a1, S1=S, S2=-S, d=dimension
+                # )
+                # #material = Examples.NiO_supercell(config, alignement=0)
+                #material = Examples.NiO(config, alignement=0)
+                assert material is not None, "Material has to be given "
+                
+                # material = Examples.example_1_General_D_FM_AFM_bonds(
+                #     -J1, -J2, a, a1, S1=S, S2=S, d=dimension
+                # )
+                draw_atoms_new_bond_system(material=material)
+                J_bonds_general, dist_bonds_general, spins = (
+                    material.creating_bonds_dist_lists_types()
+                )
+                lv = material.lattice_vectors
+            
+            if config.use_direct_grid_calculation:
+                H,*_=current_Hamiltonian_to_use(
+                    config,
+                    k_=np.array(k_values),
+                    material=material,
+                    Ba_z=Ba_z,
+                    Bz=Bz,
+                )
+                # bring energies in right form
+                shape_k = H.shape[:-2] 
+                energies = [H[(...,i,i)] for i in range(H.shape[-1])]
+                
+            
+            if not config.use_direct_grid_calculation:  # use old version energies
+                for k_ in k_values:
+
+                    H, spin_creation, spin_anihil, bog_trafo = current_Hamiltonian_to_use(
+                        config,
+                        spins=spins,
+                        J_bonds_general=J_bonds_general,
+                        dist_bonds_general=dist_bonds_general,
+                        k_=k_,
+                        Bz=Bz,
+                        Ba_z=Ba_z,
+                        material=material,
+                    )
+                    # spin_anihil=np.array([])
+                    if debug_compare_H_general_H_AFM_trafo:
+                        print("new k")
+                        print(H)
+                        print(spin_creation)
+                        H, spin_creation, spin_anihil = AFM_with_trafo(
+                            S, bonds=bonds, J=J, k_=k_, w0=1.001, Delta=0
+                        )
+                        print(H)
+                        print(spin_creation)
+
+                    # print(H)
+                    # print(spin_creation)
+                    # print(H)
+                    # H = general_Ham_types_FM(k_, S=spins, J_bonds=J_bonds_general, bonds_distances=dist_bonds_general)
+                    # print(H)
+                    # print(H-H_comp)
+                    # print("general")
+                    # print(H)
+
+                    eigvals, eigvecs = la.eig(H)
+
+                    # TODO why imaginary part is not zero?
+                    for i in range(len(eigvals)):
+                        if np.imag(eigvals[i]) != 0:
+                            if DEBUG:
+                                print(
+                                    "ATTTENTION: imaginary part of eigenvalues is not zero --> discard imaginary part"
+                                )
+                            eigvals[i] = np.real(eigvals[i])
+                    H_not_diag.append(np.array(H))
+                    H_diag.append(np.diag(eigvals))
+
+                    # backup spin creation
+                    if spin_creation.size == 0:
+                        spin_creation = [1 for _ in range(len(H))]
+                    if (
+                        spin_anihil.size == 0
+                    ):  # no spin anihilation operator defined --> used as hermitian conjugate of spin creation
+                        spin_anihil = spin_creation
+                    if diagonalise_before_using:
+                        states_cr_an.append(
+                            [la.inv(eigvecs) @ spin_creation, la.inv(eigvecs) @ spin_anihil]
+                        )
+                    else:
+                        states_cr_an.append([spin_creation, spin_anihil])
+
+                    energies.append(eigvals)
+                energies = np.array(energies).T
+            plt.figure(0)
+            for e in energies:
+                plt.plot(k_values_scalar, e)
+                plt.xticks(xticks_pos, xticks_label)
+            config.debug_timer.print_difference("done with energies along path", config.debug_timing)
+            if use_automated_energy_window:
+                    min_w = 100
+                    max_w = -100
+                    for e in energies:
+                        if min_w > np.min(e):
+                            min_w = np.real(np.min(e)) - 0.2
+                        if max_w < np.max(e):
+                            max_w = np.real(np.max(e)) + 0.2
+                    if min_w < 0:
+                        min_w = 0
+                    w_values = np.linspace(min_w, max_w, amount_w_values)
+            # spectral weight
+            if not config.use_direct_grid_calculation:
+                intensities = []
+                # spectral_weight = calc_spectral_weight_grid(
+                #             H,
+                #             states_cr_an[k_index][0],
+                #             w_,
+                #             state_an=states_cr_an[k_index][1],
+                #         )
+                
+
+                for k_index, k_ in enumerate(k_values):
+                    temp_results = []
+                    for w_ in w_values:
+
+                        if diagonalise_before_using:
+                            H = H_diag[k_index]
+                        else:
+                            H = H_not_diag[k_index]
+                        spectral_weight = calc_spectral_weight(
+                            H,
+                            states_cr_an[k_index][0],
+                            w_,
+                            state_an=states_cr_an[k_index][1],
+                        )
+
+                        if config.use_normalisation_of_sepctral_weight:
+                            spectral_weight = spectral_weight / total_k_states
+                        temp_results.append(spectral_weight)
+                    # plt.figure(2)
+                    # plt.plot(temp_results)
+
+                    intensities.append(temp_results)
+                    # print(np.sum(temp_results))
+
+                # plotting
+                if DEBUG:
+                    print("plotting")
+
+                """  plt.figure(0)
+                for e in energies:
+                    plt.plot(k_values_scalar, e) """
+
+                if len(running_param_2) > 1 and len(a_values) > 1:
+                    current_ax = ax[a_index, param_2_index]
+                elif len(running_param_2) + len(a_values) > 2:
+                    current_ax = ax[a_index + param_2_index]
+                else:
+                    current_ax = ax
+
+                # current_ax.set_title("a_factor=" + str(a_factor))
+                if use_Log_Norm:
+                    image = current_ax.pcolormesh(
+                        k_values_scalar,
+                        w_values,
+                        np.array(intensities).T,
+                        cmap="viridis",
+                        shading="auto",
+                        norm=LogNorm(1e-2, np.max(intensities)),
+                    )
+                else:
+                    image = current_ax.pcolormesh(
+                        k_values_scalar,
+                        w_values,
+                        np.array(intensities).T,
+                        cmap="viridis",
+                        shading="auto",
+                    )
+                current_ax.set_xticks(xticks_pos, xticks_label)
+                config.plot_info["x_values_scalar"] = k_values_scalar
+                config.plot_info["x_ticks_label"] = xticks_label
+                config.plot_info["x_ticks_pos"] = xticks_pos
+                config.plot_info["y_ticks_label"] = w_values
+                # current_ax.xaxis.set_major_locator(MultipleLocator(base=np.pi))
+                # current_ax.xaxis.set_major_formatter(FuncFormatter(format_func))
+                fig.colorbar(image, ax=current_ax, label="Intensity")
+                if debug_compare_H_general_H_AFM_trafo:
+                    fig.suptitle("AFM_TRAFO")
+                else:
+                    fig.suptitle("general_H")
+                    
+                    
+                    
 #RIXS substitution all at once
 if False:
     substitution_extraction = np.eye(len(prefactors_of_intensitiess))

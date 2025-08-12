@@ -32,6 +32,7 @@ class Config:
     cut_diverging_spectral_weights: bool
     use_my_calculation_TT_switched: bool
     use_SpinW_mat_form_factors: bool
+    use_calc_of_S_a_ad: bool
     use_explicit_calculation_of_u_v_for_uv_grid: bool
     calc_u_v_convolutions:bool
     calc_pref_convolutions: bool
@@ -109,6 +110,7 @@ def config_main():
         use_rotation_Paper_4 = True,
         use_my_calculation_TT_switched = False,
         use_SpinW_mat_form_factors = False,
+        use_calc_of_S_a_ad = False,
         
         path_for_energy_calc= None,
         path_through_grid_directions= None,
@@ -128,7 +130,7 @@ def config_main():
         a = 0.5, #lattice constant
         Bz = 0,
         Ba_z = 0,
-        Gamma = 0.05,
+        Gamma = 0.01,
         lattice_vectors = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
         state_cr_input_untransformed = np.array([1,1]),
         state_an_input_untransformed = np.array([1,1]),
@@ -140,7 +142,8 @@ def config_main():
             "Hamiltonian_parts_plot": (False,True),
             "T_parts_plot": (False,True),
             "max_x_projection_sqw": (False,False),
-            "energy_dependent_part": (True,True),
+            "energy_dependent_part": (False,True),
+            "energy_dependent_part_colormap": (False,True),
             "structure_plot": (True,False),
             "path_plot": (True,True),
             },
@@ -158,10 +161,10 @@ def config_experimental(name = ""):
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = [40,40,1]
+    config_tryout_paper.amount_k_values = [40,1,1]
     config_tryout_paper.amount_BZ = 1
     config_tryout_paper.amount_w_values = 30
-    config_tryout_paper.amount_tau_values = 5
+    config_tryout_paper.amount_tau_values = 3
     config_tryout_paper.dtype_complex = np.complex128
     
     
@@ -173,6 +176,7 @@ def config_experimental(name = ""):
     config_tryout_paper.use_old_example_version = False
     config_tryout_paper.use_my_calculation_TT_switched = True
     config_tryout_paper.use_SpinW_mat_form_factors = False
+    config_tryout_paper.use_calc_of_S_a_ad = False
     
     config_tryout_paper.use_Log_Norm = True
     config_tryout_paper.terms_to_calculate_in_pref_conv = [3]
