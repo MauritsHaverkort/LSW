@@ -500,8 +500,8 @@ def calculate_complete_RIXS_spectrum(
             conv_intensities_along_path  = np.array(give_spectral_weight_along_the_path(conv_intensities_grid))
             intensities_along_path  = np.array(give_spectral_weight_along_the_path(intensities_grid))
             
-            functions.plot_grid(conv_intensities_along_path, title="conv intensities along the path", xlabel="k", ylabel="Energy loss", useLogNorm=True)
-            functions.plot_grid(intensities_along_path, title="intensities along the path", xlabel="k", ylabel="Energy loss", useLogNorm=True)
+            functions.plot_2_1_d_grid(conv_intensities_along_path, title="conv intensities along the path", xlabel="k", ylabel="Energy loss", useLogNorm=True)
+            functions.plot_2_1_d_grid(intensities_along_path, title="intensities along the path", xlabel="k", ylabel="Energy loss", useLogNorm=True)
             w_diff = w_in-w_out
 
             #looping over k and w (this doesnt make sense yet since the expression should also depend on k)
@@ -532,7 +532,7 @@ def calculate_complete_RIXS_spectrum(
             grid_complete_spectral_weight =  temp1_padded + temp2  # Ensure both arrays have the same shape
                 
         
-            functions.plot_grid(grid_complete_spectral_weight, title=f"complete spectral weight {config_rixs}", xlabel="q_x", ylabel="w_in-w_out", useLogNorm=True) 
+            functions.plot_2_1_d_grid(grid_complete_spectral_weight, title=f"complete spectral weight {config_rixs}", xlabel="q_x", ylabel="w_in-w_out", useLogNorm=True) 
             plt.figure(f"prefactors of intensities {config_rixs}")
             plt.plot(prefactors_of_intensitiess['one_magnon'], label="one magnon prefactor")
             plt.plot(prefactors_of_intensitiess['two_magnon'], label="two magnon prefactor")
@@ -548,7 +548,7 @@ def calculate_complete_RIXS_spectrum(
             
     result = np.sum(complete_spectral_weight_grids, axis=0)
     np.save(f"complete/summed_complete_spectral_weight_{timestamp}.npy", result)
-    functions.plot_grid(result, title=f"all grids summed", xlabel="q_x", ylabel="w_in-w_out", useLogNorm=True)
+    functions.plot_2_1_d_grid(result, title=f"all grids summed", xlabel="q_x", ylabel="w_in-w_out", useLogNorm=True)
 
 def plot_all_combinations_of_prefactors(dict:dict):
     result=[]

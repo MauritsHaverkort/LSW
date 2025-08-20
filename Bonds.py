@@ -31,7 +31,7 @@ class Bond(object):
     in the Hamiltonian
     """
 
-    def __init__(self, material, atom0:Atom, atom1:Atom, unit_cell_of_atom_0=np.array((0, 0, 0)), unit_cell_of_atom_1=np.array((0, 0, 0)), j=1):
+    def __init__(self, material, atom0:Atom, atom1:Atom, unit_cell_of_atom_0=np.array((0, 0, 0)), unit_cell_of_atom_2=np.array((0, 0, 0)), j=1):
         # self.idx = (idx0, idx1)
         # self.atom0 = Sample.atoms[idx0]
         # self.atom1 = Sample.atoms[idx1]
@@ -39,7 +39,7 @@ class Bond(object):
         self.atom1:Atom = atom1
         
         self.unit_cell_of_atom_0 = np.array(unit_cell_of_atom_0)
-        self.unit_cell_of_atom_1 = np.array(unit_cell_of_atom_1)
+        self.unit_cell_of_atom_1 = np.array(unit_cell_of_atom_2)
         self.s0 = self.atom0.S
         self.s1 = self.atom1.S
         self.d_absolut = np.round(self.atom1.position - self.atom0.position + self.unit_cell_of_atom_1 - self.unit_cell_of_atom_0, 3)

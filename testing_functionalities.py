@@ -324,7 +324,7 @@ def test_interaction():
         functions.give_reciprocal_lv(material.lattice_vectors)[:1], 
         steps=100
     )
-    print(material.interaction_e_minus_ikd(d[0], k)+material.interaction_e_minus_ikd(d[1], k))
+    print(material.e_minus_ikd(d[0], k)+material.e_minus_ikd(d[1], k))
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()

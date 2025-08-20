@@ -2,6 +2,7 @@ import numpy as np
 from typing import List
 import funtions as functions
 from rotation import rotation_matrix_from_vectors, rotation_matrix_from_axis_angle
+from Configurations import Config
 
 
 
@@ -35,12 +36,17 @@ class Atom:
         self.index=Atom.give_next_index()
         self.S=S
         self.dir = spin_dir/np.linalg.norm(spin_dir) if spin_dir is not None else np.array([0,0,1])  #direction of the atom z by default
-        self.rotation = rotation_matrix_from_vectors(np.array([0,0,1]), self.dir)  #rotation matrix to align the atom with the z-axis
-        self.v = self.rotation[:,2]
-        self.u= (self.rotation[:,0] + 1j*self.rotation[:,1])
-    
-    
-    
+        self.R_prime = rotation_matrix_from_vectors(np.array([0,0,1]), self.dir)  #rotation matrix to align the atom with the z-axis
+        if np.all(spin_dir == np.array([0,0,-1])): 
+            self.R_prime = np.array([[1,0,0],
+                                      [0,-1,0],
+                                      [0,0,-1]])
+
+        self.v = self.R_prime[:,2]
+        self.u= (self.R_prime[:,1] + 1j*self.R_prime[:,0])
+
+
+
     def j_coupling_function(self, distance, correlation_length):
         return np.exp(-distance/correlation_length)
 

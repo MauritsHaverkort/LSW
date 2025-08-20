@@ -161,7 +161,7 @@ class Material:
         return J_bonds,bonds_distances, spins
     
     
-    def interaction_e_minus_ikd(self, d, k):
+    def e_minus_ikd(self, d, k):
         """takes k as arbitrary array of k-vectors (some grid) and returns the interaction term for the given bond"""
         #TODO: this must be checked for other lattices!
         #removed the pi here because for me this is already in the k-values

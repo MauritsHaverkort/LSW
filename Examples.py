@@ -40,23 +40,23 @@ def General_D_FM_AFM_simple_cubic_J1_J2(config:Config,J1, J2 ,a1, a, S1, S2, d=3
     bonds = [
         #1d
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J1
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J1
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, 0, 0]), j=J2
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, 0, 0]), j=J2
         ),#2d
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, -1, 0]), j=J1
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, -1, 0]), j=J1
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, -1, 0]), j=J2
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, -1, 0]), j=J2
         ),
         #3d
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, -1]), j=J1
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, -1]), j=J1
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, -1, -1]), j=J1
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, -1, -1]), j=J1
         ),
     ]
     bonds = [bonds[i] for i in range(d)]                                                                  
@@ -156,13 +156,13 @@ def D2_FM_AFM_simple_cubic_NNN_interactions(config: Config, J_AFM, J_FM, a, S, d
     ]
     bonds = [
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 1, 0]), j=J_AFM
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 1, 0]), j=J_AFM
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, -1, 0]), j=J_AFM
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, -1, 0]), j=J_AFM
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J_FM
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J_FM
         ),
         
         
@@ -209,28 +209,28 @@ def D12_FM_AFM_simple_cubic_NNN_interactions_supercell(config: Config, J, J2, a,
     ]
     bonds = [
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J2
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J2
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, -1, 0]), j=J2
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, -1, 0]), j=J2
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, 0, 0]), j=J2
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, 0, 0]), j=J2
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, -1, 0]), j=J2
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, -1, 0]), j=J2
         ),
         Bond(
-            material, atoms[0], atoms[2], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J
+            material, atoms[0], atoms[2], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[2], unit_cell_of_atom_1=np.array([-1, 1, 0]), j=J
+            material, atoms[0], atoms[2], unit_cell_of_atom_2=np.array([-1, 1, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[2], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J
+            material, atoms[0], atoms[2], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[2], unit_cell_of_atom_1=np.array([-1, 1, 0]), j=J
+            material, atoms[0], atoms[2], unit_cell_of_atom_2=np.array([-1, 1, 0]), j=J
         ),
         
     ]
@@ -268,13 +268,13 @@ def General_D_FM_AFM_simple_cubic(config: Config, J, a, S1, S2, d=3, spin_dir=np
     ]
     bonds = [
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([0, 1, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([0, 1, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([0, 0, 1]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([0, 0, 1]), j=J
         ),
     ]
     bonds = [bonds[i] for i in range(d)]
@@ -326,21 +326,30 @@ def D2_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     ]
     bonds = [
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, -1, 0]), j=J
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, -1, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, 0, 0]), j=J
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([-1, -1, 0]), j=J
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, -1, 0]), j=J
         ),
     ]
     #bonds = [bonds[i] for i in range(d)]
 
     material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    
+    match config.dimension:
+        case 1:
+            config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
+        case 2:
+            config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 1/2, 0]), np.array([1, 0, 0]), np.array([0, 0, 0])]
+        case 3:
+            config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([1/2, 1/2, 1/2]), np.array([0, 0, 0])]
+
 
     # all_atoms.append(atoms[0])
     return material
@@ -377,13 +386,13 @@ def spin_helix_tut30_D2(config: Config, J=1, a=1, S1=1, d=2, spin_dir=np.array([
         ]
     bonds = [
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 1, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 1, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([0, 1, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([0, 1, 0]), j=J
         ),
         
         
@@ -430,25 +439,25 @@ def spin_helix_tut30_D2_two_atoms(config: Config, J=1, J2=1, factor_pos_atom_2=0
         ]
     bonds = [
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 1, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 1, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([0, 1, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([0, 1, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J2
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J2
         ),
         Bond(
-            material, atoms[1], atoms[1], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J
+            material, atoms[1], atoms[1], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[1], atoms[1], unit_cell_of_atom_1=np.array([1, 1, 0]), j=J
+            material, atoms[1], atoms[1], unit_cell_of_atom_2=np.array([1, 1, 0]), j=J
         ),
         Bond(
-            material, atoms[1], atoms[1], unit_cell_of_atom_1=np.array([0, 1, 0]), j=J
+            material, atoms[1], atoms[1], unit_cell_of_atom_2=np.array([0, 1, 0]), j=J
         ),
         
         
@@ -497,19 +506,19 @@ def D1_spin_spiral_inversion_sym_breaking_90_degree(config: Config, J_btw_chains
     
     bonds = [
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J_btw_chains
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J_btw_chains
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J_NN
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J_NN
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([2, 0, 0]), j=J_NNN
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([2, 0, 0]), j=J_NNN
         ),
         Bond(
-            material, atoms[1], atoms[1], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J_NN
+            material, atoms[1], atoms[1], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J_NN
         ),
         Bond(
-            material, atoms[1], atoms[1], unit_cell_of_atom_1=np.array([2, 0, 0]), j=J_NNN
+            material, atoms[1], atoms[1], unit_cell_of_atom_2=np.array([2, 0, 0]), j=J_NNN
         ),
         
     ]
@@ -522,7 +531,7 @@ def D1_spin_spiral_inversion_sym_breaking_90_degree(config: Config, J_btw_chains
     # all_atoms.append(atoms[0])
     return material
 
-def D1_spin_spiral_inversion_sym_breaking_general_degree(config: Config, J1=-3.23607, J2=1, a=1,fraction_pos_atom2=0.3, S1=1, d=1, spin_dir=np.array([0, 0, 1]), tau=np.array([1/5, 0, 0])):
+def D1_spin_spiral_inversion_sym_breaking_general_degree(config: Config, rotated_to_y:bool = False, J1=-3.23607, J2=1, a=1,fraction_pos_atom2=0.3, S1=1, d=1, spin_dir=np.array([0, 0, 1]), tau=np.array([1/5, 0, 0])):
     """
     Creates a spin spiral in a simple cubic lattice with specified parameters.
     
@@ -539,25 +548,34 @@ def D1_spin_spiral_inversion_sym_breaking_general_degree(config: Config, J1=-3.2
     - Material object representing the spin spiral configuration.
     """
     
-    config.dimension = 1
+    config.dimension = 1 if not rotated_to_y else 2
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = np.array([1,0,0])
-    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Spiral D1")
-
+    
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
+    pos_atom_2 = np.array([fraction_pos_atom2*a, 0, 0]) if not rotated_to_y else np.array([0, fraction_pos_atom2*a, 0])
+    unit_cell_of_atom_2 = np.array([1, 0, 0]) if not rotated_to_y else np.array([0, 1, 0])
+    if rotated_to_y:
+        spin_dir = np.array([1, 0, 0])
+        normal_vector = np.array([0, 1, 0])
+        tau = np.array([0, 1/5, 0])
+    
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=d, name="Spin Spiral D1")
+    
+    
     atoms = [
         Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
-        
-        Atom(np.array([fraction_pos_atom2*a, 0, 0]), type=1, S=S1, spin_dir=rotation.rot_vec(theta=2*np.pi/10, n = normal_vector)@spin_dir),
+
+        Atom(pos_atom_2, type=1, S=S1, spin_dir=rotation.rot_vec(theta=2*np.pi/10, n = normal_vector)@spin_dir),
         ]
     
     bonds = [
         Bond(
-            material, atoms[0], atoms[1], unit_cell_of_atom_1=np.array([0, 0, 0]), j=J1
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J1
         ),
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J2
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=unit_cell_of_atom_2, j=J2
         ),
         
     ]
@@ -565,7 +583,7 @@ def D1_spin_spiral_inversion_sym_breaking_general_degree(config: Config, J1=-3.2
 
     material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
     
-    config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
+    config.relative_grid_points_path = [np.array([0, 0, 0]), np.array([0, 1, 0])] if rotated_to_y else [np.array([0, 0, 0]), np.array([1, 0, 0])]
 
     # all_atoms.append(atoms[0])
     return material
@@ -602,7 +620,7 @@ def spin_helix_sc_D(config: Config, J=1, a=1, S1=1, d=1, spin_dir=np.array([0, 0
         ]
     bonds = [
         Bond(
-            material, atoms[0], atoms[0], unit_cell_of_atom_1=np.array([1, 0, 0]), j=J
+            material, atoms[0], atoms[0], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J
         ),
     ]
     #bonds = [bonds[i] for i in range(d)]

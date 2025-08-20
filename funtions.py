@@ -79,6 +79,30 @@ def analyze_matrix(matrix):
 
     print("========================\n")
 
+def orthonormalise(A):
+    """
+    Orthonormalises the column vectors of matrix A (like MATLAB's orth).
+    """
+    Q, R = np.linalg.qr(A, mode='reduced')   # QR decomposition
+    # # remove near-zero columns (if rank deficient)
+    # tol = 1e-12
+    # keep = np.abs(np.diag(R)) > tol
+    
+    if Q.shape[1] == A.shape[1]:
+        return Q
+    else:   # matrix is rank deficient --> no orthonormalisation possible
+        return A    
+    
+    
+def give_line_width(indices, max_ranges, offset = 2, decrease_factor=0.5):
+    assert len(indices) == len(max_ranges), "indices and max_ranges must have the same length"
+    max_values_multiplied = [1]
+    for i in range(len(max_ranges)):
+        max_values_multiplied.append(max_values_multiplied[-1] * max_ranges[i])
+    max_values_multiplied = np.array(max_values_multiplied)
+    indices = np.array(indices)
+    result = np.einsum('i,i->', indices, max_values_multiplied[:-1]) * decrease_factor
+    return max_values_multiplied[-1]*decrease_factor - result + offset
 
 def cut_array_by_one(arr, dimensions_to_exclude=[]):
     """
@@ -223,14 +247,14 @@ def plot_3d_grid_slider(grid,
     
 
 
-def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
-              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, prevent_reusing_fig=False, plot_also_imaginary_part=True):
+def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
+              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
     grid = np.array(grid)
     if np.iscomplexobj(grid):
         if plot_also_imaginary_part:
             #recall the function to plot the imaginary part
-            plot_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity=intensity, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
+            plot_2_1_d_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity=intensity, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
                       xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False)
         else:
             print("Warning: Grid contains complex values. Discarding imaginary part.")
@@ -268,9 +292,9 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
     # fig.colorbar(image, label=intensity)  
     # plt.xlabel(xlabel)
     # plt.ylabel(ylabel)
-    
-        
-    gs = gridspec.GridSpec(1, 2, width_ratios=[4, 1], wspace=0.05)
+
+
+    gs = gridspec.GridSpec(2, 2, width_ratios=[4, 1], height_ratios=[4,1], wspace=0.05)
 
     # Main grid plot
     ax0 = plt.subplot(gs[0])
@@ -306,11 +330,9 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
                 ax1.set_xlabel("DOS")
             ax1.yaxis.set_tick_params(labelleft=False)  # Hide y-axis labels to avoid duplication
             ax1.grid(True)
-                
-        
-        
             
-        # #grid is giving in the form (Y,X)!!!
+
+        # grid is giving in the form (Y,X)!!!
         if k_values_scalar is None:
             k_values_scalar_ = np.arange(grid.shape[1]+1)
 
@@ -332,6 +354,14 @@ def plot_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="I
             
             k_values_scalar = np.array(k_values_scalar)
 
+        if use_intensity_k:
+            # beneath intensity plot
+            ax2 = plt.subplot(gs[2], sharex=ax0)
+            intensity_k = np.sum(grid, axis=0)
+            ax2.plot(k_values_scalar[:-1], intensity_k)
+            ax2.set_ylabel("Intensity")
+            
+        
         if len(w_values) == 0:
             w_values = np.arange(grid.shape[0]+1)
         if not useLogNorm:
@@ -591,7 +621,7 @@ def path_through_grid_from_relative_points(relative_points, q_grid:np.ndarray):
         
         
 
-def path_through_k_grid( grid, max_value_k=None, q_grid=None,relative_grid_points = None, startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, material=None, no_w_values=False):
+def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relative_grid_points = None, startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, material=None, no_w_values=False):
     """
     Takes a startpoint, a list of directions and the number of steps in each direction and returns a grid with the values of the original grid at each point and w-value (y-axis)
     If relative_grid_points are given, it calculates the startpoint, directions and steps from them.
@@ -653,11 +683,17 @@ def path_through_k_grid( grid, max_value_k=None, q_grid=None,relative_grid_point
         elif max_value_k is not None:
             xticks_pos.append(len(path)-1) #-1 since path has already one element
             xticks_labels.append(np.round((path[-1])/len(grid[1])*max_value_k,2)) #TODO: this doesnt fit completely since the path doesnt start at 1 but at 0
-  
+        else:
+            raise ValueError("Either q_grid or max_value_k must be given to calculate the xticks labels.")
+    
+    steps[0] = steps[0] - 1 # # the first step is already taken with the startpoint, so we take one less step
     for i in range(len(directions)):
         #each time the direction is changed, the value of the k-value is added to the xticks
         add_xticks_pos_labels()
-        for j in range(steps[i]-1):
+        for j in range(steps[i]):
+            if np.any(path[-1]+directions[i] < 0):
+                
+                break #if the next point is out of bounds, we stop the path
             path.append(path[-1]+directions[i])
     #the last point is added
     add_xticks_pos_labels()
@@ -823,8 +859,10 @@ def save_figures_as_images_to_pdf(
     
     material_description = f"{material.name}" if material is not None else "Material Description Not Provided"
     for fig in figures:
-        
-        fig.axes[0].set_title(f"{fig.canvas.manager.get_window_title()}")
+        try:
+            fig.axes[0].set_title(f"{fig.canvas.manager.get_window_title()}")
+        except Exception as e:
+            continue
     with PdfPages(filename) as pdf:
         for i in range(0, len(figures), figures_per_page):
             figs_subset = figures[i:i + figures_per_page]
@@ -838,7 +876,7 @@ def save_figures_as_images_to_pdf(
             fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
             if len(config.warnings) != 0 and i==0: 
                 warning_str = ""
-                warning_str = f"config:{config.name}\n tau:{material.tau}\n normal: {material.normal_vector_to_rotation_plane} \n spin direction: {material.atoms[0][0].dir} \n"
+                warning_str = f"time: {config.timestamp}\n config:{config.name}\n tau:{material.tau}\n normal: {material.normal_vector_to_rotation_plane} \n spin direction: {material.atoms[0][0].dir} \n"
                 for w in config.warnings:
                     warning_str = warning_str + f"\n{w}"
                 fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')

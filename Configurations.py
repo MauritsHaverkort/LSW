@@ -139,11 +139,13 @@ def config_main():
         additional_values = {},
         terms_to_calculate_in_pref_conv=[0,1,2,3],  # List of terms to calculate
         plots_to_show_print={
-            "Hamiltonian_parts_plot": (False,True),
-            "T_parts_plot": (False,True),
+            "Hamiltonian_parts_plot": (True,True),
+            "T_parts_plot": (True,True),
             "max_x_projection_sqw": (False,False),
-            "energy_dependent_part": (False,True),
+            "sqw_prime_elements": (False,True),
+            "energy_dependent_part": (True,True),
             "energy_dependent_part_colormap": (False,True),
+            "intensitities_k": (True,True),
             "structure_plot": (True,False),
             "path_plot": (True,True),
             },
@@ -161,9 +163,9 @@ def config_experimental(name = ""):
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = [40,1,1]
+    config_tryout_paper.amount_k_values = [40,40,1]
     config_tryout_paper.amount_BZ = 1
-    config_tryout_paper.amount_w_values = 30
+    config_tryout_paper.amount_w_values = 40
     config_tryout_paper.amount_tau_values = 3
     config_tryout_paper.dtype_complex = np.complex128
     
@@ -177,6 +179,7 @@ def config_experimental(name = ""):
     config_tryout_paper.use_my_calculation_TT_switched = True
     config_tryout_paper.use_SpinW_mat_form_factors = False
     config_tryout_paper.use_calc_of_S_a_ad = False
+    
     
     config_tryout_paper.use_Log_Norm = True
     config_tryout_paper.terms_to_calculate_in_pref_conv = [3]
