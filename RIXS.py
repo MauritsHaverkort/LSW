@@ -20,6 +20,7 @@ from sympy.physics.quantum import Dagger, Commutator, Operator
 from datetime import datetime
 
 from rotation import rotation_matrix_from_vectors, rotation_matrix_from_axis_angle
+import sympy_manipulations as sympy_manipulations
 
 
 
@@ -606,10 +607,196 @@ def calculate_RIXS(w_in, w_out, q, epsilon_in, epsilon_out):
     #example from mathematica notebook
 #calculate_RIXS()
 
+def higher_order_spin_operator(order_of_operator_x_ray_absoption_dependency = 3, plot_x_ray_absoption_spectra_depndent = True, plot_only_S_dependent = True):
+    
+    S = symbols('S', real=True, positive=True)
+    
+    Sx, Sy, Sz = symbols('Sx Sy Sz', commutative=False)
+    Splus, Smin = symbols('S_pl S_min', commutative=False)
+    Smin = sp.conjugate(Splus)  # Define S- as the conjugate of S+
+    # Define total spin squared
+    S_sq = symbols('S_sq')
+    a = symbols('a', commutative=False)
+    ad = Dagger(a)
 
+    # Define the Sigma function as a symbolic function of two arguments
+
+    # Define orbital labels
+    a1g, eg, t1u, t2g = symbols('a1g eg t1u t2g',commutative=True)
+
+    
+    # Construct the RIXS matrix----------------------------------------------------------------------------
+    RIXSMatrix = Matrix([
+            [
+                a1g + 2 * (Sx**2 - (1/3)*S_sq) * eg,
+                Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
+                -Sy * t1u + (Sz * Sx + Sx * Sz) * t2g
+            ],
+            [
+                -Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
+                a1g + 2 * (Sy**2 - (1/3)*S_sq) * eg,
+                Sx * t1u + (Sy * Sz + Sz * Sy) * t2g
+            ],
+            [
+                Sy * t1u + (Sz * Sx + Sx * Sz) * t2g,
+                -Sx * t1u + (Sy * Sz + Sz * Sy) * t2g,
+                a1g + 2 * (Sz**2 - (1/3)*S_sq) * eg
+            ]
+        ])
+    #
+    RIXSMatrix=RIXSMatrix.subs({S_sq: Sx*Sx + Sy*Sy + Sz*Sz})  # Substitute S_sq with its expression
+    RIXSMatrix=RIXSMatrix.subs({Sx: (Splus+Smin)/2, Sy: (Splus-Smin)/(2*I)})
+
+
+    RIXSMatrix_HP_scnd_order=RIXSMatrix.subs({Splus: sp.sqrt(2*S)*a-1/(2*sp.sqrt(2*S))*ad*a*a, Smin: sp.sqrt(2*S)*ad-1/(2*sp.sqrt(2*S)) * ad*ad*a, Sz: S-ad*a})  # Substitute Sx, Sy, Sz S+ and S-
+    RIXSMatrix_HP_first_order=RIXSMatrix.subs({Splus: sp.sqrt(2*S)*a, Smin: sp.sqrt(2*S)*a, Sz: S-ad*a})  # Substitute Sx, Sy, Sz S+ and S-
+    
+    RIXSMatrix_HP_scnd_order = RIXSMatrix_HP_scnd_order.expand()
+    RIXSMatrix_HP_first_order = RIXSMatrix_HP_first_order.expand()
+    
+    def calculate_RIXS_matrix_coeffcients_of_order(RIXSMatrix, order_of_operator, include_x_ray_numerical_data = True):
+        RIXSMatrix=sp.expand(RIXSMatrix)
+        
+        RIXSMatrix_certain_order = Matrix([
+        [sympy_manipulations.extract_terms_of_order(RIXSMatrix[i, j], order_of_operator=order_of_operator)
+        for j in range(RIXSMatrix.shape[1])]
+        for i in range(RIXSMatrix.shape[0])
+        ])    
+        RIXSMatrix_certain_order=RIXSMatrix_certain_order.subs({a:1})
+        #sp.pprint(RIXSMatrix_certain_order)
+        if include_x_ray_numerical_data == False:
+            RIXSMatrix_certain_order = RIXSMatrix_certain_order.subs({a1g: 1, eg: 1, t1u: 1, t2g: 1})
+            
+            return RIXSMatrix_certain_order
+        
+        #get w dependent prefactors
+        input_filename = "prefactors_results.dat"
+        loaded_data = pd.read_csv(input_filename, sep="\t")
+
+        #getting the prefactors a1g, eg, t1u, t2g for the given w_in-----------------------------------------------------------------------
+        #w_in_index = give_index_of_closest_value(loaded_data["Energy"], w_in)
+
+        a1g_arr = np.array(loaded_data['Re a1g']) + 1j * np.array(loaded_data["Im a1g"])
+        eg_arr = np.array(loaded_data['Re eg']) + 1j * np.array(loaded_data["Im eg"])
+        t1u_arr = np.array(loaded_data['Re t1u']) + 1j * np.array(loaded_data["Im t1u"])
+        t2g_arr = np.array(loaded_data['Re t2g']) + 1j * np.array(loaded_data["Im t2g"])
+        # prefactor_dict_of_w = {
+        #             #'a1g': prefactor_dict_all_w['a1g'][w_in_index],
+        #             #TODO: think about the a1g value
+        #             'a1g': 0,
+        #             'eg': prefactor_dict_all_w['eg'][w_in_index],
+        #             't1u': prefactor_dict_all_w['t1u'][w_in_index],
+        #             't2g': prefactor_dict_all_w['t2g'][w_in_index]
+        #         }
+        numerical_result = np.zeros((3,3,len(a1g_arr)), dtype=complex)
+        Mf = sp.lambdify((a1g, eg, t1u, t2g), RIXSMatrix_certain_order.tolist(), 'numpy')
+        result_list = Mf(a1g_arr, eg_arr, t1u_arr, t2g_arr)
+        #this has as of now a inhomgeneous shape needs to be broadcasted
+        ref_shape_w = a1g_arr.shape #these are the w values
+        result_list = [
+        [np.broadcast_to(np.asarray(result_list[i][j]), ref_shape_w) for j in range(3)]
+        for i in range(3)
+    ]
+        numerical_result = np.array(result_list)
+        return numerical_result
+    
+    S_array = np.arange(0.5, 10.5, 0.5)
+    order_of_operator_array = [2,3]
+    
+    numerical_result_first_order = np.zeros((len(S_array), len(order_of_operator_array), 3, 3), dtype=complex)
+    numerical_result_scnd_order = np.zeros((len(S_array), len(order_of_operator_array), 3, 3), dtype=complex)
+    for order_of_operator_index, order_of_operator_ in enumerate(order_of_operator_array):
+        for S_index, S_value in enumerate(S_array):
+            numerical_result_first_order[S_index, order_of_operator_index, :, :] = calculate_RIXS_matrix_coeffcients_of_order(RIXSMatrix_HP_first_order.subs({S: S_value}), order_of_operator=order_of_operator_, include_x_ray_numerical_data = False)
+            numerical_result_scnd_order[S_index, order_of_operator_index, :, :] = calculate_RIXS_matrix_coeffcients_of_order(RIXSMatrix_HP_scnd_order.subs({S: S_value}), order_of_operator=order_of_operator_, include_x_ray_numerical_data = False)
+    numerical_result_first_order = np.array(numerical_result_first_order)
+    numerical_result_scnd_order = np.array(numerical_result_scnd_order)
+    
+    
+    #plot only dependency on S--------------------------------------------------------------------------
+    if plot_only_S_dependent:
+        fig, axes = plt.subplots(3, 3, figsize=(12, 10))
+        fig.suptitle(f'RIXS Matrix Elements with x-ray absorption spectra set to 1', fontsize=16)
+
+      
+        lines = []
+        handles, labels = [], []
+        for i in range(3):
+            row = []
+            for j in range(3):
+                for order_of_operator_index, order_of_operator_ in enumerate(order_of_operator_array):
+
+                    l1, = axes[i, j].plot(S_array,np.real(numerical_result_first_order[:, order_of_operator_index, i, j]), label=f'Re first order HP order {order_of_operator_}')
+                    l2, = axes[i, j].plot(S_array,np.imag(numerical_result_first_order[:, order_of_operator_index, i, j]), label=f'Im first order HP order {order_of_operator_}')
+                    l3, = axes[i, j].plot(S_array,np.real(numerical_result_scnd_order[:, order_of_operator_index, i, j]), '--', label=f'Re second order HP order {order_of_operator_}')
+                    l4, = axes[i, j].plot(S_array,np.imag(numerical_result_scnd_order[:, order_of_operator_index, i, j]), '--', label=f'Im second order HP order {order_of_operator_}')
+                    axes[i, j].set_title(f'RIXS[{i},{j}]')
+                    axes[i, j].set_xlabel('S')
+                    axes[i, j].set_ylabel('Value')
+                    
+                    row.append((l1, l2, l3, l4))
+                if not handles:  # only collect once
+                    handles, labels = axes[i, j].get_legend_handles_labels()
+            lines.append(row)
+        fig.legend(handles, labels, loc='upper right')
+        plt.subplots_adjust(bottom=0.15)
+    
+    #plot dependency on energy--------------------------------------------------------------------------
+    if plot_x_ray_absoption_spectra_depndent:
+        
+        numerical_result_first_order = []
+        numerical_result_scnd_order = []
+        
+        for S_index, S_value in enumerate(S_array):
+            numerical_result_first_order.append(calculate_RIXS_matrix_coeffcients_of_order(RIXSMatrix_HP_first_order.subs({S: S_value}), order_of_operator=order_of_operator_x_ray_absoption_dependency, include_x_ray_numerical_data = True))
+            numerical_result_scnd_order.append(calculate_RIXS_matrix_coeffcients_of_order(RIXSMatrix_HP_scnd_order.subs({S: S_value}), order_of_operator=order_of_operator_x_ray_absoption_dependency, include_x_ray_numerical_data = True))
+        numerical_result_first_order = np.array(numerical_result_first_order)
+        numerical_result_scnd_order = np.array(numerical_result_scnd_order)
+        
+        import matplotlib.widgets as widgets
+
+        fig, axes = plt.subplots(3, 3, figsize=(12, 10))
+        fig.suptitle(f'RIXS Matrix Elements at S={S_array[0]} and order={order_of_operator_x_ray_absoption_dependency}', fontsize=16)
+
+        # Initial plot for S[0]
+        lines = []
+        for i in range(3):
+            row = []
+            for j in range(3):
+                l1, = axes[i, j].plot(np.real(numerical_result_first_order[0, i, j, :]), label='Re first order')
+                l2, = axes[i, j].plot(np.imag(numerical_result_first_order[0, i, j, :]), label='Im first order')
+                l3, = axes[i, j].plot(np.real(numerical_result_scnd_order[0, i, j, :]), 'r--', label='Re second order')
+                l4, = axes[i, j].plot(np.imag(numerical_result_scnd_order[0, i, j, :]), 'b--', label='Im second order')
+                axes[i, j].set_title(f'RIXS[{i},{j}]')
+                axes[i, j].set_xlabel('w index')
+                axes[i, j].set_ylabel('Value')
+                axes[i, j].legend()
+                row.append((l1, l2, l3, l4))
+            lines.append(row)
+
+        plt.subplots_adjust(bottom=0.15)
+        ax_slider = plt.axes([0.2, 0.05, 0.6, 0.03])
+        slider = widgets.Slider(ax_slider, 'S', 0, len(S_array)-1, valinit=0, valstep=1)
+
+        def update(val):
+            idx = int(slider.val)
+            fig.suptitle(f'RIXS Matrix Elements at S={S_array[idx]} and order={order_of_operator_x_ray_absoption_dependency}', fontsize=16)
+            for i in range(3):
+                for j in range(3):
+                    lines[i][j][0].set_ydata(np.real(numerical_result_first_order[idx, i, j, :]))
+                    lines[i][j][1].set_ydata(np.imag(numerical_result_first_order[idx, i, j, :]))
+                    lines[i][j][2].set_ydata(np.real(numerical_result_scnd_order[idx, i, j, :]))
+                    lines[i][j][3].set_ydata(np.imag(numerical_result_scnd_order[idx, i, j, :]))
+            fig.canvas.draw_idle()
+
+        slider.on_changed(update)
+        plt.tight_layout()
+
+    
 if __name__ == "__main__":
-    calculate_complete_RIXS_spectrum()
+    #calculate_complete_RIXS_spectrum()
     #tryout()
     #sympy_compute_operator()
+    higher_order_spin_operator()
     plt.show()
     print("done")

@@ -14,6 +14,7 @@ from datetime import datetime
 from mpl_toolkits.mplot3d import Axes3D
 from Configurations import Config
 from scipy.signal import fftconvolve
+import scipy as scipy
 
 from funtions import np
 def turn_comp_info_into_str(comp_info):
@@ -79,21 +80,99 @@ def analyze_matrix(matrix):
 
     print("========================\n")
 
+def compare_tensors(a,b):
+    # Mask out values where both a and b are close to zero
+    mask = (np.abs(a) > 1e-10) | (np.abs(b) > 1e-10)
+    a_masked = a[mask]
+    b_masked = b[mask]
+
+    relative = np.abs(a / (b + 1e-10))
+    print(f"max, mean, median, std relative np.abs(a/(b+1e-10)): {np.max(relative)}, {np.mean(relative)}, {np.median(relative)}, {np.std(relative)}")
+    difference = np.abs(a - b)
+    print(f"max, mean, median, std distance np.abs(a-b): {np.max(difference)}, {np.mean(difference)}, {np.median(difference)}, {np.std(difference)}")
+
+    # Masked comparison
+    relative_masked = np.abs(a_masked / (b_masked + 1e-10))
+    difference_masked = np.abs(a_masked - b_masked)
+    print(f"[Masked] max, mean, median, std relative np.abs(a/(b+1e-10)): {np.max(relative_masked)}, {np.mean(relative_masked)}, {np.median(relative_masked)}, {np.std(relative_masked)}")
+    print(f"[Masked] max, mean, median, std distance np.abs(a-b): {np.max(difference_masked)}, {np.mean(difference_masked)}, {np.median(difference_masked)}, {np.std(difference_masked)}")
+
+
+def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, use_median_relative_difference=True):
+    """given a tensor this returns a list of lists of indices that are the same"""
+    assert number_axis_to_include != None, "number_axis_to_include must be provided"
+    def is_similar_max_diff(a, b, threshold):
+        return np.max(np.abs(a - b)) < threshold
+    def is_similar_mean_relative_diff(a, b, threshold):
+        a_rounded = np.round(a, decimals=2)
+        b_rounded = np.round(b, decimals=2)
+        mask = np.abs(a_rounded) > 1e-12  # Exclude values where a is (close to) zero
+        if not np.any(mask):
+            return is_similar_max_diff(a,b,threshold)  # No valid elements to compare
+        return np.abs(np.mean((a_rounded[mask] - b_rounded[mask]) / a_rounded[mask])) < threshold
+    def is_similar_median_relative_diff(a, b, threshold):
+        a_rounded = np.round(a, decimals=2)
+        b_rounded = np.round(b, decimals=2)
+        mask = np.abs(a_rounded) > 1e-12  # Exclude values where a is (close to) zero
+        if not np.any(mask):
+            return is_similar_max_diff(a,b,threshold)  # No valid elements to compare
+        return np.abs(np.median((a_rounded[mask] - b_rounded[mask]) / a_rounded[mask])) < threshold
+
+    symmetries = []
+    
+    for indices in np.ndindex(tensor.shape[:number_axis_to_include]):
+        new_symmetry = True
+        #adding the first symmetry batch
+        if len(symmetries) == 0:
+            symmetries.append([indices])
+            continue
+        #check if the current indices belong to an already known symmetry batch
+        for sym in symmetries:
+            is_similar = is_similar_median_relative_diff(tensor[indices], tensor[sym[0]], threshold) if use_median_relative_difference else is_similar_max_diff(tensor[indices], tensor[sym[0]], threshold)
+            if is_similar:
+                new_symmetry = False
+                sym.append(indices)
+                break
+        #if not create a new symmetry batch
+        if new_symmetry:
+            symmetries.append([indices])
+    for sym in symmetries:
+        sym.append(f"max abs value: {np.max(np.abs(tensor[sym[0]]))}")
+    
+    #construct a tnesor of the same shape as the axis to include but just fill it with the corresponding symmetry class index --> for further testing of symmetries
+    tensor_of_symm_class_index = np.zeros(tensor.shape[:number_axis_to_include], dtype=int)
+    for sym_class_index,sym_class in enumerate(symmetries):
+        for item in sym_class:
+            if isinstance(item, tuple):
+                tensor_of_symm_class_index[*item]=sym_class_index
+    return symmetries, tensor_of_symm_class_index
+
+def give_highest_indices_of_matrix(matrix, number_of_indices=5):
+    n = number_of_indices  # number of indices to return
+    flat_indices = np.argsort(-np.abs(matrix.flatten()))
+    top_n_indices = np.unravel_index(flat_indices[:n], matrix.shape)
+    print(f"Indices of top {n} differences from identity:")
+    for idx in zip(*top_n_indices):
+        print(f"Index: {tuple(int(i) for i in idx)}, Value: {float(matrix[idx])}")
+
+
 def orthonormalise(A):
     """
     Orthonormalises the column vectors of matrix A (like MATLAB's orth).
     """
-    Q, R = np.linalg.qr(A, mode='reduced')   # QR decomposition
-    # # remove near-zero columns (if rank deficient)
-    # tol = 1e-12
-    # keep = np.abs(np.diag(R)) > tol
+    # Q, R = np.linalg.qr(A, mode='reduced')   # QR decomposition
+    # # # remove near-zero columns (if rank deficient)
+    # # tol = 1e-12
+    # # keep = np.abs(np.diag(R)) > tol
     
-    if Q.shape[1] == A.shape[1]:
-        return Q
-    else:   # matrix is rank deficient --> no orthonormalisation possible
-        return A    
-    
-    
+    # if Q.shape[1] == A.shape[1]:
+    #     return Q
+    # else:   # matrix is rank deficient --> no orthonormalisation possible
+    #     return A    
+    # MATLAB-like orth() using SVD
+    Q = scipy.linalg.orth(A)
+    return Q
+
 def give_line_width(indices, max_ranges, offset = 2, decrease_factor=0.5):
     assert len(indices) == len(max_ranges), "indices and max_ranges must have the same length"
     max_values_multiplied = [1]
@@ -104,20 +183,34 @@ def give_line_width(indices, max_ranges, offset = 2, decrease_factor=0.5):
     result = np.einsum('i,i->', indices, max_values_multiplied[:-1]) * decrease_factor
     return max_values_multiplied[-1]*decrease_factor - result + offset
 
-def cut_array_by_one(arr, dimensions_to_exclude=[]):
+def cut_array_by_one(arr, dimensions_to_exclude=[], cut_also_first_element=False):
     """
     Cuts the last element of each dimension of the array, except if the dimension is already 1. also one can give dimensions to exclude as a list"""
     slices = []
+    startindex = 1 if cut_also_first_element else 0
+    
     for i,s in enumerate(arr.shape):
         if i in dimensions_to_exclude:
             slices.append(slice(0,s))
         elif s>1:
-            slices.append(slice(0,s-1))
+            slices.append(slice(startindex,s-1))
         else:
             slices.append(slice(0,s))
     return arr[tuple(slices)]
 
+def subtract_grids_with_padding(big, small):
+    # Ensure `big` is the larger-by-shape; swap if not
+    if any(s > b for s, b in zip(small.shape, big.shape)):
+        big, small = small, big  # result will be small->padded to big
+    
+    out = np.zeros_like(big, dtype=np.result_type(big, small))
+    # slice the overlapping region
+    sl = tuple(slice(0, s) for s in small.shape)
+    out[sl] = small
+    return big - out
+
 def sort_atoms_for_type(atoms):
+    """Sorts atoms into a list of lists based on their type attribute."""
     from Atoms import Atom
     if not all(isinstance(atom, Atom) for atom in atoms):
         raise TypeError("All elements in atoms must be of type Atom")
@@ -334,7 +427,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
 
         # grid is giving in the form (Y,X)!!!
         if k_values_scalar is None:
-            k_values_scalar_ = np.arange(grid.shape[1]+1)
+            
 
             #making the spacing correct
             k_values_scalar = [0]
@@ -347,12 +440,14 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                     for j in range(steps):
                         k_values_scalar.append(k_values_scalar[-1] + np.linalg.norm(x)/steps)
                     xticks_pos_new.append(k_values_scalar[-1])
-            #x_ticks pos was just the scalar value (index of calculated point) now it is the float value of the actual position
-            xticks_pos = xticks_pos_new
-            #k_values_scalar has to be one larger than the grid.shape[1]
-            k_values_scalar.append(k_values_scalar[-1] + np.round(np.linalg.norm(x)/steps))
-            
-            k_values_scalar = np.array(k_values_scalar)
+                #x_ticks pos was just the scalar value (index of calculated point) now it is the float value of the actual position
+                xticks_pos = xticks_pos_new
+                #k_values_scalar has to be one larger than the grid.shape[1]
+                k_values_scalar.append(k_values_scalar[-1] + np.round(np.linalg.norm(x)/steps))
+                
+                k_values_scalar = np.array(k_values_scalar)
+            else:
+                k_values_scalar = np.arange(grid.shape[1]+1)
 
         if use_intensity_k:
             # beneath intensity plot
@@ -443,6 +538,8 @@ def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="
 
     if save_path:
         fig.write_html(save_path)
+        
+        
 
     return fig
 
@@ -679,6 +776,10 @@ def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relat
     def add_xticks_pos_labels():
         if q_grid is not None:
             xticks_pos.append(len(path)-1)
+            mask_overshoot_grid_size = q_grid.shape[:-1]<=path[-1]
+            path[-1][mask_overshoot_grid_size] = np.array(q_grid.shape[:-1])[mask_overshoot_grid_size]-1
+            if np.any(mask_overshoot_grid_size):
+                config.warnings.add("some grid points exceeded the grid size and were set to the maximum value of the grid.")
             xticks_labels.append(np.round(q_grid[path[-1][0],path[-1][1],path[-1][2]],2))
         elif max_value_k is not None:
             xticks_pos.append(len(path)-1) #-1 since path has already one element

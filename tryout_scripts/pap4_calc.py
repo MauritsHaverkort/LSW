@@ -20,7 +20,7 @@ def calc_spectrum(Dab,T):
     res = M[1,1]
     return sp.factor(res)
 
-def calc_spectrum_mine(state_1,state_2, alpha, alpha_d):
+def calc_spectrum_mine_Sd_S(state_1,state_2, alpha, alpha_d):
     #this was swapped since I am using the convention that Sab = <0|(Sa)^+ Sb|0>
     expr = np.conjugate(state_1)*state_2
     expr = expr.subs({np.conjugate(alpha):alpha_d}, evaluate=True)
@@ -34,6 +34,23 @@ def calc_spectrum_mine(state_1,state_2, alpha, alpha_d):
     expr = expr.subs({alpha: 0, alpha_d: 0}, evaluate=True)
     
     return sp.factor(expr)
+
+def calc_spectrum_mine_S_S(state_1,state_2, alpha, alpha_d):
+    #Now I want to compare the new convention that I think they use in paper 4 
+    #this was swapped since I am using the convention that Sab = <0|Sa Sb|0> so left side is in fact not daggered!
+    expr = state_1*state_2
+    expr = expr.subs({np.conjugate(alpha):alpha_d}, evaluate=True)
+    expr = expr.subs({np.conjugate(alpha_d):alpha}, evaluate=True)
+    
+    expr = expr.expand()
+    #this is the only term that survives
+    expr = expr.subs({alpha*alpha_d:1}, evaluate=True)
+    
+    # set the rest to zero
+    expr = expr.subs({alpha: 0, alpha_d: 0}, evaluate=True)
+    
+    return sp.factor(expr)
+
 
 def calc_spectrum_mine_matrix(alpha,beta,u,v,T:sp.Matrix, use_numerical=False, ):
     
@@ -111,7 +128,7 @@ if __name__ == "__main__":
     x_state = x_state.subs(dict, evaluate=True)
     y_state = y_state.subs(dict, evaluate=True)
      
-    T = sp.Matrix([[u_, v_], [np.conjugate(v_), np.conjugate(u_)]])
+    T = sp.Matrix([[u_, np.conjugate(v_)], [v_, np.conjugate(u_)]])
     #T_inv = T.inv()
     def D(Y,Z,V,W):
         D = np.zeros((3,3,2,2),dtype=complex)
@@ -134,12 +151,15 @@ if __name__ == "__main__":
     V = np.einsum("i,j->ij", np.conjugate(u), np.conjugate(u))
     W = np.einsum("i,j->ij", np.conjugate(u), u)
     D_4 = D(Y, Z, V, W)
+    D_mine_new = D(W, Z, V, Y)
     #my matrix
     Y = np.einsum("i,j->ij", u, np.conjugate(u))
     Z = np.einsum("i,j->ij", np.conjugate(u), np.conjugate(u))
     V = np.einsum("i,j->ij", u,u)
     W = np.einsum("i,j->ij", np.conjugate(u),u)
     D_mine = D(Y, Z, V, W)
+    
+  
     
     states = [x_state, y_state]
     theta = 0.56
@@ -167,8 +187,23 @@ if __name__ == "__main__":
                 print(sp.simplify(expr1.subs(test_dict, evaluate=True)))
                 print(expr1.subs(test_dict_real, evaluate=True))
             #print()
-            print("Spectrum mine by substituting the annihilation operators by 0:\n")
-            expr2 = 4*calc_spectrum_mine(states[i], states[j], alpha, alpha_d)
+            print(f"D_mine_new:\n")
+            sp.pprint(D_mine_new[i,j])
+            expr1 = calc_spectrum(D_mine_new[i,j], T)
+            sp.pprint(expr1)
+            if test_explicit:
+                print(sp.simplify(expr1.subs(test_dict, evaluate=True)))
+                print(expr1.subs(test_dict_real, evaluate=True))
+            #print()
+            print("Spectrum mine by substituting the annihilation operators by 0 Sd S:\n")
+            expr2 = 4*calc_spectrum_mine_Sd_S(states[i], states[j], alpha, alpha_d)
+            sp.pprint(expr2)
+            if test_explicit:
+                print(sp.simplify(expr2.subs(test_dict, evaluate=True)))
+                print(expr2.subs(test_dict_real, evaluate=True))
+                
+            print("Spectrum mine by substituting the annihilation operators by 0 S S:\n")
+            expr2 = 4*calc_spectrum_mine_S_S(states[i], states[j], alpha, alpha_d)
             sp.pprint(expr2)
             if test_explicit:
                 print(sp.simplify(expr2.subs(test_dict, evaluate=True)))

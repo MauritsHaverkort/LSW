@@ -37,13 +37,13 @@ class Atom:
         self.S=S
         self.dir = spin_dir/np.linalg.norm(spin_dir) if spin_dir is not None else np.array([0,0,1])  #direction of the atom z by default
         self.R_prime = rotation_matrix_from_vectors(np.array([0,0,1]), self.dir)  #rotation matrix to align the atom with the z-axis
-        if np.all(spin_dir == np.array([0,0,-1])): 
-            self.R_prime = np.array([[1,0,0],
-                                      [0,-1,0],
-                                      [0,0,-1]])
+        # if np.all(spin_dir == np.array([0,0,-1])): 
+        #     self.R_prime = np.array([[1,0,0],
+        #                               [0,-1,0],
+        #                               [0,0,-1]])
 
         self.v = self.R_prime[:,2]
-        self.u= (self.R_prime[:,1] + 1j*self.R_prime[:,0])
+        self.u= (self.R_prime[:,0] + 1j*self.R_prime[:,1])
 
 
 

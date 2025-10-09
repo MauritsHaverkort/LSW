@@ -27,7 +27,7 @@ class Config:
     calc_conv_intensities: bool
     debug_compare_H_general_H_AFM_trafo: bool
     use_normalisation_of_sepctral_weight: bool
-    use_hamiltonian_paper_experimental: bool
+    use_hamiltonian_paper_4: bool
     use_direct_grid_calculation: bool
     cut_diverging_spectral_weights: bool
     use_my_calculation_TT_switched: bool
@@ -36,6 +36,7 @@ class Config:
     use_explicit_calculation_of_u_v_for_uv_grid: bool
     calc_u_v_convolutions:bool
     calc_pref_convolutions: bool
+    debug_Sa_ad: bool
     terms_to_calculate_in_pref_conv: List[int]# List of terms to calculate, e.g., ["S+", "S-", "Sz", "S^2"]
     path_through_grid_startpoint: np.ndarray
     path_through_grid_directions: List[np.ndarray]  # List of direction vectors for the path through the grid
@@ -102,11 +103,13 @@ def config_main():
         path_load_pref_convolutions = "",#"grids/u_v_gridD3_S1_k80_w80_cr[1 1]_an[1 1]_Bz0_Ba_z0_20250525_231126.npz",
 
         debug_compare_H_general_H_AFM_trafo=False,
+        debug_Sa_ad=False,
+        
         use_normalisation_of_sepctral_weight=True,
         cut_diverging_spectral_weights=True,
         use_explicit_calculation_of_u_v_for_uv_grid = False,
 
-        use_hamiltonian_paper_experimental = False,
+        use_hamiltonian_paper_4 = False,
         use_rotation_Paper_4 = True,
         use_my_calculation_TT_switched = False,
         use_SpinW_mat_form_factors = False,
@@ -124,16 +127,20 @@ def config_main():
         amount_k_values=20,
         amount_w_values=20,
         amount_BZ=1,  # Number of Brillouin zones to include in plot, default is 1
+        Gamma = 0.01,
+        
+        # these are material specific parameters and are most likely overwritten in the examples
         dimension=2,
         amount_tau_values=3,
         S = 2.5,  
         a = 0.5, #lattice constant
         Bz = 0,
         Ba_z = 0,
-        Gamma = 0.01,
         lattice_vectors = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
         state_cr_input_untransformed = np.array([1,1]),
         state_an_input_untransformed = np.array([1,1]),
+        
+        
         load_saved_grid=True,
         double_convolution=False, 
         additional_values = {},
@@ -143,9 +150,11 @@ def config_main():
             "T_parts_plot": (True,True),
             "max_x_projection_sqw": (False,False),
             "sqw_prime_elements": (False,True),
+            "sqw_prime_a_ad": (False,True),
             "energy_dependent_part": (True,True),
             "energy_dependent_part_colormap": (False,True),
-            "intensitities_k": (True,True),
+            "intensities_k": (True,True),
+            "intensities_sqw": (True,True),
             "structure_plot": (True,False),
             "path_plot": (True,True),
             },
@@ -159,26 +168,37 @@ def config_experimental(name = ""):
     config_tryout_paper.name = name if name else "Experimental Configuration"
     
     
-    config_tryout_paper.use_hamiltonian_paper_experimental = True
+    config_tryout_paper.use_hamiltonian_paper_4 = True
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
-    config_tryout_paper.amount_k_values = [40,40,1]
+    fast=True
+    # fast=False
+    if fast:
+        config_tryout_paper.amount_k_values = [20,20,1]
+        config_tryout_paper.amount_w_values = 20
+    else:
+        config_tryout_paper.amount_k_values = [60,60,1]
+        config_tryout_paper.amount_w_values = 60
+    
     config_tryout_paper.amount_BZ = 1
-    config_tryout_paper.amount_w_values = 40
+    
+ 
     config_tryout_paper.amount_tau_values = 3
     config_tryout_paper.dtype_complex = np.complex128
     
-    
+    config_tryout_paper.use_calc_of_S_a_ad = True
     config_tryout_paper.calc_conv_intensities = False
-    config_tryout_paper.calc_u_v_convolutions = False
-    config_tryout_paper.use_explicit_calculation_of_u_v_for_uv_grid = False
-    config_tryout_paper.calc_pref_convolutions = True
-    config_tryout_paper.use_direct_grid_calculation = True
-    config_tryout_paper.use_old_example_version = False
-    config_tryout_paper.use_my_calculation_TT_switched = True
-    config_tryout_paper.use_SpinW_mat_form_factors = False
-    config_tryout_paper.use_calc_of_S_a_ad = False
+    config_tryout_paper.debug_Sa_ad = True
+    
+    # config_tryout_paper.calc_u_v_convolutions = False
+    # config_tryout_paper.use_explicit_calculation_of_u_v_for_uv_grid = False
+    # config_tryout_paper.calc_pref_convolutions = True
+    # config_tryout_paper.use_direct_grid_calculation = True
+    # config_tryout_paper.use_old_example_version = False
+    # config_tryout_paper.use_my_calculation_TT_switched = True
+    # config_tryout_paper.use_SpinW_mat_form_factors = False
+    
     
     
     config_tryout_paper.use_Log_Norm = True

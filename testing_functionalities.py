@@ -176,7 +176,7 @@ def test_current_Hamiltonian(
     config: Config, k_array: np.ndarray, Bz, Ba_z, material: Material, spins: List[float] = [], J_bonds_general: List[List[float]] = [], dist_bonds_general: List[List[float]] = [],
     use_looping_over_k_for_old_H=True
 ):
-    from LSW import general_Ham_types_AFM_FM, general_Ham_types_AFM_FM_paper_comp, post_process, general_Ham_types_AFM_FM_paper, plotting_additional_values
+    from LSW import general_Ham_types_AFM_FM_old, general_Ham_types_AFM_FM_paper_4, post_process, general_Ham_types_AFM_FM_paper_old, plotting_additional_values
     state_cr_input_untransformed = config.state_cr_input_untransformed
     state_an_input_untransformed = config.state_an_input_untransformed
 
@@ -198,7 +198,7 @@ def test_current_Hamiltonian(
     for k_ in k_array:
         # just double the states to match the extended Hamiltonian size
         
-        H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM_paper(
+        H, state_cr, state_anihil, eigvecs = general_Ham_types_AFM_FM_paper_old(
             config,
             k_,
             use_correct_self_interaction=True,
@@ -260,7 +260,7 @@ def test_grid_spectral_weight_computation(config:Config):
     k_values_scalar, k_values, xticks_label, xticks_pos = (
         functions.path_k_space(path, config.amount_k_values, a1)
     ) 
-    from LSW import example_1_General_D_FM_AFM_bonds, general_Ham_types_AFM_FM_paper_comp, create_bog_pref_grid
+    from LSW import example_1_General_D_FM_AFM_bonds, general_Ham_types_AFM_FM_paper_4, create_bog_pref_grid
     material = example_1_General_D_FM_AFM_bonds(
                     -1, -1, 1, config.a, S1=config.S, S2=-config.S, d=config.dimension
                 )
@@ -270,7 +270,7 @@ def test_grid_spectral_weight_computation(config:Config):
     )
     lv = material.lattice_vectors
     
-    H, state_cr, state_anihil, eigvecs=general_Ham_types_AFM_FM_paper_comp(
+    H, state_cr, state_anihil, eigvecs=general_Ham_types_AFM_FM_paper_4(
                 config,
                 k_=np.array(k_values),
                 material=material,
@@ -325,6 +325,128 @@ def test_interaction():
         steps=100
     )
     print(material.e_minus_ikd(d[0], k)+material.e_minus_ikd(d[1], k))
+    
+    
+def test_sympy():
+    from sympy import symbols
+    from sympy import Add, Mul, Pow, Symbol
+    from sympy.physics.quantum import Dagger
+
+    a0 = symbols("a0", commutative=False)
+    a1 = symbols("a1", commutative=False)
+    def return_term_cutted_to_order(expr, order_of_operator):
+        expr = sp.expand(expr)
+        expr_terms = expr.as_ordered_terms()
+        new_expr = 0
+        
+        for term in expr_terms:
+            if total_power(term) == order_of_operator:
+                new_expr += term
+        return new_expr
+
+
+    def _is_nc_symbol(x):
+        return isinstance(x, Symbol) and (x.is_commutative is False)
+
+    def _count_in_factor(f):
+        # Dagger(a) -> 1 if a is a noncommutative Symbol
+        if f.func.__name__ == "Dagger" and _is_nc_symbol(f.args[0]):
+            return 1
+
+        # Powers
+        if isinstance(f, Pow):
+            base, exp = f.as_base_exp()
+            if base.func is Dagger and _is_nc_symbol(base.args[0]):
+                if not exp.is_integer:
+                    raise ValueError(f"Non-integer power {exp} on {f}")
+                return abs(int(exp))
+            if _is_nc_symbol(base):
+                if not exp.is_integer:
+                    raise ValueError(f"Non-integer power {exp} on {f}")
+                return abs(int(exp))
+            # (a*b)**n or powers of non-atomic bases are ignored
+            return 0
+
+        # Products
+        if isinstance(f, Mul):
+            return sum(_count_in_factor(arg) for arg in f.args)
+
+        # Single noncommutative symbol
+        if _is_nc_symbol(f):
+            return 1
+
+        # Everything else (numbers, commutative symbols, functions, etc.)
+        return 0
+
+    def total_power(expr):
+        """
+        Count total occurrences ("power") of noncommutative Symbols per additive term.
+        - If `expr` is a sum, returns a list (one count per term, ordered).
+        - Otherwise returns a single integer.
+        Notes:
+        * Dagger(a) counts as 1; Dagger(a)**n counts as n.
+        * Negative integer powers contribute |n| (e.g., a**-2 contributes 2).
+        * Powers of compound noncommutative products like (a*b)**2 are not expanded and contribute 0.
+        """
+        if isinstance(expr, Add):
+            terms = expr.as_ordered_terms()
+            return [_count_in_factor(t) for t in terms]
+        return _count_in_factor(expr)
+
+    expr = 3*a0*a1 + 2*a1*a0+a0**2*a1*a0+Dagger(a0)*a1*a0 + a0*Dagger(a1) + a0*a1*Dagger(a0) + a0*a1*a0**2 + a0**3*a1 + a1*a0**3
+    
+    print(return_term_cutted_to_order(expr, 2))
+
+def test_eig():
+    from LSW import create_Gamma
+    # A = np.random.rand(4, 4)
+    A = np.array([[0.08115414, 0.25824574, 0.05471431, 0.12461827],
+       [0.5601806 , 0.2840338 , 0.19578568, 0.79153294],
+       [0.22626809, 0.42106937, 0.46369308, 0.23805797],
+       [0.6798633 , 0.49473999, 0.47582169, 0.90402245]])
+    test = np.array([[ 4.        +0.j        ,  0.        +0.j        ,
+         0.        +0.j        ,  0.        +0.j        ,
+         0.        +0.j        , -1.35892975-0.93336458j,
+        -2.        +0.j        ,  0.        +0.j        ],
+       [ 0.        +0.j        ,  4.        +0.j        ,
+         0.        +0.j        ,  0.        +0.j        ,
+        -1.35892975+0.93336458j,  0.        +0.j        ,
+         0.        +0.j        , -2.        +0.j        ],
+       [ 0.        +0.j        ,  0.        +0.j        ,
+         4.        +0.j        ,  0.        +0.j        ,
+        -2.        +0.j        ,  0.        +0.j        ,
+         0.        +0.j        , -1.35892975-0.93336458j],
+       [ 0.        +0.j        ,  0.        +0.j        ,
+         0.        +0.j        ,  4.        +0.j        ,
+         0.        +0.j        , -2.        +0.j        ,
+        -1.35892975+0.93336458j,  0.        +0.j        ],
+       [ 0.        +0.j        , -1.35892975-0.93336458j,
+        -2.        +0.j        ,  0.        +0.j        ,
+         4.        +0.j        ,  0.        +0.j        ,
+         0.        +0.j        ,  0.        +0.j        ],
+       [-1.35892975+0.93336458j,  0.        +0.j        ,
+         0.        +0.j        , -2.        +0.j        ,
+         0.        +0.j        ,  4.        +0.j        ,
+         0.        +0.j        ,  0.        +0.j        ],
+       [-2.        +0.j        ,  0.        +0.j        ,
+         0.        +0.j        , -1.35892975-0.93336458j,
+         0.        +0.j        ,  0.        +0.j        ,
+         4.        +0.j        ,  0.        +0.j        ],
+       [ 0.        +0.j        , -2.        +0.j        ,
+        -1.35892975+0.93336458j,  0.        +0.j        ,
+         0.        +0.j        ,  0.        +0.j        ,
+         0.        +0.j        ,  4.        +0.j        ]])
+    
+    Gamma = create_Gamma(half_size=4)
+    
+    eigvals, eigvecs = la.eig(test)
+
+    idx_sorted_eigvals = np.argsort(eigvals)
+    eigvals = eigvals[idx_sorted_eigvals]
+    eigvecs = eigvecs[:, idx_sorted_eigvals]
+    print("Eigenvalues:", eigvals)
+    print("Eigenvectors:\n", eigvecs)
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -336,4 +458,6 @@ if __name__ == "__main__":
     #test_path_relative_points()
     #test_3D_scatter()
     #test_sqw_compoents_new()
-    test_interaction()
+    #test_interaction()
+    # test_sympy()
+    test_eig()

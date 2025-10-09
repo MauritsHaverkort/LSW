@@ -7,7 +7,7 @@ import rotation
 import Configurations as Config
 
 class Material:
-    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given"):
+    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
         
@@ -20,6 +20,17 @@ class Material:
         self.lattice_vectors = np.array(lattice_vectors) if lattice_vectors is not None else np.array([])
         self.N = len(atoms) if atoms is not None else 0
         self.dimension = dimension  # Dimension of the material
+        if relative_grid_points_path is not None:
+            self.relative_grid_points_path = relative_grid_points_path
+        else:
+            match dimension:
+                case 1:
+                    self.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
+                case 2:
+                    self.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([0, 0, 0])]
+                case 3:
+                    self.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([1/2, 1/2, 1/2]), np.array([0, 0, 0])]
+
         self.name = name
         self.config = config
         
@@ -69,9 +80,30 @@ class Material:
     def __repr__(self):
         return f"Material(atoms={self.atoms}, bonds={self.bonds})"
 
+    def transform_basis_i_order_i_to_n1_n2(self, tensor, axis_to_skip=0, backtransform=False):
+        if backtransform:
+            assert tensor.shape[axis_to_skip:axis_to_skip+2] == (2*self.N, 2*self.N), f"tensor shape does not match for backtransform {tensor.shape} vs {(2*self.N, 2*self.N)}"
+            result = np.zeros(tensor.shape[:axis_to_skip] + (self.N,2, self.N,2) + tensor.shape[axis_to_skip+2:] , dtype=np.complex128)
+        else:
+            assert tensor.shape[axis_to_skip:axis_to_skip+4] == (self.N,2, self.N,2), f"tensor shape does not match for transform {tensor.shape} vs {(self.N,2, self.N,2)}"
+            result = np.zeros(tensor.shape[:axis_to_skip] + (2*self.N, 2*self.N) + tensor.shape[axis_to_skip+4:] , dtype=np.complex128) 
+
+        for i in range(self.N):
+            for j in range(self.N):
+                for (is_ad_1, is_ad_2) in self.return_order_of_a_ad_operator_indices(order_of_operator=4):
+                    prefix = (slice(None),) * axis_to_skip
+                    if not backtransform:
+                        result[prefix + (i + is_ad_1*self.N, j + is_ad_2*self.N)] = \
+                            tensor[prefix + (i, is_ad_1, j, is_ad_2)]
+                    else:
+                        result[prefix + (i, is_ad_1, j, is_ad_2)] = \
+                            tensor[prefix + (i + is_ad_1*self.N, j + is_ad_2*self.N)]
+        return result
+
     def return_ad_a_spectra_indices(self, order_of_operator=2):
         """Returns the indices for the ad_a spectra for the given order of operator."""
         if order_of_operator == 2:
+            return [[i, order_i, j, order_j] for i in range(self.N) for order_i in range(2) for j in range(self.N)  for order_j in range(2)]
             raise ValueError("Not implemented yet for order_of_operator == 2")
         elif order_of_operator == 4:
             return [[i, order_i, j, order_j] for i in range(self.N) for order_i in range(4) for j in range(self.N)  for order_j in range(4)]
@@ -97,12 +129,15 @@ class Material:
     def return_order_of_a_ad_operator_indices(self, order_of_operator=2):
         """Returns the indices for the order of a and ad operator."""
         if order_of_operator == 2:
-            return np.array([0,1])
+            return np.array([[0],[1]])
         elif order_of_operator == 4:
             return np.array([[0,0],[0,1],[1,0],[1,1]])
         else:
             raise ValueError("Invalid order_of_operator. Must be 2 or 4.")
         
+
+
+
     def creating_bonds_dist_lists_types(self, fill_with_zeros=False):
         """Creates the bonds_distances and J_bonds matrices for each type of atom in atoms_sorted."""
         
