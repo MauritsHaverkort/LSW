@@ -366,7 +366,7 @@ def calculate_prefactors_of_intensities_experimental_non_squared_operator(Splus,
                 break
     return prefactors_of_intensitiess
 
-def calculate_complete_RIXS_spectrum(
+def calculate_complete_RIXS_spectrum_for_sqw_xyz(
                         w_in = -10, w_out=0,  
                         debug_time_duration=False,
                         debug_RIXS_operator=False,
@@ -551,6 +551,10 @@ def calculate_complete_RIXS_spectrum(
     np.save(f"complete/summed_complete_spectral_weight_{timestamp}.npy", result)
     functions.plot_2_1_d_grid(result, title=f"all grids summed", xlabel="q_x", ylabel="w_in-w_out", useLogNorm=True)
 
+   
+            
+            
+
 def plot_all_combinations_of_prefactors(dict:dict):
     result=[]
     plt.figure("combinations of prefactors")
@@ -600,7 +604,7 @@ def calculate_RIXS(w_in, w_out, q, epsilon_in, epsilon_out):
     input_filename = "prefactors_results.dat"
     loaded_data = pd.read_csv(input_filename, sep="\t")
 
-    term_to_calculate = calculate_complete_RIXS_spectrum()
+    term_to_calculate = calculate_complete_RIXS_spectrum_for_sqw_xyz()
 
 
     #print(loaded_data.head())  # Display the first few rows of the loaded data

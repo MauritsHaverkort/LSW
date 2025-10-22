@@ -1,0 +1,34 @@
+{
+  "crystal_structure": {
+    "atomic_positions": [
+      {
+        "wyckoff": "12c",
+        "element": "Fe",
+        "x": "1/3",
+        "y": "2/3",
+        "z": "0.521489"
+      },
+      {
+        "wyckoff": "18e",
+        "element": "O",
+        "x": "0.694599",
+        "y": "0.694599",
+        "z": "3/4"
+      }
+    ],
+    "symmetry": {
+      "crystal_system": "Trigonal",
+      "lattice_system": "Rhombohedral",
+      "hall_number": "-R 3 2\"c",
+      "international_number": 167,
+      "symbol": "R3̅c",
+      "point_group": "3̅m"
+    },
+    "structure_meta": {
+      "number_of_atoms": 30,
+      "density": "5.14 g·cm⁻³",
+      "dimensionality": "",
+      "possible_oxidation_states": "Fe³⁺, O²⁻"
+    }
+  }
+}

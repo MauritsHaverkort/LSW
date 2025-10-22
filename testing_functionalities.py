@@ -146,11 +146,11 @@ def test_the_Hamiltonian_on_grids_of_k(config:Config):
     q_values = give_grid_vectors_d(functions.give_reciprocal_lv(material.lattice_vectors)[:dimension], amount_k_values)
     
     from LSW import current_Hamiltonian_to_use
-    H, spin_creation, spin_anihil, bog_trafo = current_Hamiltonian_to_use(config, material=material, k_=q_values[:,0,0])
-    H, spin_creation, spin_anihil, bog_trafo3 = current_Hamiltonian_to_use(config, material=material, k_=q_values[0,:,0])
-    H, spin_creation, spin_anihil, bog_trafo4 = current_Hamiltonian_to_use(config, material=material, k_=q_values[0,:,:])
+    H, spin_creation, spin_anihil, bog_trafo = current_Hamiltonian_to_use(config, material=material, q_grid=q_values[:,0,0])
+    H, spin_creation, spin_anihil, bog_trafo3 = current_Hamiltonian_to_use(config, material=material, q_grid=q_values[0,:,0])
+    H, spin_creation, spin_anihil, bog_trafo4 = current_Hamiltonian_to_use(config, material=material, q_grid=q_values[0,:,:])
     
-    H2, spin_creation2, spin_anihil2, bog_trafo2 = current_Hamiltonian_to_use(config, material=material, k_=q_values)
+    H2, spin_creation2, spin_anihil2, bog_trafo2 = current_Hamiltonian_to_use(config, material=material, q_grid=q_values)
     print(np.any(bog_trafo!=bog_trafo2[:,0,0]))
     print(np.any(bog_trafo3!=bog_trafo2[0,:,0]))
     print(np.any(bog_trafo4!=bog_trafo2[0,:,:]))

@@ -80,6 +80,66 @@ def analyze_matrix(matrix):
 
     print("========================\n")
 
+import numpy as np
+
+def compare_tensors_new(a, b, rtol=1e-6, atol=1e-12, zero_tol=1e-12, threshold=1e-8):
+    a = np.asarray(a); b = np.asarray(b)
+    a[np.abs(a) < threshold] = 0
+    b[np.abs(b) < threshold] = 0
+    
+    assert a.shape == b.shape, "Shapes must match"
+
+    # Valid entries: finite and at least one not ~0
+    finite = np.isfinite(a) & np.isfinite(b)
+    nontrivial = (np.abs(a) > zero_tol) | (np.abs(b) > zero_tol)
+    M = finite & nontrivial
+    if not np.any(M):
+        print("No valid elements to compare."); return
+
+    aM, bM = a[M], b[M]
+
+    # --- 1) Absolute / relative errors ---
+    abs_err = np.abs(aM - bM)
+    rel_err_asym = abs_err / np.maximum(np.abs(bM), zero_tol)        # asymmetric
+    rel_err_sym  = 2*abs_err / (np.abs(aM) + np.abs(bM) + 1e-300)    # symmetric, safe
+
+    L_inf = abs_err.max()
+    fro_rel = np.linalg.norm(a - b) / max(np.linalg.norm(a), np.linalg.norm(b), 1e-300)
+    print(f"L_inf max |a-b|: {L_inf:.3e}")
+    print(f"Frobenius relative error ||a-b||/max(||a||,||b||): {fro_rel:.3e}")
+    print(f"Median symmetric relative error 2|a-b|/(|a|+|b|): {np.median(rel_err_sym):.3e}")
+    print(f"95th pct symmetric relative error: {np.percentile(rel_err_sym,95):.3e}")
+
+    # --- 2) Ratio statistics (elementwise, where b ≠ 0) ---
+    nz = np.abs(bM) > zero_tol
+    if np.any(nz):
+        r = aM[nz] / bM[nz]
+        print(f"Ratio |a/b|: median={np.median(np.abs(r)):.3e}, IQR=({np.percentile(np.abs(r),25):.3e},{np.percentile(np.abs(r),75):.3e})")
+        # phase difference of a vs b (in radians)
+        dphi = np.angle(r)
+        # wrap to [-pi,pi]
+        print(f"Phase diff angle(a)−angle(b): median={np.median(dphi):.3e} rad, MAD={np.median(np.abs(dphi-np.median(dphi))):.3e}")
+
+    # --- 3) Best complex scalar factor α (least squares) ---
+    # α* = argmin_α ||a - α b||_F → α = <b,a>/<b,b>, using conjugate inner product
+    denom = np.vdot(bM, bM)
+    if np.abs(denom) > 0:
+        alpha = np.vdot(bM, aM) / denom
+        scaled_err = np.linalg.norm(a - alpha*b) / max(np.linalg.norm(a), 1e-300)
+        print(f"Best scale α: |α|={np.abs(alpha):.6g}, arg(α)={np.angle(alpha):.3e} rad")
+        print(f"Relative error after scaling ||a-αb||/||a||: {scaled_err:.3e}")
+
+    # --- 4) Magnitude-only and correlation ---
+    mag_rmse = np.sqrt(np.mean((np.abs(aM)-np.abs(bM))**2))
+    # Complex correlation / coherence in [0,1]
+    coh = np.abs(np.vdot(aM, bM)) / (np.linalg.norm(aM)*np.linalg.norm(bM) + 1e-300)
+    print(f"Magnitude RMSE: {mag_rmse:.3e}")
+    print(f"Complex coherence |<a,b>|/(||a|| ||b||): {coh:.6f}")
+
+    # --- 5) Quick pass/fail with tolerances (predefined behavior) ---
+    print(f"np.allclose(a,b, rtol={rtol}, atol={atol}) → {np.allclose(a, b, rtol=rtol, atol=atol)}")
+
+
 def compare_tensors(a,b):
     # Mask out values where both a and b are close to zero
     mask = (np.abs(a) > 1e-10) | (np.abs(b) > 1e-10)
@@ -97,64 +157,190 @@ def compare_tensors(a,b):
     print(f"[Masked] max, mean, median, std relative np.abs(a/(b+1e-10)): {np.max(relative_masked)}, {np.mean(relative_masked)}, {np.median(relative_masked)}, {np.std(relative_masked)}")
     print(f"[Masked] max, mean, median, std distance np.abs(a-b): {np.max(difference_masked)}, {np.mean(difference_masked)}, {np.median(difference_masked)}, {np.std(difference_masked)}")
 
+    a_rounded = np.round(a, decimals=5)
+    b_rounded = np.round(b, decimals=5)
+    mask = np.abs(a_rounded) > 1e-12  # Exclude values where a is (close to) zero
+    relative_difference_masked = np.abs((a_rounded[mask] - b_rounded[mask])) / np.abs(a_rounded[mask])
+    if not np.any(mask):
+        print("No valid elements to compare after rounding.")
+        return
+    print(f"[MASKED] max, mean, median, std distance np.abs((a-b))/abs(a)): {np.max(relative_difference_masked)}, {np.mean(relative_difference_masked)}, {np.median(relative_difference_masked)}, {np.std(relative_difference_masked)}")
 
-def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, use_median_relative_difference=True):
+def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, use_median_relative_difference=True, rounding_decimals = 2, return_conjugated_symmetries=True):
     """given a tensor this returns a list of lists of indices that are the same"""
     assert number_axis_to_include != None, "number_axis_to_include must be provided"
     def is_similar_max_diff(a, b, threshold):
         return np.max(np.abs(a - b)) < threshold
+    def conjugated_is_similar(a, b, threshold):
+        return is_similar_max_diff(a, np.conj(b), threshold)
     def is_similar_mean_relative_diff(a, b, threshold):
-        a_rounded = np.round(a, decimals=2)
-        b_rounded = np.round(b, decimals=2)
+        a_rounded = np.round(a, decimals=rounding_decimals)
+        b_rounded = np.round(b, decimals=rounding_decimals)
         mask = np.abs(a_rounded) > 1e-12  # Exclude values where a is (close to) zero
         if not np.any(mask):
             return is_similar_max_diff(a,b,threshold)  # No valid elements to compare
-        return np.abs(np.mean((a_rounded[mask] - b_rounded[mask]) / a_rounded[mask])) < threshold
+        return np.mean(np.abs((a_rounded[mask] - b_rounded[mask]) / a_rounded[mask])) < threshold
     def is_similar_median_relative_diff(a, b, threshold):
-        a_rounded = np.round(a, decimals=2)
-        b_rounded = np.round(b, decimals=2)
+        a_rounded = np.round(a, decimals=rounding_decimals)
+        b_rounded = np.round(b, decimals=rounding_decimals)
         mask = np.abs(a_rounded) > 1e-12  # Exclude values where a is (close to) zero
+        
+       
         if not np.any(mask):
             return is_similar_max_diff(a,b,threshold)  # No valid elements to compare
         return np.abs(np.median((a_rounded[mask] - b_rounded[mask]) / a_rounded[mask])) < threshold
 
     symmetries = []
-    
+    conj_symmetries = []
     for indices in np.ndindex(tensor.shape[:number_axis_to_include]):
         new_symmetry = True
         #adding the first symmetry batch
         if len(symmetries) == 0:
             symmetries.append([indices])
+            conj_symmetries.append([])
             continue
         #check if the current indices belong to an already known symmetry batch
-        for sym in symmetries:
-            is_similar = is_similar_median_relative_diff(tensor[indices], tensor[sym[0]], threshold) if use_median_relative_difference else is_similar_max_diff(tensor[indices], tensor[sym[0]], threshold)
+        for sym_idx,sym in enumerate(symmetries):
+            is_similar = is_similar_max_diff(tensor[indices], tensor[sym[0]], threshold)
             if is_similar:
+                new_symmetry = False
+                sym.append(indices)
+                break
+            elif conjugated_is_similar(tensor[indices], tensor[sym[0]], threshold) and return_conjugated_symmetries:
+                new_symmetry = False
+                conj_symmetries[sym_idx].append(indices)
+                break
+            elif is_similar_median_relative_diff(tensor[indices], tensor[sym[0]], threshold) and use_median_relative_difference:
                 new_symmetry = False
                 sym.append(indices)
                 break
         #if not create a new symmetry batch
         if new_symmetry:
             symmetries.append([indices])
-    for sym in symmetries:
-        sym.append(f"max abs value: {np.max(np.abs(tensor[sym[0]]))}")
+            conj_symmetries.append([])
     
+
     #construct a tnesor of the same shape as the axis to include but just fill it with the corresponding symmetry class index --> for further testing of symmetries
     tensor_of_symm_class_index = np.zeros(tensor.shape[:number_axis_to_include], dtype=int)
-    for sym_class_index,sym_class in enumerate(symmetries):
+    for sym_class_index,sym_class in enumerate(symmetries+conj_symmetries):
         for item in sym_class:
             if isinstance(item, tuple):
                 tensor_of_symm_class_index[*item]=sym_class_index
-    return symmetries, tensor_of_symm_class_index
+                
+    for sym in symmetries:
+        sym.insert(0, f"mean abs value: {np.mean(np.abs(tensor[sym[0]]))}")
+    for sym_idx,sym in enumerate(conj_symmetries):
+        if len(sym)>0:
+            sym.insert(0, (f"conjugated indices",sym_idx))
+    result = symmetries + conj_symmetries if return_conjugated_symmetries else symmetries
+    return result, tensor_of_symm_class_index
+
+def test_symmetries_sqw_4(symmetries, tensor_of_symm_class_index, material):
+    #testing if the order does or doesn not play a role for same amount of a and ad operators
+    permutation = [0,2,1,3] 
+    temp=[]
+    for idx in material.return_ad_a_spectra_indices(order_of_operator=4):
+        idx_o_2_altered = idx.copy()
+        idx_o_2_altered[3] = permutation[idx[3]] 
+        idx_o_1_altered = idx.copy()
+        idx_o_1_altered[1] = permutation[idx[1]] 
+        if tensor_of_symm_class_index[*idx]!=tensor_of_symm_class_index[*idx_o_2_altered]:
+            temp.append((idx, idx_o_2_altered))
+        if tensor_of_symm_class_index[*idx]!=tensor_of_symm_class_index[*idx_o_1_altered]:
+            temp.append((idx, idx_o_1_altered))
+        
+        #testing if swapping i oi and j oj leads to same symmetry class
+        idx_ij_swapped = idx.copy()
+        # idx_ij_swapped[0], idx_ij_swapped[2] = idx_ij_swapped[2], idx_ij_swapped[0]
+        idx_ij_swapped = [idx[2], idx[3], idx[0], idx[1]]
+        if tensor_of_symm_class_index[*idx]!=tensor_of_symm_class_index[*idx_ij_swapped]:
+            temp.append((idx, idx_ij_swapped))
+        
+        
+    return temp
 
 def give_highest_indices_of_matrix(matrix, number_of_indices=5):
     n = number_of_indices  # number of indices to return
     flat_indices = np.argsort(-np.abs(matrix.flatten()))
     top_n_indices = np.unravel_index(flat_indices[:n], matrix.shape)
     print(f"Indices of top {n} differences from identity:")
+    res = []
     for idx in zip(*top_n_indices):
-        print(f"Index: {tuple(int(i) for i in idx)}, Value: {float(matrix[idx])}")
+        res.append(f"Index: {tuple(int(i) for i in idx)}, Value: {matrix[idx]}")
+        print(res[-1])
+    return res
 
+def first_order_perturbation_degenerate(H, dH, deg_tol=1e-10):
+    """
+    First-order (static) perturbation theory with degeneracies.
+
+    Parameters
+    ----------
+    H   : (N,N) Hermitian array
+    dH  : (N,N) Hermitian array, derivative dH/dλ at the same point
+    deg_tol : float
+        Two eigenvalues |E_i - E_j| <= deg_tol are treated as degenerate.
+
+    Returns
+    -------
+    E    : (N,) eigenvalues of H (sorted ascending)
+    U    : (N,N) eigenvectors of H, possibly rotated within degenerate blocks
+           to diagonalize P dH P (a smooth gauge).
+    dE   : (N,) first-order derivatives of eigenvalues
+    dU   : (N,N) first-order derivatives of eigenvectors in the chosen gauge
+           (columns are d|n>/dλ). Inside each degenerate block we enforce
+           parallel-transport: the component within the block is zero.
+    """
+    H = np.asarray(H)
+    dH = np.asarray(dH)
+    # Diagonalize H
+    E, U = la.eig(H)  # H U = U diag(E)
+    N = H.shape[0]
+
+    # Helper: build degenerate blocks from sorted E
+    blocks = []
+    start = 0
+    for i in range(N - 1):
+        if abs(E[i+1] - E[i]) > deg_tol:
+            blocks.append(np.arange(start, i + 1))
+            start = i + 1
+    blocks.append(np.arange(start, N))  # last block
+
+    # Rotate eigenvectors within each block to diagonalize P dH P
+    U_rot = U.copy()
+    dE = np.empty(N, dtype=np.result_type(H, dH, np.float64))
+    for blk in blocks:
+        U_blk = U_rot[:, blk]                       # (N, g)
+        W = U_blk.conj().T @ dH @ U_blk            # (g, g), Hermitian
+        wvals, V = la.eig(W)                         # diagonalize inside block
+        U_rot[:, blk] = U_blk @ V                  # rotate basis in block
+        dE[blk] = wvals.real                       # eigenvalue derivatives
+
+    # Precompute projected dH in the rotated basis
+    Hp = U_rot.conj().T @ dH @ U_rot               # <m|dH|n> in rotated basis
+
+    # Eigenvector derivatives: only components outside each block
+    dU = np.zeros_like(U_rot, dtype=U_rot.dtype)   # columns are d|n>/dλ
+    Ecol = E[:, None]
+    for blk in blocks:
+        # indices outside this degenerate subspace
+        out = np.setdiff1d(np.arange(N), blk, assume_unique=True)
+        if out.size == 0:
+            continue
+        # Hp_out_blk: (nout, g) with entries <m|dH|n>, m ∉ blk, n ∈ blk
+        Hp_out_blk = Hp[np.ix_(out, blk)]
+        # Denominators (E_n - E_m): shape (nout, g) -> we want m rows, n cols
+        denom = (E[blk][None, :] - E[out][:, None])
+        # Safe: gaps to states outside block should be > deg_tol; if not, it's a larger block
+        if np.any(np.abs(denom) <= deg_tol):
+            raise ValueError("Detected overlapping/insufficiently separated blocks; "
+                             "increase deg_tol or ensure isolated degenerate manifold.")
+        K_out_blk = Hp_out_blk / denom             # (nout, g)
+        # Contribution to d|n>/dλ from outside states:
+        dU[:, blk] += U_rot[:, out] @ K_out_blk    # (N, g)
+        # Inside-block component is set to zero (parallel-transport gauge)
+
+    return E, U_rot, dE, dU
 
 def orthonormalise(A):
     """
@@ -640,6 +826,35 @@ def plot_max_x_projection(values, title="Max X Projection", xlabel="W", ylabel="
 
     return fig
 
+def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values_grid, VALUES_TO_SAVE):
+    try:
+        #fig = plt.figure(f"intensities k dependent tau:{t}")
+        M = material.N
+        fig_grid, axs_grid = plt.subplots(M, M, figsize=(12, 10))
+        fig_grid.suptitle(f"intensities sqw ad_a(NxN grid)")
+        for a in range(M):
+            for b in range(M):
+                ax = axs_grid[a, b]
+                
+                intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
+                    config,
+                    relative_grid_points=material.relative_grid_points_path,
+                    dimension=material.dimension,
+                    grid=sqw_intensities[0,a, b, :, :, :],
+                    q_grid=q_values_grid,
+                    no_w_values=True,
+                )
+                #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
+                ax.plot(intensities_k_along_path, label=f"I_i{a}_j{b}", linewidth=2)
+                ax.set_title(f"i={a}, j={b}")
+                ax.set_xticks(xticks_pos)
+                ax.set_xticklabels(xticks_labels)
+                ax.legend(fontsize=7)
+        fig_grid.tight_layout(rect=[0, 0.03, 1, 0.95])
+        if config.plots_to_show_print["intensities_sqw"][1]:
+            VALUES_TO_SAVE["figs_for_pdf"].append(fig_grid)
+    except NameError:
+        config.warnings.add("try to plot sqw but not defined")
 
 def plot_path_through_grid(path, q_grid=None, material=None):
     """
@@ -815,6 +1030,9 @@ def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relat
 
 def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=None):
     """takes two or three grids of shape (w,k*dim) and convolves them in the k-dimensions."""
+
+    assert False, "This function is deprecated. Please use convolute_grids_fft instead."
+
     conv_degree=2
     if double_convolution:
         conv_degree=3
@@ -843,6 +1061,66 @@ def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=N
     return conv_grids
    # print("shape conv_intens "+str(np.shape(conv_intensities)))
     
+#GPT version
+def convolute_grids_fft(grid1, grid2, dimension=3, double_convolution=False, grid3=None, use_real=True):
+    """
+    Fast version: vectorized via FFT.
+    grid* shape: (W, K1, K2, K3?) with only the first `dimension` spatial dims used.
+    Returns shape ((deg)*W, K1, K2, K3?) where deg=2 or 3.
+    """
+    from scipy.fft import fftn, ifftn, fft, ifft, rfftn, irfftn
+
+    assert grid1.shape[1:1+dimension] == grid2.shape[1:1+dimension]
+    if double_convolution:
+        assert grid3 is not None and grid3.shape[1:1+dimension] == grid1.shape[1:1+dimension]
+
+    W = grid1.shape[0]
+    spatial_shape = grid1.shape[1:1+dimension]
+    # Preserve trailing singleton dims up to 3
+    trailing = grid1.shape[1+dimension:]
+    out_W = (3 if double_convolution else 2) * W
+
+    # Choose real FFTs if inputs are real to save time/memory
+    rfft = use_real and np.isrealobj(grid1) and np.isrealobj(grid2) and (not double_convolution or np.isrealobj(grid3))
+    fftn_fn, ifftn_fn = (rfftn, irfftn) if rfft else (fftn, ifftn)
+
+    # 1) FFT over spatial axes for each w-slice
+    axes = tuple(range(1, 1+dimension))
+    A_hat = fftn_fn(grid1, s=None, axes=axes)
+    B_hat = fftn_fn(grid2, s=None, axes=axes)
+    if double_convolution:
+        C_hat = fftn_fn(grid3, s=None, axes=axes)
+
+    # 2) Convolution along w using FFT (treat each spatial-frequency bin independently)
+    #    conv over w: for each spatial bin, (A_hat *_w B_hat)[t] = sum_i A_hat[i]*B_hat[t-i]
+    #    Compute via FFT along axis=0.
+    #    Zero-pad length to out_W for 'full' convolution length = W+W-1 (here you sum to index i+j),
+    #    but your code uses i from j..W-1 and accumulates into w_index+w_index_2 (length 2W),
+    #    so we pad to 2W (or 3W for triple).
+    W = grid1.shape[0]
+    
+    pad_W = out_W
+    def wfft(x):
+        return fft(x, n=pad_W, axis=0) #n is zero padding! if pad_W > x.shape[0]
+    def iwfft(x):
+        return ifft(x, n=pad_W, axis=0)
+
+    AB_hat_w = iwfft(wfft(A_hat) * wfft(B_hat))  # shape: (out_W, *spatial_freq_shape, *trailing)
+
+    if double_convolution:
+        ABC_hat_w = iwfft(wfft(AB_hat_w) * wfft(C_hat))  # convolve once more along w
+        H_w = ABC_hat_w
+    else:
+        H_w = AB_hat_w
+
+    # 3) Inverse FFT over spatial axes to get back k-space convolution for every w-sum index
+    #    Take real part if inputs were real (tiny imag from numerics).
+    conv_spatial = ifftn_fn(H_w, s=None, axes=axes)
+    if rfft:
+        conv_spatial = conv_spatial.real
+    # Output shape ((deg)*W, K1, K2, K3?, trailing...)
+    return conv_spatial
+
 def sum_k_dependency(grid):
     """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
     if grid.ndim < 2:
@@ -977,7 +1255,7 @@ def save_figures_as_images_to_pdf(
             fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
             if len(config.warnings) != 0 and i==0: 
                 warning_str = ""
-                warning_str = f"time: {config.timestamp}\n config:{config.name}\n tau:{material.tau}\n normal: {material.normal_vector_to_rotation_plane} \n spin direction: {material.atoms[0][0].dir} \n"
+                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values}\n tau:{material.tau}\n normal: {material.normal_vector_to_rotation_plane} \n spin direction: {material.atoms[0][0].dir} \n amount BZ: {config.amount_BZ} // use extended k-space: {config.experimental_plots_on_extended_grid}"
                 for w in config.warnings:
                     warning_str = warning_str + f"\n{w}"
                 fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')
@@ -996,27 +1274,75 @@ def save_figures_as_images_to_pdf(
             pdf.savefig(fig)
             plt.close(fig)
 
-def save_config_to_json(config, filename: str = None):
-    from LSW import Configurations  # Local import to avoid circular dependency
-    config:Configurations = config  # Ensure config is of type Config
+# def save_config_to_json(config, filename: str = None):
+#     from LSW import Configurations  # Local import to avoid circular dependency
+#     config:Configurations = config  # Ensure config is of type Config
     
-    if filename is None:
-        timestamp = config.timestamp
-        filename = f"config/config_{timestamp}.json"
+#     if filename is None:
+#         timestamp = config.timestamp
+#         filename = f"config/config_{timestamp}.json"
     
-    # Convert the Config dataclass to a dictionary
-    config_dict = config.__dict__
+#     # Convert the Config dataclass to a dictionary
+#     config_dict = config.__dict__
     
-    # Save the dictionary to a JSON file
-    with open(filename, "w") as json_file:
-        #TODO: fix the json error for the dtype object
-        try:
-            json.dump(config_dict, json_file, indent=4, default=lambda o: "Unsupported type" if isinstance(o, np.dtype) else o.tolist()
-                      )
-        except Exception as e:
-            print(f"Error saving configuration to {filename}: {e}")
+#     # Save the dictionary to a JSON file
+#     with open(filename, "w") as json_file:
+#         #TODO: fix the json error for the dtype object
+#         try:
+#             json.dump(config_dict, json_file, indent=4, default=lambda o: "Unsupported type" if isinstance(o, np.dtype) else o.tolist()
+#                       )
+#         except Exception as e:
+#             print(f"Error saving configuration to {filename}: {e}")
 
-    print(f"Configuration saved to {filename}")
+#     print(f"Configuration saved to {filename}")
+
+def save_config_to_json(config, filename: str = None, max_array_size: int = 1000):
+    """
+    Save dataclass config to JSON, skipping or summarizing large/unsupported entries.
+    """
+    from LSW import Configurations
+    from dataclasses import asdict, is_dataclass
+
+    config: Configurations = config  # type hint
+
+    if filename is None:
+        timestamp = getattr(config, "timestamp", "no_time")
+        filename = f"config/config_{timestamp}.json"
+
+    # Convert dataclass to dict if applicable
+    if is_dataclass(config):
+        config_dict = asdict(config)
+    else:
+        config_dict = config.__dict__
+
+    def safe_convert(obj):
+        """Convert non-serializable objects into JSON-safe representations."""
+        # --- NumPy types ---
+        if isinstance(obj, np.generic):
+            return obj.item()  # scalar NumPy type
+        if isinstance(obj, np.ndarray):
+            if obj.size > max_array_size:
+                return f"<ndarray shape={obj.shape}, dtype={obj.dtype}, size too large>"
+            return obj.tolist()
+        # --- Built-ins ---
+        if isinstance(obj, (bool, int, float, str, type(None))):
+            return obj
+        # --- Dictionaries and sequences ---
+        if isinstance(obj, dict):
+            return f"no dicts are safed"
+        if isinstance(obj, (list, tuple)):
+            return [safe_convert(v) for v in obj]
+        # --- Fallback ---
+        return f"<Unsupported type {type(obj).__name__}>"
+
+    config_safe = {k: safe_convert(v) for k, v in config_dict.items()}
+
+    try:
+        with open(filename, "w") as f:
+            json.dump(config_safe, f, indent=4)
+        print(f"Config saved to {filename}")
+    except Exception as e:
+        print(f"Error saving configuration to {filename}: {e}")
 
 def find_files_with_keywords(directory:str, keywords: List[str]) -> List[str]:
     """
@@ -1138,6 +1464,89 @@ if __name__ == "__main__":
 
     call_main()
 
+def integrate_nd(f, grid_points, dimension):
+    """
+    Piecewise-linear (trapezoidal) integration over 1–3 axes.
+
+    Parameters
+    ----------
+    f : ndarray
+        Values on a grid. Shape must start with (Nx[, Ny[, Nz]]).
+    coords : sequence of 1D arrays
+        Coordinate arrays [x], [x,y], or [x,y,z] (non-uniform allowed).
+    dimension : int, optional
+        Number of axes to integrate (1, 2, or 3). Defaults to len(coords).
+
+    Returns
+    -------
+    integral : ndarray or float
+        Result after integrating over the first `dimension` axes.
+        (If f has extra trailing dims, they are preserved.)
+    """
+    # if dimension is None:
+    #     dimension = len(grid_points.shape[:-1])
+    if not (1 <= dimension <= 3):
+        raise ValueError("dimension must be 1, 2, or 3")
+
+    # grid_points = [np.asarray(c) for c in grid_points[:dimension]]
+    # basic shape checks
+    if f.shape[:dimension] != grid_points.shape[:-1][:dimension]:
+        raise ValueError("f shape and grid_points shape do not match.")
+    res = f[(slice(None),)*dimension + (0,)*(3-dimension)]  # only include the axis that I want to integrate over
+    # integrate from last axis down so axis indices stay valid
+    for ax in reversed(range(dimension)):
+        grid_slice = (slice(None),) * (ax+1) + (0,)*(2-ax) + (ax,)
+        res = np.trapezoid(res, grid_points[grid_slice], axis=ax)
+    return res
+
+def give_refined_grid_around_point(grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
+    point = grid[*point_idx]
+    neigbour_index = point_idx+np.array((-1,)*(dimension)+(0,)*(3-dimension))
+                        # (1,)+(-1,)*(dimension-1)+(0,)(3-dimension),
+                        # (-1,)+(1,)+(-1,)*(dimension-2)+(0,)(3-dimension),
+                        # (-1,)*2+(1,)]
+    #prevent being outside of the grid
+    if np.any(np.array(neigbour_index)<0):
+        neigbour_point = grid[*(-neigbour_index)]
+    else:
+        neigbour_point = grid[*neigbour_index]
+        
+    d= point+(neigbour_point-point)*fraction_to_neighbour_to_include #vector pointing from the point to the corner neighbour
+    box_corner_point = point+d
+    # spacings_per_d = [np.linspace(box_corner_point[axis], box_corner_point[axis]-2*d[axis], refinement_factor) for axis in range(dimension)]
+    spacings_per_d = [decreasing_step_spacing(start=np.array([box_corner_point[axis]]), end=np.array([point[axis]]), num_points=refinement_factor, decrease_ratio=decrease_ratio) for axis in range(dimension)]
+    spacings_per_d += [np.array([0]) for _ in range(3-dimension)]
+    X, Y, Z = np.meshgrid(*spacings_per_d, indexing='ij')
+    grid_points = np.stack([X, Y, Z], axis=-1)
+    
+    grid_volume = 1
+    for axs in range(dimension):
+        grid_volume *= (2 * abs(d[axs]))
+    return grid_points, grid_volume
+
+def decreasing_step_spacing(start: np.ndarray, end: np.ndarray, num_points: int, decrease_ratio: float, use_approach_from_both_sides: bool = True) -> np.ndarray:
+    """Generates a sequence of points between start and end (never reaches end) with spacing that is always reduced by geometric_ratio for each step."""
+    
+    if num_points < 2:
+        raise ValueError("num_points must be at least 2 to create a spacing.")
+    if decrease_ratio <= 0 or decrease_ratio > 1:
+        raise ValueError("decrease_ratio must be positive and less than or equal to 1.")
+    if decrease_ratio == 1:
+        return np.linspace(start, end, num_points)
+
+
+    r = decrease_ratio
+
+    # Generate the geometric series
+    series_factors = np.array([1-r ** i for i in range(num_points)])
+
+    # series * (end - start) + start (working for vectors as well)
+    series = np.einsum('..., N->N...', (end - start), series_factors) + np.broadcast_to(start[None,...], (series_factors.shape[0],start.shape[0]))
+    if use_approach_from_both_sides:
+        new_start = start + 2* (end - start)
+        series_other_side = np.einsum('..., N->N...', (end - new_start), series_factors) + np.broadcast_to(new_start[None,...], (series_factors.shape[0],new_start.shape[0]))
+        series = np.concatenate((series, np.flip(series_other_side)), axis=0)
+    return series
 
 def give_grid_vectors_d(vectors, steps, amount_BZ=1):
     """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with the corresponding number of steps."""
@@ -1156,6 +1565,7 @@ def give_grid_vectors_d(vectors, steps, amount_BZ=1):
     # vectors_left=len(vectors)
     spacing = []
     for s in steps_list:
+        # spacing.append(np.linspace(0, 1-1/s, s)) #the last point should not be the same as the first point but "one before that"
         spacing.append(np.linspace(0, 1, s))
     #spacing = np.array(spacing)
     # Use broadcasting and einsum to generate the grid efficiently

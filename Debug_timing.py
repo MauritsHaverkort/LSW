@@ -9,13 +9,19 @@ USE_MALLOC = False  # Set to False to disable memory tracking
 class Debug_timing:
     def __init__(self):
         self.ref_timestamp = int(time.time() * 1000)
+        self.start_timestamp = int(time.time() * 1000)
         self.debug_info = ""
         if USE_MALLOC:
             tracemalloc.start()  # start tracking memory
             self.last_snapshot = tracemalloc.take_snapshot()
         else:
             self.last_snapshot = None
-
+    def print_complete_time_since_start(self):
+        new_timestamp = int(time.time() * 1000)
+        time_diff = new_timestamp - self.start_timestamp
+        
+        with open("debug_timing_log.txt", "a", encoding="utf-8") as log_file:
+            log_file.write(f"Total time: {time_diff}ms \n")
     def print_difference(self, debug_info, do_print=True):
         new_timestamp = int(time.time() * 1000)
         time_diff = new_timestamp - self.ref_timestamp

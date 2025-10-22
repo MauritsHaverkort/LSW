@@ -68,6 +68,7 @@ from collections import defaultdict
 def nc_coeff_dict(expr):
     """
     Return {noncommutative_monomial: coefficient} for expr.
+    expr is expanded first.
     All commutative factors (numbers, I, pi, functions of commutative symbols, …)
     are absorbed into the coefficient. The key is a product of ONLY
     noncommutative factors (order preserved).

@@ -336,7 +336,7 @@ def D1_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     
     match material.dimension:
         case 1:
-            material.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([0, 0, 0])]
+            material.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
         case 2:
             material.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 1/2, 0]), np.array([1, 0, 0]), np.array([0, 0, 0])]
         case 3:
@@ -398,7 +398,7 @@ def D2_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     # all_atoms.append(atoms[0])
     return material
 
-def D2_AFM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, spin_dir=np.array([0, 0, 1])):
+def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True):
 
     #config.dimension = 2
     # config.amount_BZ = 1 #this is done since I am using the supercell calculations and thus have to take the phase factor into account
@@ -407,19 +407,21 @@ def D2_AFM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, spin
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     
-    material = Material(config=config,lattice_vectors=lv, tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name="D2 AFM SC non rotated Supercell")
+    material = Material(config=config,lattice_vectors=lv, tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name=f"D2 AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}")
 
+    sign_spin_dir = -1 if AFM else 1
+    
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
     atoms = [
         Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
         
-        Atom(1/2*np.array([a, a, 0]), type=1, S=S1, spin_dir=spin_dir),
+        Atom(relative_position_atom_2*np.array([a, a, 0]), type=1, S=S1, spin_dir=spin_dir),
         
         
-        Atom(1/2*np.array([a, 0, 0]), type=2, S=S2, spin_dir=-spin_dir),
+        Atom(relative_position_atom_2*np.array([a, 0, 0]), type=2, S=S2, spin_dir=sign_spin_dir*spin_dir),
         
-        Atom(1/2*np.array([0, a, 0]), type=3, S=S2, spin_dir=-spin_dir),
+        Atom(relative_position_atom_2*np.array([0, a, 0]), type=3, S=S2, spin_dir=sign_spin_dir*spin_dir),
         
         # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
         # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))

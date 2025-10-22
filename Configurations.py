@@ -33,6 +33,9 @@ class Config:
     use_my_calculation_TT_switched: bool
     use_SpinW_mat_form_factors: bool
     use_calc_of_S_a_ad: bool
+    plot_only_once_per_symmetry_class: bool
+    experimental_plots_on_extended_grid: bool
+    compute_T_derivatives: bool
     use_explicit_calculation_of_u_v_for_uv_grid: bool
     calc_u_v_convolutions:bool
     calc_pref_convolutions: bool
@@ -94,10 +97,13 @@ def config_main():
         plot_info={},
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
         #in use boolean values
+        compute_T_derivatives=False,
+        plot_only_once_per_symmetry_class = True,
         use_automated_energy_window=True,
         use_Log_Norm=False,
         calc_conv_intensities=True,
         calc_u_v_convolutions=False,
+        experimental_plots_on_extended_grid = True,
         
         calc_pref_convolutions= True,
         path_load_pref_convolutions = "",#"grids/u_v_gridD3_S1_k80_w80_cr[1 1]_an[1 1]_Bz0_Ba_z0_20250525_231126.npz",
@@ -147,14 +153,14 @@ def config_main():
         terms_to_calculate_in_pref_conv=[0,1,2,3],  # List of terms to calculate
         plots_to_show_print={
             "Hamiltonian_parts_plot": (True,True),
-            "T_parts_plot": (True,True),
+            "T_parts_plot": (False,True),
             "max_x_projection_sqw": (False,False),
             "sqw_prime_elements": (False,True),
             "sqw_prime_a_ad": (False,True),
             "energy_dependent_part": (True,True),
             "energy_dependent_part_colormap": (False,True),
-            "intensities_k": (True,True),
-            "intensities_sqw": (True,True),
+            "intensities_k": (False,True),
+            "intensities_sqw": (False,True),
             "structure_plot": (True,False),
             "path_plot": (True,True),
             },
@@ -172,14 +178,16 @@ def config_experimental(name = ""):
     config_tryout_paper.use_rotation_Paper_4 = True
     
     config_tryout_paper.load_saved_grid = False
+    fast_grid_size = 10
+    big_grid_size = 31
     fast=True
     # fast=False
     if fast:
-        config_tryout_paper.amount_k_values = [20,20,1]
-        config_tryout_paper.amount_w_values = 20
+        config_tryout_paper.amount_k_values = [fast_grid_size,fast_grid_size,1]
+        config_tryout_paper.amount_w_values = fast_grid_size
     else:
-        config_tryout_paper.amount_k_values = [60,60,1]
-        config_tryout_paper.amount_w_values = 60
+        config_tryout_paper.amount_k_values = [big_grid_size,big_grid_size,1]
+        config_tryout_paper.amount_w_values = big_grid_size
     
     config_tryout_paper.amount_BZ = 1
     
@@ -188,8 +196,10 @@ def config_experimental(name = ""):
     config_tryout_paper.dtype_complex = np.complex128
     
     config_tryout_paper.use_calc_of_S_a_ad = True
-    config_tryout_paper.calc_conv_intensities = False
+    config_tryout_paper.calc_conv_intensities = True
     config_tryout_paper.debug_Sa_ad = True
+    config_tryout_paper.experimental_plots_on_extended_grid = True
+    config_tryout_paper.compute_T_derivatives = False
     
     # config_tryout_paper.calc_u_v_convolutions = False
     # config_tryout_paper.use_explicit_calculation_of_u_v_for_uv_grid = False
@@ -200,8 +210,9 @@ def config_experimental(name = ""):
     # config_tryout_paper.use_SpinW_mat_form_factors = False
     
     
-    
+    config_tryout_paper.plot_only_once_per_symmetry_class = True
     config_tryout_paper.use_Log_Norm = True
+    config_tryout_paper.cut_diverging_spectral_weights=True
     config_tryout_paper.terms_to_calculate_in_pref_conv = [3]
     #this is the path for the first energy calculation
     #config_tryout_paper.path_for_energy_calc = [np.array([-4,1,0]),np.array([4,1,0])]
