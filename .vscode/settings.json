@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.Quanty": "lua",
+        "pseudocodec": "c",
+        "pseudocode_material_c": "cpp",
+        "pseudocode_classes": "c"
+    }
+}

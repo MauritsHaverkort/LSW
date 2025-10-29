@@ -645,16 +645,18 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         
         if len(w_values) == 0:
             w_values = np.arange(grid.shape[0]+1)
+        if config.shading_colormesh_plots == 'gouraud':
+            X, Y = np.meshgrid(k_values_scalar[:-1], w_values[:-1])
         if not useLogNorm:
-            image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto')
+            image = ax0.pcolormesh(X, Y, grid, cmap='viridis', shading=config.shading_colormesh_plots)
         else:
             try:
                 image = ax0.pcolormesh(
-                        k_values_scalar,
-                        w_values,
+                        X,
+                        Y,
                         grid,
                         cmap='viridis',
-                        shading='auto',
+                        shading=config.shading_colormesh_plots,
                         norm=SymLogNorm(
                             linthresh=1e-5,          # linear range around zero
                             linscale=1.0,            # scale of the linear range
@@ -665,7 +667,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                     )
             except Exception as e:
                 print("Log Norm failed in plot_grid")
-                image = ax0.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto')
+                image = ax0.pcolormesh(X, Y, grid, cmap='viridis', shading=config.shading_colormesh_plots)
         try:
             fig.colorbar(image, ax=ax0, label=intensity)
         except Exception as e:
@@ -829,7 +831,7 @@ def plot_max_x_projection(values, title="Max X Projection", xlabel="W", ylabel="
 def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values_grid, VALUES_TO_SAVE):
     try:
         #fig = plt.figure(f"intensities k dependent tau:{t}")
-        M = material.N
+        M = 2*material.N
         fig_grid, axs_grid = plt.subplots(M, M, figsize=(12, 10))
         fig_grid.suptitle(f"intensities sqw ad_a(NxN grid)")
         for a in range(M):
@@ -991,6 +993,104 @@ def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relat
     def add_xticks_pos_labels():
         if q_grid is not None:
             xticks_pos.append(len(path)-1)
+            # mask_overshoot_grid_size = q_grid.shape[:-1]<=path[-1]
+            # path[-1][mask_overshoot_grid_size] = np.array(q_grid.shape[:-1])[mask_overshoot_grid_size]-1
+            # if np.any(mask_overshoot_grid_size):
+            #     config.warnings.add("some grid points exceeded the grid size and were set to the maximum value of the grid.")
+            xticks_labels.append(np.round(q_grid[path[-1][0],path[-1][1],path[-1][2]],2))
+        elif max_value_k is not None:
+            xticks_pos.append(len(path)-1) #-1 since path has already one element
+            xticks_labels.append(np.round((path[-1])/len(grid[1])*max_value_k,2)) #TODO: this doesnt fit completely since the path doesnt start at 1 but at 0
+        else:
+            raise ValueError("Either q_grid or max_value_k must be given to calculate the xticks labels.")
+    
+    #taken out since I want to "overstep" so that 1/2 as relative point ends up in the middle of k-space
+    #steps[0] = steps[0] - 1 # # the first step is already taken with the startpoint, so we take one less step
+    for i in range(len(directions)):
+        #each time the direction is changed, the value of the k-value is added to the xticks
+        add_xticks_pos_labels()
+        for j in range(steps[i]):
+            # if np.any(path[-1]+directions[i] < 0):
+                
+            #     break #if the next point is out of bounds, we stop the path
+            path.append(path[-1]+directions[i])
+            path[-1] = path[-1]%q_grid.shape[:-1]  #wrap around the grid if the point is out of bounds
+    #the last point is added
+    add_xticks_pos_labels()
+    for p in path:
+        try:
+            result.append(grid[:,p[0],p[1],p[2]])
+        except IndexError as e:
+            print(f"IndexError: {e} at point {p}. This point is out of bounds for the grid with shape {grid.shape}.")
+            return None, None, None
+    if plot_path:
+        plot_path_through_grid(path, q_grid=q_grid, material=material) #taking only the k-part of the grid for plotting
+
+    if not no_w_values:
+        #if no_w_values is True, the grid has only one dimension --> there is no need to transpose
+        result = np.array(result).T
+    
+    return result, xticks_pos, xticks_labels
+
+
+def path_through_k_grid_old(config:Config, grid, max_value_k=None, q_grid=None,relative_grid_points = None, startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, material=None, no_w_values=False):
+    """
+    Takes a startpoint, a list of directions and the number of steps in each direction and returns a grid with the values of the original grid at each point and w-value (y-axis)
+    If relative_grid_points are given, it calculates the startpoint, directions and steps from them.
+    If no startpoint, directions and steps or relative_grid_points are given, it uses the standard paths through the k-grid.
+    If no_w_values is True, it goes only throgh the k-values and adds a dummy dimension to the grid.
+    If max_value_k is given, it is used to calculate the xticks labels. 
+    plot_path is used to plot the path through the grid, if material is given, the lattice vectors are also plotted.
+    
+    return: result, xticks_pos, xticks_labels
+    result: the values of the grid at each point in the path
+    """
+
+    if relative_grid_points is not None:
+        #if relative_grid_points is given, it is used to calculate the startpoint, directions and steps
+        startpoint, directions, steps = path_through_grid_from_relative_points(relative_grid_points, q_grid)
+    
+    if no_w_values:
+        #adding a dummy dimension if no_w_values is True
+        grid = grid[np.newaxis, ...]
+    assert grid.ndim == 4, "Grid must be 4D (w, kx, ky, kz) or 3D (kx, ky, kz) if no_w_values is True. Current shape: {}".format(grid.shape)
+    
+    if startpoint is None or directions is None or steps is None:
+        if dimension is None:
+            raise ValueError("Either startpoint, directions and steps must be given or dimension or relative_grid_points must be given.")
+        else:
+            #these are the standard paths through the k-grid
+            if dimension == 2:
+                startpoint=np.array([0, 0, 0])
+                directions=[
+                    np.array([1, 0, 0]),
+                    np.array([0, 1, 0]),
+                    np.array([-1, -1, 0]),
+                ]
+            elif dimension == 3:
+                startpoint=np.array([0, 0, 0])
+                directions=[
+                    np.array([1, 0, 0]),
+                    np.array([0, 1, 0]),
+                    np.array([0, 0, 1]),
+                    np.array([-1, -1, -1]),
+                ]
+            elif dimension == 1:
+                startpoint=np.array([0, 0, 0])
+                directions=[
+                    np.array([1, 0, 0]),
+                    np.array([-1, 0, 0]),
+                ]
+
+            steps = [int(grid.shape[1] / 2)]*len(directions)
+
+    path=[startpoint]
+    result=[]
+    xticks_pos=[]
+    xticks_labels=[]
+    def add_xticks_pos_labels():
+        if q_grid is not None:
+            xticks_pos.append(len(path)-1)
             mask_overshoot_grid_size = q_grid.shape[:-1]<=path[-1]
             path[-1][mask_overshoot_grid_size] = np.array(q_grid.shape[:-1])[mask_overshoot_grid_size]-1
             if np.any(mask_overshoot_grid_size):
@@ -1027,6 +1127,7 @@ def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relat
         result = np.array(result).T
     
     return result, xticks_pos, xticks_labels
+
 
 def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=None):
     """takes two or three grids of shape (w,k*dim) and convolves them in the k-dimensions."""
@@ -1255,7 +1356,7 @@ def save_figures_as_images_to_pdf(
             fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
             if len(config.warnings) != 0 and i==0: 
                 warning_str = ""
-                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values}\n tau:{material.tau}\n normal: {material.normal_vector_to_rotation_plane} \n spin direction: {material.atoms[0][0].dir} \n amount BZ: {config.amount_BZ} // use extended k-space: {config.experimental_plots_on_extended_grid}"
+                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values} // G: {config.Gamma} \n tau:{material.tau}\n normal: {material.normal_vector_to_rotation_plane} \n spin direction: {material.atoms[0][0].dir} \n amount BZ: {config.amount_BZ} // use extended k-space: {config.experimental_plots_on_extended_grid}"
                 for w in config.warnings:
                     warning_str = warning_str + f"\n{w}"
                 fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')
@@ -1565,8 +1666,8 @@ def give_grid_vectors_d(vectors, steps, amount_BZ=1):
     # vectors_left=len(vectors)
     spacing = []
     for s in steps_list:
-        # spacing.append(np.linspace(0, 1-1/s, s)) #the last point should not be the same as the first point but "one before that"
-        spacing.append(np.linspace(0, 1, s))
+        spacing.append(np.linspace(0, 1-1/s, s)) #the last point should not be the same as the first point but "one before that"
+        # spacing.append(np.linspace(0, 1, s))
     #spacing = np.array(spacing)
     # Use broadcasting and einsum to generate the grid efficiently
     grid_shape = (steps_list[0], steps_list[1], steps_list[2], len(vectors[0]))

@@ -32,9 +32,6 @@ class Bond(object):
     """
 
     def __init__(self, material, atom0:Atom, atom1:Atom, unit_cell_of_atom_0=np.array((0, 0, 0)), unit_cell_of_atom_2=np.array((0, 0, 0)), j=1):
-        # self.idx = (idx0, idx1)
-        # self.atom0 = Sample.atoms[idx0]
-        # self.atom1 = Sample.atoms[idx1]
         self.atom0:Atom = atom0
         self.atom1:Atom = atom1
         
@@ -52,7 +49,7 @@ class Bond(object):
 
         tau = 2 * np.pi * np.array(material.tau)
         self.r_matrix = np.round(rotation.rot_vec(np.dot(tau, self.d_of_unit_cells), material.normal_vector_to_rotation_plane), 3)
-        test=0
+        
         
 if __name__ == "__main__":
     # Example usage

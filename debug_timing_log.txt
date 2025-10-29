@@ -26333,3 +26333,1914 @@ Total time: 21440ms
 38ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
 3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
 167694ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-22_16-19-25 
+388ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+39ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+55ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+10ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+12ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+53ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+238ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+124ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4977ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+31ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+173ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+8ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+654ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+25ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1968ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+828ms | Δ RAM: +0.0 KB --> done with all convolutions 
+11371ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 20972ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_10-45-58 
+2462ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+26ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+24ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+9ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+42ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+270ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+244ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4758ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+26ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+187ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+11ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+694ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+21ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2182ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+851ms | Δ RAM: +0.0 KB --> done with all convolutions 
+12391ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 24224ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_10-48-28 
+532ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+84ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+171ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+93ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+212ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+61ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+137ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+70ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+2034ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+186ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+8463ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+8902ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+52380ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1958ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+1687ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+79ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1316ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+41ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+1616ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2208ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1802ms | Δ RAM: +0.0 KB --> done with all convolutions 
+10425ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 94458ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_11-08-24 
+460ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+58ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+181ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+56ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+184ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+56ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+100ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+42ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1635ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+144ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+9893ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+7420ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+45120ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1697ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_11-10-18 
+621ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+67ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+314ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+79ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+287ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+94ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+151ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+89ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1959ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+105ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+9833ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+3857ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+43957ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1569ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+565ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+20ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1402ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+13ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+1275ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1854ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1087ms | Δ RAM: +0.0 KB --> done with all convolutions 
+8369ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 77568ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_11-34-46 
+411ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+81ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+78ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+10ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+17ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+63ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+6ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+653ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_11-49-35 
+479ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+62ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+33ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+11ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+22ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+79ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+239ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+112ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+6041ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+63ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+457ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+17ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1685ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+84ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3757ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1717ms | Δ RAM: +0.0 KB --> done with all convolutions 
+13296ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 28173ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_11-51-59 
+327ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+89ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+60ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+8ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+10ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+49ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+627ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+4431ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4586ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+36ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+205ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+9ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+765ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+3ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+29ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_11-54-00 
+409ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+64ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+62ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+10ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+51ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+402ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+4862ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+12065ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+37ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+375ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+14ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1068ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+74ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_11-59-02 
+265ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+26ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+22ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+9ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+43ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+178ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+94ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3960ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+60ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+249ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+13ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+596ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+21ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1668ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+899ms | Δ RAM: +0.0 KB --> done with all convolutions 
+8146ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 16272ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_12-00-02 
+486ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+25ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+33ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+9ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+12ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+12ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+67ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+5ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+216ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+191ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5788ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+55ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+462ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+41ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1844ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+103ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_12-00-58 
+423ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+66ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+58ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+41ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+376ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+4344ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5024ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+33ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+202ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+10ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+702ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+3ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+28ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_12-10-29 
+249ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+45ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+33ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+43ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+191ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+96ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4480ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+39ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+209ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+13ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+634ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+26ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1750ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1493ms | Δ RAM: +0.0 KB --> done with all convolutions 
+9615ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 18947ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_12-11-34 
+455ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+62ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+193ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+67ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+195ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+57ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+122ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+43ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+2188ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+117ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+7126ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+6111ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+54082ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2109ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+1008ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+150ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1132ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+23ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+1333ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2867ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1729ms | Δ RAM: +0.0 KB --> done with all convolutions 
+11075ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 92245ms 
+2ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_13-40-41 
+1222ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+161ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+591ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+73ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+814ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+82ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+215ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+48ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+2257ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+134ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+9144ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_16-41-36 
+2744ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+101ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+70ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+927ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+62ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_16-43-22 
+441ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+58ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+46ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+485ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+32ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2827ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1346ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+17835ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_16-52-00 
+465ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+62ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+42ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+492ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+40ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2863ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1260ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+14022ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_16-53-00 
+473ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+57ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+48ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+457ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+56ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2607ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1117ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+14287ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+344ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1535ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_16-55-26 
+414ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+59ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+39ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+432ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+24ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2566ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1182ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+13785ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+321ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+617ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+27ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+6661ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1189ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+538ms | Δ RAM: +0.0 KB --> done with all convolutions 
+9746ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 37610ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_17-46-08 
+430ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+145ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+55ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+581ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+63ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+4379ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+2504ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+22755ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+480ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+985ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+34ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+11971ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1401ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+518ms | Δ RAM: +0.0 KB --> done with all convolutions 
+9097ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 55408ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_17-51-39 
+722ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+70ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_17-54-45 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-23_17-55-07 
+799ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+61ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+162626ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+1264ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+520ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+30ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+57633061ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_09-58-44 
+1170ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+153ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+17593ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+212ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1311ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+34ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3094ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+6884ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+16944ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+501354ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+2577ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+33ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_10-09-05 
+2437ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+62ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+53ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+920ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+90ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2978ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+217352ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_10-15-12 
+402ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+86ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+11ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+115ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+510ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+39ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2633ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1647ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+15902ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+336ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+757ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+37ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+10895ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1465ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+504ms | Δ RAM: +0.0 KB --> done with all convolutions 
+10079ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 45421ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_10-24-31 
+799ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+81ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+58ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+894ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+62ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3232ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+2025ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_10-24-43 
+450ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+73ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+9ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+47ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+570ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+32ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2638ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1477ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+20053ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+360ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+815ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+31ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+15400ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+3ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+997ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1021ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+46ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+8410ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1771ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+711ms | Δ RAM: +0.0 KB --> done with all convolutions 
+4483ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1948ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+833ms | Δ RAM: +0.0 KB --> done with all convolutions 
+13014ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 52324ms 
+11110ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 41139ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_10-29-20 
+454ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+65ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+49ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+477ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+27ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3033ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1890ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+14165ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+631ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1455ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+43ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+7766ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1429ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+696ms | Δ RAM: +0.0 KB --> done with all convolutions 
+7704ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 39895ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_11-22-38 
+844ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+82ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+60ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+647ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+84ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3057ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1221ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_11-24-12 
+548ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+78ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+51ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+753ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+37ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3482ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+2614ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_11-26-41 
+512ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+68ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+51ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+740ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+55ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2955ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1539ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5180ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+324ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+768ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+66ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_11-27-26 
+733ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+79ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+10ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+59ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+511ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+59ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2233ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1022ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4974ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+342ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+754ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+66ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+5695ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1249ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+558ms | Δ RAM: +0.0 KB --> done with all convolutions 
+8853ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 27201ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_11-29-51 
+454ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+89ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+38ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+397ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+32ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2236ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1138ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4643ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+291ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+809ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+28ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+417ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+559ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+447ms | Δ RAM: +0.0 KB --> done with all convolutions 
+4036ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 15622ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_11-32-50 
+447ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+83ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+53ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+553ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+80ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3113ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1916ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+9765ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+569ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1154ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+57ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+714ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1343ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1101ms | Δ RAM: +0.0 KB --> done with all convolutions 
+9379ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 30338ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_12-41-30 
+2728ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+90ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+76ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+235567ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+43ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2672ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+5123ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_13-49-23 
+554ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+73ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+50ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+629ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+40ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2828ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1624ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+6484ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+386ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+839ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+59ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+7506ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1800ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+616ms | Δ RAM: +0.0 KB --> done with all convolutions 
+12975ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 36472ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_14-05-46 
+270ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+14ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+22ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+77ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+61ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+6516ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+473ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1708ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+307ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2107ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1129ms | Δ RAM: +0.0 KB --> done with all convolutions 
+13113ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 25816ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_14-14-40 
+338ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+13ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_14-14-48 
+269ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+7ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_14-15-10 
+436ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+12ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+19ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+74ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+45ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3921ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+178ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+832ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+48ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+951ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+381ms | Δ RAM: +0.0 KB --> done with all convolutions 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_14-15-42 
+227ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+14ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+74ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+42ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4285ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+183ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+0ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+729ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+42ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1858ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+561ms | Δ RAM: +0.0 KB --> done with all convolutions 
+7658ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 15692ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_14-20-59 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_14-22-59 
+595ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+10ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+21ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+72ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+58ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4190ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+204ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+828ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+49ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1609ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+621ms | Δ RAM: +0.0 KB --> done with all convolutions 
+7241ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 15510ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_15-58-57 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-24_15-59-32 
+419ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+10ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+22ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+90ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+51ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5062ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+209ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+819ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+50ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+947ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+458ms | Δ RAM: +0.0 KB --> done with all convolutions 
+7717ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 15871ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_10-09-48 
+3809ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+23ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+58ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+91ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+8ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+329ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+93ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_10-14-37 
+937ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+102ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+68ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+808ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+60ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3472ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+2197ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+243222ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+3ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+8813ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+19ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_10-23-24 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_10-23-30 
+854ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+62ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+54ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+573ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+36ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2859ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1156ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_10-24-07 
+754ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+59ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+72ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+487ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+53ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+2459ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1369ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+6094ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+338ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_10-30-02 
+453ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+10ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+16ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+119ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+32ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4266ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+185ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-03-06 
+829ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+21ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+23ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+103ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+47ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4257ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+4ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+350ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-18-34 
+2448ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+9ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+16ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+17ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+95ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+35ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3894ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+175ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-19-04 
+348ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+19ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+124ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+45ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3970ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+210ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-19-45 
+336ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+10ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+20ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+235ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+54ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4649ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+21ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+202ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+4ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-20-04 
+425ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+18ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+58ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+34ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3680ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+196ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+3ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+638ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+3ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+329ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-21-42 
+345ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+18ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+70ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+40ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3758ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+290ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+5ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+659ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+521ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3052ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+958ms | Δ RAM: +0.0 KB --> done with all convolutions 
+20948ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 30688ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-24-42 
+250ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+15ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+61ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+40ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3571ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+165ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+0ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+623ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+89ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1038ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+394ms | Δ RAM: +0.0 KB --> done with all convolutions 
+7288ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 13555ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-27-32 
+312ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+14ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+72ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+37ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4294ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+197ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+772ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+99ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+15932ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1209ms | Δ RAM: +0.0 KB --> done with all convolutions 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-28-11 
+358ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+15ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+28ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+29ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-28-18 
+344ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+4ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+17ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+19ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+1ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+80ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+57ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4209ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+198ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_12-42-23 
+447ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+30ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+18ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+73ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+33ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3778ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+167ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+3ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+2112ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+2ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+288ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2640ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+910ms | Δ RAM: +0.0 KB --> done with all convolutions 
+15081ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 25598ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_13-44-44 
+2272ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+5ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+16ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+99ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+41ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-24-08 
+378ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+12ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+20ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+142ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+39ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+8612ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+198ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+4059ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+2732ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-33-32 
+308ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+17ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+131ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+51ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4514ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+203ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+2430ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-35-10 
+236ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+3ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+10ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+13ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+1ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+59ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+30ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+3596ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+23ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+211ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+2092ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+21ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+84ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+914ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1022ms | Δ RAM: +0.0 KB --> done with all convolutions 
+11284ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 19601ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-37-05 
+170ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+3ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+2ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+106ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+11ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+191ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+7ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+800ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+898ms | Δ RAM: +0.0 KB --> done with all convolutions 
+8667ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 10867ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-38-11 
+218ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+13ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+3ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+33ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+5ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+159ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+18ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+15ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+6ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+201ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+19ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-40-31 
+204ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+8ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+0ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+2ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+2ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+12ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+4ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+119ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+10ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+14ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+4ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+212ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+18ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-40-41 
+242ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+2ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+28ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+22ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+7ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+1ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+33ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+3ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+125ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+10ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+16ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+7ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+227ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+7195ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+34ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-44-20 
+290ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+7ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+9ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+1ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+2ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+1ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+18ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+2ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+135ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+10ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+14ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+5ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+204ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+1ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+21ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1659ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1154ms | Δ RAM: +0.0 KB --> done with all convolutions 
+13571ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 17112ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-45-27 
+264ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+50ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+10ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+54ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+18ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+8ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+34ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+523ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+56ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+689ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+241ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+47ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+14ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-45-47 
+270ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+52ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+10ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+57ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+32ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+166ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+34ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+613ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+157ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+50ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+6ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+329ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+5ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+398ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1748ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1456ms | Δ RAM: +0.0 KB --> done with all convolutions 
+14638ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 20046ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_14-51-45 
+752ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+10ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+60ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+56ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+39ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+477ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+128ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+1229ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+96ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+104ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+24ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+577ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+1217ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3879ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1848ms | Δ RAM: +0.0 KB --> done with all convolutions 
+19613ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 30138ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-02-48 
+331ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+76ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+104ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+58ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+251ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+64ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+757ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+85ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+62ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+11ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+302ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+591ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3140ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+2924ms | Δ RAM: +0.0 KB --> done with all convolutions 
+32920ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 41733ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-17-13 
+329ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+51ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+46ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+31ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+5ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+217ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+45ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+563ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+95ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+47ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+8ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+335ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+5ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+597ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3499ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+2855ms | Δ RAM: +0.0 KB --> done with all convolutions 
+30066ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 38827ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-21-03 
+403ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+55ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+52ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+40ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+5ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+166ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+37ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+600ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+159ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+80ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+9ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+313ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+516ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2663ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+2283ms | Δ RAM: +0.0 KB --> done with all convolutions 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-21-22 
+379ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+49ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+49ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+35ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+205ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+34ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+592ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+81ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+74ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+8ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+265ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+5ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+408ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1721ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1239ms | Δ RAM: +0.0 KB --> done with all convolutions 
+15419ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 20594ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-30-46 
+240ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+43ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+43ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+29ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+150ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+33ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+542ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+80ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+35ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+8ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+244ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+479ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3104ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+923ms | Δ RAM: +0.0 KB --> done with all convolutions 
+19815ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 25801ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-39-11 
+402ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+171ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+172ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+30ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+149ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+32ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+553ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+97ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+84ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+21ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-48-52 
+456ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+208ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+195ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+33ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+174ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+37ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+586ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+81ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+41ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+11ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-49-31 
+251ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+47ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+52ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+33ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+6ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+142ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+35ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+515ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+116ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+42ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+10ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-51-22 
+611ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+201ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+253ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+35ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+5ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+199ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+56ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+609ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+142ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+94ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+14ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-54-10 
+477ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+231ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+183ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+6ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+33ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+175ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+60ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+599ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+109ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+146ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+43ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+22182ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+24ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+1476ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+8454ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+3707ms | Δ RAM: +0.0 KB --> done with all convolutions 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_15-56-14 
+212ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+47ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+45ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+31ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+161ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+27ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+610ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+78ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+48ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+8ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+232ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+3ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+372ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2978ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+787ms | Δ RAM: +0.0 KB --> done with all convolutions 
+16176ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 21844ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_16-11-38 
+242ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+56ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+66ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+34ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+171ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+40ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+842ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+80ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+49ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+7ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+263ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+5ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+435ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3237ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+808ms | Δ RAM: +0.0 KB --> done with all convolutions 
+17903ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 24270ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_16-16-08 
+457ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+185ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+187ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+31ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+163ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+45ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+817ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+77ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_16-17-20 
+402ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+177ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+9ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+173ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+6ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+37ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+160ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+34ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+810ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+93ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_16-21-23 
+530ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+10ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+292ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+264ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+4ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+50ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+6ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+229ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+39ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+1057ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+72ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_16-22-22 
+231ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+47ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+48ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+25ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+194ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+36ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+817ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+85ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+113ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+9ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+259ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+414ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+4616ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+2281ms | Δ RAM: +0.0 KB --> done with all convolutions 
+21298ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 30507ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_16-24-28 
+260ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+46ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+46ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+9ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+5ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+34ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+2ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+247ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+55ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+834ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+210ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+68ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+9ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+260ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+393ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+3025ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+748ms | Δ RAM: +0.0 KB --> done with all convolutions 
+15820ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 22092ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_16-55-08 
+589ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+12ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+138ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+9ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+90ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+9ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+15ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+58ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+282ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+38ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+1312ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+194ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+136ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+13ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+943ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+23ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+1287ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+7413ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1471ms | Δ RAM: +0.0 KB --> done with all convolutions 
+27292ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 41330ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-00-27 
+458ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+49ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+38ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+544ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+46ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+948ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1545ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5852ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+8ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+444ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+3200ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+123ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+9754ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2206ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+855ms | Δ RAM: +0.0 KB --> done with all convolutions 
+12492ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 38570ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-05-06 
+461ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+79ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+52ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+479ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+12ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+1019ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1438ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5449ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+393ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-06-28 
+5094ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+68ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+40ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+500ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+17ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+952ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1345ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5785ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+21ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+380ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-09-04 
+430ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+58ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+36ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+428ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+10ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+928ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1112ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4599ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+293ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+2338ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+25ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+5529ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1984ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+965ms | Δ RAM: +0.0 KB --> done with all convolutions 
+12560ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 31304ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-13-12 
+387ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+52ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+4ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+38ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+630ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+10ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+1683ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1368ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4701ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+346ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+2625ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+47ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+9392ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-16-28 
+545ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+58ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+38ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+423ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+15ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+918ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1408ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5015ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+376ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+104ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+4385ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+39ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+13105ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2632ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+933ms | Δ RAM: +0.0 KB --> done with all convolutions 
+15596ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 45598ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-18-38 
+431ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+62ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+38ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+428ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+9ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+847ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1064ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+4890ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+19ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+418ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+80ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+4175ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+30ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+14238ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+6398ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+3123ms | Δ RAM: +0.0 KB --> done with all convolutions 
+21524ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 57781ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-25-36 
+440ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+53ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+35ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+431ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+11ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+860ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1076ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5372ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+1ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+363ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+91ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+3128ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+17ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+4931ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+2596ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+739ms | Δ RAM: +0.0 KB --> done with all convolutions 
+12122ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 32272ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-28_17-33-12 
+323ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+49ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+49ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+7ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+34ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+164ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+39ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+802ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+90ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+64ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+10ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+67ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+257ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+4ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+300ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1454ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+804ms | Δ RAM: +0.0 KB --> done with all convolutions 
+10162ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 14703ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-29_09-58-35 
+1603ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+19ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+504ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+19ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+445ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+32ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+30ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+127ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+4ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+780ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+133ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+2132ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+188ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+180ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+28ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+130318ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-10-29_10-15-53 
+1505ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+13ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+308ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+426ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+15ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+2ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+9ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+66ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+6ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+352ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+60ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+1635ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+110ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+82ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+13ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+228490ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-29_10-22-13 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-29_10-23-43 
+329ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+10ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+50ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+8ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+52ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+10ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+1ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+3ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+36ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+3ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+226ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+42ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+869ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+79ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+50ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+11ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+61ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+286ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+5ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+283ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1155ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+746ms | Δ RAM: +0.0 KB --> done with all convolutions 
+12973ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 17289ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-29_10-25-31 
+458ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+56ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+6ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+36ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+452ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+11ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+888ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1409ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5231ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+11ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+784ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+1ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+130ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+2801ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+29ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+5889ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+791ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+715ms | Δ RAM: +0.0 KB --> done with all convolutions 
+8092ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 27791ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-10-29_10-31-08 
+456ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+65ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+3ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+46ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+528ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+19ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+1241ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1418ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+6385ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+671ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+145ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+3751ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+23ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+6028ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+1873ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+1346ms | Δ RAM: +0.0 KB --> done with all convolutions 
+15137ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 39140ms 0ms | Δ RAM: +0.0 KB --> starting: 2025-10-29_10-45-29 
+388ms | Δ RAM: +0.0 KB --> calculated H and bog_trafo  
+55ms | Δ RAM: +0.0 KB --> calculated energy dependent part  
+5ms | Δ RAM: +0.0 KB --> calculated/ loaded T (pref) grid 
+38ms | Δ RAM: +0.0 KB --> done mat_form_factors 
+1164ms | Δ RAM: +0.0 KB --> done constructing sqw'_ad_a 
+9ms | Δ RAM: +0.0 KB --> done transform_basis_i_order_i_to_n1_n2 
+1131ms | Δ RAM: +0.0 KB --> done with all convolutions of a and ad 
+1322ms | Δ RAM: +0.0 KB --> done with adding k prefactor again (experimental k prefactor on higher basis) 
+5086ms | Δ RAM: +0.0 KB --> done with transforming from a_ad to xyz 
+2ms | Δ RAM: +0.0 KB --> done with transforming sqw prime to sqw 
+361ms | Δ RAM: +0.0 KB --> done constructing sqw' 
+2ms | Δ RAM: +0.0 KB --> done sqw' to sqw 
+88ms | Δ RAM: +0.0 KB --> done normalising to sum rule 
+2370ms | Δ RAM: +0.0 KB --> done calculating the intensities of sqw (repeat all without energy part) 
+42ms | Δ RAM: +0.0 KB --> before searching for symmetries in sqw 4 
+4752ms | Δ RAM: +0.0 KB --> after searching for symmetries in sqw 4 
+892ms | Δ RAM: +0.0 KB --> after slicing sqw components for plotting 
+675ms | Δ RAM: +0.0 KB --> done with all convolutions 
+8184ms | Δ RAM: +0.0 KB --> done with all plotting 
+--------------DONE------------------ 
+Total time: 26567ms 

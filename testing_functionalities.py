@@ -260,7 +260,7 @@ def test_grid_spectral_weight_computation(config:Config):
     k_values_scalar, k_values, xticks_label, xticks_pos = (
         functions.path_k_space(path, config.amount_k_values, a1)
     ) 
-    from LSW import example_1_General_D_FM_AFM_bonds, general_Ham_types_AFM_FM_paper_4, create_bog_pref_grid
+    from LSW import example_1_General_D_FM_AFM_bonds, general_Ham_types_AFM_FM_paper_4, calc_H_T_w_on_grid
     material = example_1_General_D_FM_AFM_bonds(
                     -1, -1, 1, config.a, S1=config.S, S2=-config.S, d=config.dimension
                 )
@@ -447,6 +447,80 @@ def test_eig():
     print("Eigenvalues:", eigvals)
     print("Eigenvectors:\n", eigvecs)
 
+def test_integration():
+    dimension = 3
+    n=0.9
+    def function_to_integrate(k):
+        magnitude_k = np.linalg.norm(k, axis=-1)
+        return 1/magnitude_k**n#**2 #k[:,:,:,0] #only in one direction 
+    q_values = functions.give_grid_vectors_d(
+        functions.give_reciprocal_lv(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))[:dimension], amount_BZ=1, steps=[*(50,)*dimension]
+    )
+    refinement_factors = np.arange(10, 100, 10)
+    decrease_ratios = [1/np.sqrt(10), 1/np.sqrt(5), 1/np.sqrt(2), 1/1.1]
+
+    results = np.zeros((len(refinement_factors),len(decrease_ratios)))
+    indices_divergencies = np.array([0,0,0])
+    if indices_divergencies.shape[0] > 0:
+        for i, refinement_factor in enumerate(refinement_factors):
+            for j, decrease_ratio in enumerate(decrease_ratios):
+                refined_grid, grid_volume = give_refined_grid_around_point(q_values, point_idx= indices_divergencies
+                                                                    , decrease_ratio=decrease_ratio
+                                                                    ,dimension=dimension,
+                                                                        refinement_factor=refinement_factor, 
+                                                                        fraction_to_neighbour_to_include=0.1)
+                if np.any(refined_grid[0,0,0]>refined_grid[-1,0,0]): #necessary in the orginal case I assume that the grid is periodic but here it is not
+                    refined_grid = -refined_grid
+                function_of_k = function_to_integrate(refined_grid)
+                integration_result = functions.integrate_nd(function_of_k, refined_grid, dimension=dimension)
+                results[i, j] = integration_result
+    plt.figure()
+    for i in range(len(decrease_ratios)):
+        plt.plot(refinement_factors, results[:, i], label=f"decrease ratio: {decrease_ratios[i]:.3f}")
+    plt.xlabel("Refinement Factor")
+    plt.ylabel("Integration Result")
+    plt.title("Integration Results for Different Refinement Factors and Decrease Ratios")
+    plt.legend()
+
+    a=np.max(refined_grid)
+    
+    print(2/(1-n)*a**(1-n))
+    print(grid_volume)
+    print(a)
+
+    plt.figure()
+    plt.plot([function_of_k[*((i,)*dimension+(0,)*(3-dimension))] for i in range(function_of_k.shape[0])])
+    plt.show()
+    return results
+
+def test_integration_2d_divergent():
+    # import sympy as sp
+
+    # # symbols
+    # x, y, a, eps = sp.symbols('x y a eps', positive=True)
+
+    # # integrand
+    # f = 1/sp.sqrt(x**2 + y**2)
+
+    # # integrate over the square [eps, a] x [eps, a] and then take eps -> 0+
+    # I_eps = sp.integrate(sp.integrate(f, (x, eps, a)), (y, eps, a))
+    # I = sp.simplify(sp.limit(I_eps, eps, 0, dir='+'))
+
+    # print("Closed form:", I)
+    # print("Simplified :", sp.simplify(I.rewrite(sp.log)))
+
+    import numpy as np
+    from scipy import integrate
+
+    a = 0.0128 
+    f = lambda y, x: 1.0/np.sqrt(x*x + y*y)
+
+    # Integrate over [0,a]^2; the integrand is integrable at (0,0)
+    val, err = integrate.dblquad(f, 0.0, a, lambda x: 0.0, lambda x: a)
+    print(4*val, err)  # should be close to 2*a*np.arcsinh(1)
+
+
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -460,4 +534,6 @@ if __name__ == "__main__":
     #test_sqw_compoents_new()
     #test_interaction()
     # test_sympy()
-    test_eig()
+    # test_eig()
+    #print(test_integration())
+    test_integration_2d_divergent()

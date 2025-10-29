@@ -7,7 +7,7 @@ import rotation
 import Configurations as Config
 
 class Material:
-    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None):
+    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None, extension:int =1):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
         
@@ -33,6 +33,7 @@ class Material:
 
         self.name = name
         self.config = config
+        self.extension = extension  # Default extension factor for k-grid
         
         #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(3)]
        
@@ -46,6 +47,10 @@ class Material:
         )
         self.mat_R2 = np.outer(self.normal_vector_to_rotation_plane, self.normal_vector_to_rotation_plane)
         self.mat_R1 = (np.eye(3) - 1j * mat_nx - self.mat_R2) / 2
+    
+    def is_incommensurate(self):
+        """Check if the material is incommensurate based on its tau values."""
+        return np.any(self.tau != np.array([0, 0, 0]))
 
         
 
@@ -75,7 +80,7 @@ class Material:
 
         self.N = len(atoms)
 
-        self.ad_a_spectra_indices_4_operator = [[i, order_i, j, order_j] for i in range(self.N) for order_i in range(4) for j in range(self.N)  for order_j in range(4)]
+        # self.ad_a_spectra_indices_4_operator = [[i, order_i, j, order_j] for i in range(self.N) for order_i in range(4) for j in range(self.N)  for order_j in range(4)]
 
     def __repr__(self):
         return f"Material(atoms={self.atoms}, bonds={self.bonds})"
@@ -138,6 +143,32 @@ class Material:
 
 
 
+    
+    def e_minus_ikd(self, d, k):
+        """takes k as arbitrary array of k-vectors (some grid) and returns the interaction term for the given bond"""
+        #TODO: this must be checked for other lattices!
+        #removed the pi here because for me this is already in the k-values
+        
+        #multiplying the last axis of the k-values (the actual vectors) with the lattice vectors
+        q = np.einsum("ji,j->i",self.lattice_vectors,d)  # shape (3,)
+        result = np.exp(-1j * np.einsum('...i,i->...', k, q))
+        return result
+
+    def rotation_matrix(self, phi):
+        """returns the rotation matrix for the given angle phi"""
+        return np.round(rotation.rot_vec(phi, self.normal_vector_to_rotation_plane), 3)
+    
+    
+###################################################################################################
+###################################################################################################
+###################################################################################################
+#Old functions (NOT IN USE ANYMORE)
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+
+    
     def creating_bonds_dist_lists_types(self, fill_with_zeros=False):
         """Creates the bonds_distances and J_bonds matrices for each type of atom in atoms_sorted."""
         
@@ -195,17 +226,3 @@ class Material:
         self.spins = spins
         return J_bonds,bonds_distances, spins
     
-    
-    def e_minus_ikd(self, d, k):
-        """takes k as arbitrary array of k-vectors (some grid) and returns the interaction term for the given bond"""
-        #TODO: this must be checked for other lattices!
-        #removed the pi here because for me this is already in the k-values
-        
-        #multiplying the last axis of the k-values (the actual vectors) with the lattice vectors
-        q = np.einsum("ji,j->i",self.lattice_vectors,d)  # shape (3,)
-        result = np.exp(-1j * np.einsum('...i,i->...', k, q))
-        return result
-
-    def rotation_matrix(self, phi):
-        """returns the rotation matrix for the given angle phi"""
-        return np.round(rotation.rot_vec(phi, self.normal_vector_to_rotation_plane), 3)

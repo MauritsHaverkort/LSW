@@ -1,0 +1,444 @@
+//Constants often used:
+//  N: number of atoms in unit cell
+
+//indices: 
+//  μ,ν,σ,ρ : cartesian indices x,y,z, 
+//  a,b,c,d: Holstein-Primakoff operator indices 
+//  i,j: atom indices in unit cell 
+//  l: magnon mode index
+//  k... : k-grid indices (kx,ky,kz)
+//  t: q shift index for the incommensurate case
+//  w: energy index 
+//  p: angle index for rotations
+//  order_i, order_j: order of a, a† operators in an operator being a product of a and a†
+
+//explanation of conventions:
+//  if an index does not appear on the left side of an equation, it is summed over
+
+
+//explanation of naming:
+//  sqw: dynamical structure factor S(q,ω) in lab frame
+//  sqw2: two-point (one-magnon) spectra / sqw4: four-point (two-magnon) spectra
+//  sqw_prime: dynamical structure factor in rotating frame S'(q,ω)
+//  sqw_aad: sqw in (a, a†) operator basis / sqw_xyz: sqw in (x,y,z) basis
+
+function call_main(config){
+    material = D2_AFM_FM_simple_cubic_non_rotated_supercell(config, ...) // define material
+    main(config, material);
+}
+
+// example for a material definition function
+function D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J, a, S1, S2,
+                                                      spin_dir = [0,0,1],
+                                                      rel_pos2 = 1/2,
+                                                      AFM = true)
+{
+
+    // cubic lattice vectors
+    double lv[3,3];
+    lv[0] = [a, 0, 0];
+    lv[1] = [0, a, 0];
+    lv[2] = [0, 0, a];
+
+    // pick arbitrary normal vector to rotation plane, just has to be orthogonal to spin_dir
+    normal_vector = give_orthogonal_normal_vector(spin_dir);
+
+    // build material (2D model on square lattice, supercell extension=2)
+    material = Material(
+        dimension = 2,
+        config    = config,
+        tau       = [0,0,0],
+        normal_vector_to_rotation_plane = normal_vector,
+        lattice_vectors = lv,
+        extension = 2
+    );
+
+    // AFM flips spins on sublattice 2
+    if (AFM) {
+        sign_dir = -1;
+    } else {
+        sign_dir = 1;
+    }
+
+    
+    // Atom(position[3], type, S, spin_dir[3])
+    atoms = [
+    Atom([0, 0, 0],                 type=0, S=S1, spin_dir=spin_dir),
+    Atom(rel_pos2*[a, a, 0],        type=1, S=S1, spin_dir=spin_dir),
+    Atom(rel_pos2*[a, 0, 0],        type=2, S=S2, spin_dir=sign_dir*spin_dir),
+    Atom(rel_pos2*[0, a, 0],        type=3, S=S2, spin_dir=sign_dir*spin_dir)
+    ];
+
+    
+    // Bond(material, atom0, atom1, unit_cell_of_atom_1 = [ux,uy,uz], j = J)
+
+    bonds = [
+    Bond(material, atoms[0], atoms[2], unit_cell_of_atom_1=[ 0,  0, 0], j=J),
+    Bond(material, atoms[0], atoms[2], unit_cell_of_atom_1=[-1,  0, 0], j=J),
+    Bond(material, atoms[0], atoms[3], unit_cell_of_atom_1=[ 0,  0, 0], j=J),
+    Bond(material, atoms[0], atoms[3], unit_cell_of_atom_1=[ 0, -1, 0], j=J),
+    Bond(material, atoms[1], atoms[2], unit_cell_of_atom_1=[ 0,  0, 0], j=J),
+    Bond(material, atoms[1], atoms[3], unit_cell_of_atom_1=[ 1,  0, 0], j=J),
+    Bond(material, atoms[1], atoms[3], unit_cell_of_atom_1=[ 0,  0, 0], j=J),
+    Bond(material, atoms[1], atoms[2], unit_cell_of_atom_1=[ 0,  1, 0], j=J)
+    ];
+
+    // add reverse bonds and finalise counts inside Material
+    material.set_bond_atoms(atoms, bonds);
+
+    return material;
+}
+
+
+function calc_H_T_w_on_grid(config, q_grid, material) {
+
+    // --- tau / q-shifts ---
+    if (material.is_incommensurate()) {
+        // tau_in_lattice_units[μ] = sum_v tau[v] * G[v,μ],  G = reciprocal lattice of lv
+        G[v,μ] = give_reciprocal_lv(material.lattice_vectors)[v,μ];
+        tau_in_lattice_units[μ] = material.tau[v] * G[v,μ];
+
+        q_shifts = [];                   // 0,+tau,-tau,+2tau,-2tau,...
+        for (t = 0; t < config.amount_tau_values; ++t) {
+            sign = (t % 2 == 0) ? -1 : +1;
+            tp   = (t % 2 == 0) ? (t/2) : ((t+1)/2);
+            q_shifts.append( sign * tp * tau_in_lattice_units[:] );
+        }
+   
+    } else {
+        q_shifts = [[0,0,0]]; //for commensurate no sifts needed
+    }
+
+    tau = length(q_shifts);
+
+    
+    // --- loop over tau-shifts ---
+    for (t = 0; t < tau; ++t) {
+        q_shift[μ] = q_shifts[t][μ];
+
+        // Hamiltonian & Bogoliubov objects on shifted grid
+        ( H_diag[k..., a, b], T_tau[k..., a, b] ),
+        ( H_deriv[k..., d, a, b], T_tau_deriv[k..., d, a, b] )
+            = current_Hamiltonian_to_use(config,
+                                         q_grid + q_shift,
+                                         material);
+
+        w_values[w] = //evenly spaced energy values between min(H_diag)-0.2 and max(H_diag)+0.2 (minimal and maximal eigenvalue over all k and bands)
+
+        //Lorenzian broadening of the energies
+        E_part[w, k..., l] = calc_spectral_weight_grid(H_diag[k..., a, b],
+                                                          w_values[w],
+                                                          /*Self_energy=*/ i*config.Gamma);
+        // store per-tau objects
+        T[t, k..., a, b]                 = T_tau[k..., a, b];
+        H_tau_dep[t, k..., a, b]         = H_diag[k..., a, b];
+        E_part_shifted[t, w, k..., l]         = E_part[w, k..., l];
+
+        if (config.compute_H_derivatives) {
+            T_deriv[t, k..., d, a, b]        = T_tau_deriv[k..., d, a, b];
+            H_tau_dep_deriv[t, k..., d, a, b]= H_deriv[k..., d, a, b];
+        }
+    }
+
+    // --- normalise T by number of k-points ---
+    T[t, k..., a, b] = T[t, k..., a, b] * (1.0 / sqrt(config.number_k_points));
+
+    // --- extract eigenvalues (diagonals of H_tau_dep) ---
+    eigvalues[t, k..., l] = H_tau_dep[t, k..., l, l];
+
+    eigvalues_deriv[t, k..., d, l] = H_tau_dep_deriv[t, k..., d, l, l];
+ 
+
+    // outputs: energy part per tau, Bogoliubov T, eigenvalues, energy grid, and derivatives (optional)
+    return (E_part_shifted, T, eigvalues, w_values, eigvalues_deriv, T_deriv);
+}
+
+function diagonalising_Hamiltonian(config, H, shape_k_parts, N,
+                                  ) {
+    // Gamma: bosonic metric (2*N×2*N) diag([1,1,1,...,-1,-1,-1,...])
+    Gamma = create_Gamma(half_size = N);
+
+    eigvals_grid[shape_k_parts, 2*N];
+    T[shape_k_parts, 2*N, 2*N];
+    H_diag_grid[shape_k_parts, 2*N, 2*N];
+
+
+    // ---- solve Γ H per k ----
+    for (k in shape_k_parts) {
+
+        H_[a, b] = H[k, a, b];
+
+        GH[a,c] = Gamma[a,b] * H_[b,c];
+        (eigvals[a], eigvecs[a,b]) = eig(GH);   
+
+        // sort descending by Re(eigvals)
+        (eigvals, eigvecs) = sort_eigs_descending_by_real_part(eigvals, eigvecs);
+
+        if (use_eigvecs_correction) {
+            // --- orthonormalise degenerate columns of eigvecs (T) ---
+            batches = group_degenerate_indices(eigvals, tol = 1e-8);
+            for (batch in batches) {
+                if (len(batch) > 1) {
+                    eigvecs[a, batch] = orthonormalise(eigvecs[a, batch]);
+                }
+            }
+
+            // --- normalise T to satisfy T^† Γ T = Γ ---
+
+            //temp2 is the current diagonal values
+            temp2[i,j] = Gamma[i,a] * conj(eigvecs[b,a]) * Gamma[b,c] * eigvecs[c,j];
+
+            //claculated by what the diagonals have to be scaled so that temp2 becomes 1 on the diagonal
+            norm_diag[i] = 1.0 / sqrt( temp2[i,i] );
+            normalisation_factor[i,i] = norm_diag[i];
+
+            
+            eigvecs[i,j] = eigvecs[i,m] * normalisation_factor[m,j];
+        }
+
+       
+        H_diag[i,j] = Gamma[i,j] * eigvals[j];
+
+        H_diag_grid[k, i, j] = H_diag[i,j];
+        T[k, i, j] = eigvecs[i,j];
+        eigvals_grid[k, i]    = eigvals[i];
+    }
+
+   
+    gamma_diag[i] = Gamma[i,i];
+
+    diff[k..., i] = conj(T[k..., i, j]) * Gamma[j,j_1] * T[k..., j_1, i]
+                    - gamma_diag[i];
+    
+    check_if_close_to_zero(diff)
+    
+
+    return (H_diag_grid, T);
+}
+
+
+
+function general_Ham_types_AFM_FM_paper_4(config, k_grid, material) 
+{
+
+    N        = material.N;
+    u[i,μ]   = material.atoms[i][0].u;           // local frames
+    v[i,μ]   = material.atoms[i][0].v;
+    S[i]     = material.atoms[i][0].S;
+    kshape   = shape(k_grid without last axis);
+
+    // ---- build blocks from bonds, phases, and local frames ----
+    for (bond in material.bonds) {
+        (i, j)   = (bond.atom0.type, bond.atom1.type);
+        J[μ,ν]   = bond.j;
+        R[μ,ν]   = bond.r_matrix;
+        d_vec[d] = bond.d_of_unit_cells[d];
+        Jrot[μ,ν] = J[μ,σ] * R[σ,ν];
+
+        // phase factors on k-grid:
+        e_plus_ikd(k...)  = exp(+i * k_grid[k...,μ] * d_vec[μ]);
+        e_minus_ikd(k...) = exp(-i * k_grid[k...,μ] * d_vec[μ]);
+
+        // scalars in local frames:
+        tempA[i,j] = u[i,μ] * Jrot[μ,ν] * conj(u[j,ν]);
+        tempB[i,j] = u[i,μ] * Jrot[μ,ν] *      u[j,ν];
+
+        // accumulate blocks:
+        A  [k..., i, j] +=  0.5 * sqrt(|S[i] * S[j]|) * tempA[i,j]       * e_plus_ikd(k...);
+        mA [k..., i, j] +=  0.5 * sqrt(|S[i] * S[j]|) * conj(tempA[i,j]) * e_plus_ikd(k...);
+        B  [k..., i, j] +=  0.5 * sqrt(|S[i] * S[j]|) * tempB[i,j]       * e_plus_ikd(k...);
+        mB [k..., j, i] +=  0.5 * sqrt(|S[i] * S[j]|) * conj(tempB[i,j]) * e_minus_ikd(k...);
+        C  [k..., i, i] +=        |S[j]|             * v[i,μ] * Jrot[μ,ν] * v[j,ν];
+
+        if (config.compute_H_derivatives) {
+            // ∂/∂k_d brings factor (±i d_vec[d])
+            A_deriv [k..., d, i, j]  += ( i * d_vec[d]) * 0.5 * sqrt(|S[i] * S[j]|) *  tempA       * e_plus_ikd(k...);
+            mA_deriv[k..., d, i, j]  += ( i * d_vec[d]) * 0.5 * sqrt(|S[i] * S[j]|) *  conj(tempA) * e_plus_ikd(k...);
+            B_deriv [k..., d, i, j]  += ( i * d_vec[d]) * 0.5 * sqrt(|S[i] * S[j]|) *  tempB       * e_plus_ikd(k...);
+            mB_deriv[k..., d, j, i]  += (-i * d_vec[d]) * 0.5 * sqrt(|S[i] * S[j]|) *  conj(tempB) * e_minus_ikd(k...);
+        }
+    }
+
+    // ---- assemble 2*N×2*N Hamiltonian per k ----
+    // 0:N referring to all indices between 0 and N-1
+    // N:2*N referring to all indices between N and 2*N-1
+    H[k..., 0:N,     0:N    ]  = A[k..., :, :] - C[k..., :, :];
+    H[k..., 0:N,     N:2*N  ]  = B[k..., :, :];
+    H[k..., N:2*N,   0:N    ]  = mB[k..., :, :];
+    H[k..., N:2*N,   N:2*N  ]  = mA[k..., :, :] - C[k..., :, :];
+
+    if (config.compute_H_derivatives) {
+        H_deriv[k..., d, a, b] = 0;
+        H_deriv[k..., d, 0:N,   0:N  ] = A_deriv [k..., d, :, :];
+        H_deriv[k..., d, 0:N,   N:2*N ] = B_deriv [k..., d, :, :];
+        H_deriv[k..., d, N:2*N,  0:N  ] = mB_deriv[k..., d, :, :];
+        H_deriv[k..., d, N:2*N,  N:2*N] = mA_deriv[k..., d, :, :];
+    }
+
+    // (Hermiticity check omitted in pseudocode)
+
+    // ---- diagonalise with bosonic metric (Γ) ----
+    (H_diag, T) = diagonalising_Hamiltonian(config, H);
+
+    if (config.compute_H_derivatives) {
+        // note: w_deriv and T_deriv projection not computed here (left as future step)
+        (H_diag_deriv, T_deriv) = /* missing */;
+    } else {
+        (H_diag_deriv, T_deriv) = (NULL, NULL);
+    }
+
+    return (H_diag, T, H_diag_deriv, T_deriv);
+}
+
+
+function calculate_sqw_spectra(config, // object to store parameters defined before running
+                                q_grid, // grid of q-vectors 
+                                w_values, // array of energy values that are sampled over 
+                               material, // object defining the material properties
+                               E_part,          // energy_dependent_part
+                               T,              // transformation matrix from the magnon operators (alpha) to the Holstein Primakoff operators (a)  
+                               eig_grid,       // the energy eigenvalues on the q_grid
+                               eig_deriv,      // the derivatives of the energy eigenvalues on the q_grid
+                               T_deriv) {      // the derivatives of the transformation matrix on the q_grid
+
+    // --- precompute shapes / prefactors ---
+    k_shape   = shape(q_grid) (excluding last axis representing q-vectors);
+    phase_pref = give_phase_factor(material, config, q_grid);  // phase_pref[k..., c, d] 
+    T_H        = conj(transpose_last2(T));                     // T^†
+
+    // --- build sqw' in (a, a†) for 2-point ---
+    sqw2_aad[t, c, d, k..., l] = T_H[t, k..., l, c] * T[t, k..., d, l]
+    // t: for incommnensurate ; c,d : indices for a operators [a_0...a_N a_0^+...a_N^+] ; k... : q_grid indices ; l : magnon mode index
+    //     (no summation; l, c, d, t, k... all free)
+
+    if (config.cut_diverging_spectral_weights)
+        sqw2_aad = deal_with_divergencies(sqw2_aad, config, material, q_grid);
+
+    // (2) ω-insertion:
+
+    sqw2_aad [t, c, d, k..., l] = sqw2_aad [t, c, d, k..., l] * E_part[t, w, k..., l]
+    //     (no summation; shared indices t, k..., l are free; introduces w)
+
+    // (3) trace over creation subspace (keep only creation modes via mask):
+    //     where L = size over l, mask(l) = 0 for annihilation, 1 for creation.
+    mask     = concat(zeros(material.N), ones(material.N));   // length 2*N [0,0,0,...,1,1,1,...]
+    L        = size_last_axis(sqw2_aad);
+    sqw2_aad[t, c, d, w, k...] = (1/L) * [ sqw2_aad[t, c, d, k..., l] * mask(l) ]
+
+    // match internal index convention
+    sqw2_aad = flip_sqw_prime_ad_a(sqw2_aad, 2, material, config);
+
+   
+    // change indexing to have a consistent way for all orders of magnon spectra (c, d -> i, order_i, j, order_j):
+    // i : index of atom in the unit cell (left), order_i: order of the a a^+ operators, j: index (right), order_j: order right
+    // remarks on the order: one magnon: 0 -> a, 1 -> a^+ two magnons: 0 -> aa -> aa^+ -> a^+a -> a^+a^+
+    sqw2_aad = material.transform_basis_i_order_i_to_n1_n2(sqw2_aad);
+
+    //array of all indices for the order of (a, a†) operators
+    orders   = material.return_order_of_a_ad_operator_indices(4);
+
+    // --- convolute sqw_2 to get the two magnon spectra ---
+    
+    for (t = 0; t < config.amount_tau_values; t++) {
+        for (i = 0; i < material.N; i++) {
+            for (j = 0; j < material.N; j++) {
+                for (order_idx = 0; order_idx < len(orders); order_idx++) {
+                    (is_ad_1, is_ad_2) = orders[order_idx];
+                    for (order_idx2 = 0; order_idx2 < len(orders); order_idx2++) {
+                        (is_ad_3, is_ad_4) = orders[order_idx2];
+
+                        // Convolutions over momentum axes (FFT in k-space), ω kept.
+                            term1 = convolute_grids_fft(
+                                    sqw2_aad[t,i,is_ad_1,j,is_ad_3],
+                                    sqw2_aad[t,i,is_ad_2,j,is_ad_4],
+                                    material.dimension);
+                        term2 = convolute_grids_fft(
+                                    sqw2_aad[t,i,is_ad_1,j,is_ad_4],
+                                    sqw2_aad[t,i,is_ad_2,j,is_ad_3],
+                                    material.dimension);
+                        sqw4_aad[t,i,order_idx,j,order_idx2] = term1 + term2;
+                    }
+                }
+            }
+        }
+    }
+
+    // Re-apply k-phase after convolutions:
+
+    // sqw_2 and sqw_4 on extended grid if supercell: calculate the phase factor on a extended k-space :
+    (sqw4_aad, q_extended) = phase_factor_on_extended_grid(sqw4_aad, material.extension);
+
+    (sqw2_aad, q_extended) = phase_factor_on_extended_grid(sqw2_aad, material.extension);
+
+
+    // --- map (a,a†) → (x,y,z) ---
+    sqw4_xyz_prime = sqw_prime_from_a_ad_to_xyz_new_conv_S_S(sqw4_aad, material, config);
+    sqw2_xyz_prime = sqw_prime_from_a_ad_to_xyz_new_conv_S_S(sqw2_aad, material, config);
+    
+    // if the incommensurate case: map to sqw and symmetrise (this is only working currently for the sqw2 case)
+    if (material.is_incommensurate()) {
+        (sqw4_xyz, sqw4_comps) = sqw_prime_to_sqw(config, material, sqw4_xyz_prime);
+
+        sqw2_xyz_prime = 4 * sqw_prime_from_a_ad_to_xyz_new_conv_S_S(
+                            sqw2_aad, material, config, /*order=*/2);
+        (sqw2_xyz, sqw2_comps) = sqw_prime_to_sqw(config, sqw2_xyz_prime, material);
+
+        // --- symmetrize over supercell rotations (eq. 38) ---
+        function symmetrise_sqw(sqw, material) {
+            if (material.is_incommensurate()) {
+                P = //array of all angles a unit cell can be rotated to
+                R = //array of rotation matrices R(a,b,p) for each angle in P 
+                
+                // Symmetrization:
+
+                sqw_sym[μ,ρ, w, k...] = (1/len(P)) * R[μ,ν,p] * S_p[ν,σ, w, k...] * R^T[σ,ρ,p]
+                //a,b,c,d are cartesian indices x,y,z; p indexes the rotations in P
+                //(1/len(P)) * Σ_{p,b,c} R(a,b,p) * S_p(b,c, ...) * R^T(c,d,p)
+                return sqw_sym;
+            } else {
+                return sqw;
+            }
+        }
+        sqw2_xyz = symmetrise_sqw(sqw2_xyz, material);
+
+        
+    }
+    else {
+        sqw4_xyz=sqw4_xyz_prime[0]
+        sqw2_xyz=sqw2_xyz_prime[0]
+    }
+
+    // --- outputs ---
+    return (sqw2_xyz, sqw4_xyz);
+}
+
+
+// helper: apply phase on extended grid for sqw objects
+function phase_factor_on_extended_grid(sqw, extension) {
+    
+
+    q_extended = give_grid_vectors_d(extension); //include not only the first Brillouin zone but extend the grid in all directions by extension
+ 
+    phase_ext = give_phase_factor(material, config, q_extended);   // phase_ext(..., c, d)
+
+   
+    sqw = sqw[t,i,o1,j,o2,w,k...,c,d] * phase_ext[k..., c, d];
+
+    return (sqw, q_extended);
+}
+
+
+//the following two functions rely heavily on sympy (python library) calculations so I just give the idea here
+
+function sqw_prime_from_a_ad_to_xyz_new_conv_S_S(sqw_prime_a_ad, order_of_operator=4, material, config){
+    //map sqw_prime from (a, a†) basis to (x,y,z) basis
+    //idea: write Sx Sy Sy in terms of a and a† then extract all coefficents in front of each combination of a and a† operators
+}
+
+function sqw_prime_to_sqw(config, material, sqw_prime_xyz){
+    //map sqw_prime (rotating frame) to sqw (lab frame)
+    //for sqw_2:
+    //idea sqw = sqw'[t=0]*material.mat_R2 + sqw'[t=1]*material.mat_R1 + sqw'[t=2]*conj(material.mat_R1)
+    //for sqw_4:
+    //more involved not tested yet
+}

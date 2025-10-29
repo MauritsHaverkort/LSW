@@ -1,0 +1,234 @@
+// OO-style pseudocode (compact). 
+// Uses bracket indexing and explicit index sums instead of einsum/@.
+
+//Constants often used:
+//  N: number of atoms in unit cell
+
+//indices: 
+//  μ,ν,σ,ρ : cartesian indices x,y,z, 
+//  a,b,c,d: Holstein-Primakoff operator indices 
+//  i,j: atom indices in unit cell ; 
+//  l: magnon mode index ; 
+//  k... : k-grid indices ; 
+//  t: incommensurate index ; 
+//  w: energy index 
+//  p: angle index for rotations
+//  n: index for enumerations (like lattice vectors)
+
+class Material {
+
+    // --- fields ---
+    int    dimension;
+    int    N;                         // number of atom types
+    int    extension;
+    double tau[3];
+    double n_rot[3];                  // unit normal to rotation plane (unit length)
+    double lv[3,3];                  // lattice vectors (row-major)
+    complex mat_R1[3,3], mat_R2[3,3];
+
+    List<Atom>          atoms;       // atoms[indexWithinType]
+    List<Bond>       bonds;
+    Config           config;
+
+    // --- constructor ---
+    function __init__(dimension, config, 
+                      tau,
+                      normal_vector_to_rotation_plane,
+                      lattice_vectors,
+                      extension = 1) {
+
+        this.tau = tau;
+        this.normal_vector_to_rotation_plane = normalise(normal_vector_to_rotation_plane)
+        this.lattice_vectors = lattice_vectors;
+        this.extension = extension;
+        this.name      = name;
+    
+        //only needed for imcommensurate structures:
+
+        // explicitly setting the helper matrix 
+        mat_nx = [
+                [0, -this.normal_vector_to_rotation_plane[2], this.normal_vector_to_rotation_plane[1]],
+                [this.normal_vector_to_rotation_plane[2], 0, -this.normal_vector_to_rotation_plane[0]],
+                [-this.normal_vector_to_rotation_plane[1], this.normal_vector_to_rotation_plane[0], 0],
+            ]
+        
+        //R2 = n n^T
+        this.mat_R2 = (this.normal_vector_to_rotation_plane[μ]* this.normal_vector_to_rotation_plane[ν])
+        this.mat_R1 = (unit_matrix[μ,ν] - i * mat_nx[μ,ν] - this.mat_R2[μ,ν]) / 2
+
+    }
+
+    
+    
+
+    // --- incommensurability ---
+    function is_incommensurate() {
+        //check if tau is not [0,0,0]
+        return this.tau != [0,0,0];
+    }
+
+    // --- set atoms & bonds; append reverse bonds with symmetric/antisymmetric split explicitly ---
+    function set_bond_atoms(atoms, bonds) {
+        this.atoms = atoms;
+
+        n_bonds = length(bonds);
+        //add the reverse bonds
+        for (b=0; b<n_bonds; b++) {
+            atom1 = bonds[b].atom0;
+            atom0 = bonds[b].atom1;
+
+            r1 = bonds[b].unit_cell_of_atom_0;  // int[3]
+            r0 = bonds[b].unit_cell_of_atom_1;
+
+            j_mat = bonds[b].j
+            j_mat_T = transpose(j_mat)
+            j_mat_sym = (j_mat + j_mat_T) / 2
+            j_mat_asym = (j_mat - j_mat_T) / 2
+            j = j_mat_sym - j_mat_asym
+            //create reverse bond
+            rev = Bond(this, atom0, atom1, r0, r1, j)
+            //add reverse bond to list of bonds
+            bonds.append(rev);
+        }
+
+        this.bonds = bonds;
+        this.N     = length(atoms);
+        
+        
+    }
+
+    
+
+    function transform_basis_i_order_i_to_n1_n2(tensor, axis_to_skip = 0, backtransform = false) {
+        // bring a object of shape [a,b,...] in a object of shape [i, oi, j, oj, ...] or vice versa
+    }
+
+    // --- index enumerators ---
+    // helper functions to have a consistent way of enumerating indices for various purposes
+    function return_ad_a_spectra_indices(order_of_operator = 2) {
+       
+    }
+
+    function return_spatial_indices(order_of_operator = 2) {
+       
+    }
+
+    function return_sqw_prime_components(order_of_operator = 2) {
+        
+    }
+
+    function return_order_of_a_ad_operator_indices(order_of_operator = 2) {
+    
+    }
+
+    function e_minus_ikd(d, k_grid) {
+        // compute q = lv^T * d
+        d[μ] = this.lattice_vectors[n,μ]*d[n]
+        result[k...] = exp(-i * k_grid[k..., μ]*d[μ])
+        return result;
+    }
+
+    // --- rotation matrix around n_rot by angle phi (delegate; no einsum here) ---
+    function rotation_matrix(phi) {
+        return // a 3x3 rotation matrix of rotation by angle phi around this.n_rot
+    }
+}
+
+class Atom {
+    // ---------- fields ----------
+    double position[3];                         // relative position in unit cell
+    double S;                                   // spin length
+    double dir[3];                              // unit spin direction
+    complex R_prime[3,3];                       // rotation: dir -> z_dir
+    complex v[3];                               // v[μ] = R_prime[μ,2]
+    complex u[3];                               // u[μ] = R_prime[μ,0] + i * R_prime[μ,1]
+
+    // ---------- constructor ----------
+    function __init__(position_in[3],
+                      type_in,
+                      S_in = 1.0,
+                      spin_dir_in = null) 
+    {
+        this.type  = type_in; //index of the atom 
+
+        // position
+        this.position[μ] = position_in[μ];   // relative position in the unit cell
+
+       
+        // spin length
+        this.S = S_in;
+
+        
+        this.dir[μ] = normalise(spin_dir_in[μ]);
+        
+
+        // rotation that maps dir → z-axis
+        double z_dir[3] = [0, 0, 1];
+        this.R_prime[μ,ν] = rotation_matrix_from_vectors(z_dir, this.dir)[μ,ν]; //returns the rotation matrix rotating dir to z-axis
+
+        // u,v are later used in the Hamiltonian construction for taking care of the local rotation of every atom
+        this.v[μ] = this.R_prime[μ, 2];                         
+        this.u[μ] = this.R_prime[μ, 0] + i * this.R_prime[μ, 1];
+    }
+}
+
+
+class Bond {
+
+    // ---------- fields ----------
+    Atom   atom0;                         // first atom
+    Atom   atom1;                         // second atom
+
+    double unit_cell_of_atom_0[3];                        // unit_cell_of_atom_0
+    double unit_cell_of_atom_1[3];                        // unit_cell_of_atom_1
+
+    double s0;                            // spin of atom0
+    double s1;                            // spin of atom1
+
+    double d_absolut[3];                            // absolute vector: r1 - r0 + (unit_cell_of_atom_1 - unit_cell_of_atom_0)
+    double d_of_unit_cells[3];                       // unit-cell offset: unit_cell_of_atom_1 - unit_cell_of_atom_0
+
+    double j[3,3];                              // exchange (3×3); scalar → scalar*unit_matrix
+    double r_matrix[3,3];                      // rotation matrix R_{n−m} (3×3)
+
+    // ---------- constructor ----------
+    function __init__(material,
+                      atom0_in, atom1_in,
+                      unit_cell_of_atom_0,
+                      unit_cell_of_atom_1,
+                      j_in)
+    {
+        this.atom0 = atom0_in;
+        this.atom1 = atom1_in;
+
+        // unit-cell coordinates
+        this.unit_cell_of_atom_0 = unit_cell_of_atom_0;
+        this.unit_cell_of_atom_1 = unit_cell_of_atom_1;
+
+        // spins
+        this.s0 = this.atom0.S;
+        this.s1 = this.atom1.S;
+
+        // unit-cell difference
+        this.d_of_unit_cells = this.unit_cell_of_atom_1 - this.unit_cell_of_atom_0;
+
+        // absolute vector between sites
+        this.d_absolut = (this.atom1.position - this.atom0.position) + (this.unit_cell_of_atom_1 - this.unit_cell_of_atom_0);
+
+        // exchange: if scalar → scalar * I; else copy 3×3
+        if (is_scalar(j_in)) {
+            this.j[μ,ν] = j*unit_matrix[μ,ν];                
+        } else {
+            this.j = j_in;
+        }
+
+       
+        // θ: angle of rotation between the two atoms of the bond
+        theta =  2 * PI * tau[v] * d_of_unit_cells[v];
+
+        // r_matrix = rotation matrix around normal_vector_to_rotation_plane by angle theta
+        this.r_matrix[μ,ν] = rotation.rot_vec(theta, material.normal_vector_to_rotation_plane);
+        
+    }
+}
+
