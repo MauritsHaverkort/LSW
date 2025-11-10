@@ -9,16 +9,19 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from typing import List, Callable  # Import List for type hints
+from matplotlib.colors import LogNorm, SymLogNorm
+from sympy import pprint
+
 from Material import Material
 import funtions as functions
 from funtions import *
 from Atoms import Atom
 from Bonds import Bond
+import krein_full_space as krein_full_space
 import Examples as Examples
 import rotation as rotation
 import sympy_manipulations as sympy_manipulations
-from matplotlib.colors import LogNorm, SymLogNorm
-from sympy import pprint
+
 
 from numba import njit, prange
 from dataclasses import dataclass
@@ -93,16 +96,20 @@ def call_main():
             # Examples.NiO_supercell(config),
             
             #FM supercell
-            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=-1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 1, 1]), relative_position_atom_2=1/2, AFM=False),
+            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=-1, a=1, S1=1, S2=-1, J2 = -5, spin_dir=np.array([0, 1, 1]), relative_position_atom_2=1/2, AFM=False),
+            # Examples.D1_AFM_FM_simple_cubic_supercell(config, J=-1, a=1, S1=1, S2=-1, J2 = -1.5, spin_dir=np.array([0, 0.01, 1]), relative_position_atom_2=1/2, AFM=False),
+
             
             #AFM supercell
-            #Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
+            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             
             #AFM sc
-            # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=2, spin_dir=np.array([0, 0, -1])),
+            # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
             
+            #Fe2O3
+            Examples.Fe2O3_hematite_unitcell(config),
             
             # Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1])),
             # Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0])),
@@ -138,6 +145,77 @@ def call_main():
             plt.close('all')  # Close all figures for next configuration
     
 
+def main(config: Config, material: Material):
+
+    #set global values in configuration and assert basic settings
+    assert config.number_k_points is None, "number_k_points shouldnt be set"
+    config.number_k_points = 1
+    assert np.all(config.amount_k_values[config.amount_k_values!=1]%2==0), "amount_k_values should be even numbers or 1 (for unused dimensions) for the path through the grid working properly"
+    
+    
+    for d in range(material.dimension):
+        config.number_k_points *= config.amount_k_values[d]
+   
+    amount_k_values = config.amount_k_values[0]
+    amount_w_values = config.amount_w_values
+    dimension = material.dimension
+   
+  
+
+    COMPUTATION_INFO["D"] = dimension
+    COMPUTATION_INFO["k"] = amount_k_values
+    COMPUTATION_INFO["w"] = amount_w_values
+    # a_values,running_param_2=np.linspace(0.3,0.7,3),np.linspace(0.5,1.5,3)
+
+    assert material is not None, "Material has to be given "
+                
+    #tryout RIXS (loaded grid)
+    if False:
+        calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= None, sqw_4_xyz= None, sqw_2_xyz= None)
+                    
+
+    draw_atoms_new_bond_system(material=material)
+    
+    lv = material.lattice_vectors
+
+    grid_fineness = config.amount_k_values
+
+    q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], grid_fineness[:dimension] , amount_BZ = config.amount_BZ)
+    
+    config.additional_values["q_grid"] = q_values
+    
+
+    
+    if config.path_load_pref_convolutions != "":
+        pref_grid, *_ = functions.load_grid_from_file(
+            config.path_load_pref_convolutions
+        )
+    else:
+        print("calculating new pref_grid")
+        energy_dependent_part, T, eigvalue_grid, w_values, eigvalues_deriv, T_deriv = calc_H_T_w_on_grid(
+            config=config,
+            q_values=q_values,
+            material=material,
+        )
+    config.debug_timer.print_difference("calculated/ loaded T (pref) grid", config.debug_timing)
+
+    # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values_along_path= None, sqw_4_xyz_along_path= None)
+    
+    sqw_2_xyz, sqw_4_xyz, q_values = calculate_sqw_spectra(config, q_values_grid=q_values, w_values=w_values, material=material, energy_dependent_part=energy_dependent_part, T=T, eigvalue_grid=eigvalue_grid, eigvalues_deriv=eigvalues_deriv, T_deriv=T_deriv)
+    
+    # np.savez("outputs/sqw_intensities/results.npz", sqw_2_xyz=sqw_2_xyz, sqw_4_xyz=sqw_4_xyz, q_values=q_values, w_values=w_values)
+    
+    config.debug_timer.print_difference("done with computing sqw_4 and sqw_2", config.debug_timing)
+    
+    # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz)
+    
+    
+    functions.save_config_to_json(config)
+
+    
+    # plotting_additional_values()
+
+    
 
 
 def J_of_k(S: float, bonds: List[np.ndarray], J_couplings: List[float], k_: np.ndarray):
@@ -373,22 +451,35 @@ def general_Ham_types_AFM_FM_paper_4(
     #                 plt.plot(np.real(term), label = f"real {i},{j}", linewidth=10-2*i, linestyle="--")
     #                 plt.legend()
     
-    H_diag = diagonalising_Hamiltonian(config, H, shape_k_parts, N, use_eigvecs_correction=use_eigvecs_correction)
+    Hdiag_T = diagonalising_Hamiltonian(config, H, shape_k_parts, N, use_eigvecs_correction=use_eigvecs_correction)
     
     if config.compute_H_derivatives:
+        
+        
         #addiing the additional dimension of (vector field) behind the k dimensions
         # H_deriv_diag = diagonalising_Hamiltonian(config, H_deriv, shape_k_parts+(3,), N, use_eigvecs_correction=use_eigvecs_correction)
         Gamma = create_Gamma(half_size=N)
-        eigvals = np.einsum("...ii->...i",H_diag[0])
+        eigvals = np.einsum("...ii->...i",Hdiag_T[0])
         gradient_eigval = 1/np.abs((k_[0,0,0]-k_[1,0,0])[0])*np.array([np.gradient(eigvals[...,0,i]) for i in range(2*N)])
         #normalising with grid spacing
-        T = H_diag[3]
+        T = Hdiag_T[1]
         T_herm_conj = herm_conj(T, (-2,-1))
         eigval_deriv=np.einsum('...lc,...kcd,...dl->k...l', T_herm_conj, H_deriv,T, optimize='optimal')
-        
+        if False:
+            k_indices_example = [np.array([1,0,0])*i for i in range(1,T.shape[0])]  #example k-indices to test the perturbation theory on
+            dU_list=[]
+            for k_index_example in k_indices_example:
+                res = krein_full_space.test_krein_first_order(K0=Gamma@H[*k_index_example],Kp=Gamma@H_deriv[*k_index_example,0],eta=Gamma)
+                # # E, U_rot, dE, dU = functions.first_order_perturbation_degenerate_paraunitary(dH = H_deriv[*k_index_example,0], E = eigvals[*k_index_example], U = T[*k_index_example], Gamma=Gamma) #testing with lambda = kx
+                # dU_list.append(dU)
+                dU_list.append(res[4])
+            dU_list = np.array(dU_list)
+            dI = np.einsum('...lc,...dl->cd...', T_herm_conj[1:,0,0], dU_list)+ np.einsum('...cl,...dl->cd...', np.conj(dU_list), T[1:,0,0])
+            I = np.einsum('...lc,...dl->cd...', T_herm_conj, T, optimize='optimal')
+            
     else:
         H_deriv_diag = (None,None)
-    return H_diag, H_deriv_diag
+    return Hdiag_T, H_deriv_diag
 
 def diagonalising_Hamiltonian(config, H, shape_k_parts, N,  use_eigvecs_correction=True):
     """ diagonalises the Hamiltonian H of shape (...,2N,2N) for each k-point in the grid defined by shape_k_parts"""
@@ -404,68 +495,7 @@ def diagonalising_Hamiltonian(config, H, shape_k_parts, N,  use_eigvecs_correcti
     #solving the Hamiltonian
     for k_index in np.ndindex(momentum_shape):
         H_ = H[*k_index,:, : ]
-        #H_ = np.array([[H_[0,0], -H_[0,1]], [-H_[1,0], H_[1,1]]])  #swapping sign of off diagonals
-        eigvals, eigvecs = la.eig(Gamma @ H_)
-        eigvals = np.round(eigvals, 8)  # rounding to avoid numerical issues and discarding small imaginary parts
-        eigvecs = np.round(eigvecs, 8)  
-        #debug_temp = eigvecs @ Gamma @ H_ @ la.inv(eigvecs)
-        
-        #sorting the eigenvalues and eigenvectors in descending order
-        idx_sorted_eigvals = np.argsort(-eigvals.real)
-        eigvals = eigvals[idx_sorted_eigvals]
-        eigvecs = eigvecs[:, idx_sorted_eigvals]
-        
-       
-        # config.warnings.add(f"take out eigvecs correction!!!")
-        # use_eigvecs_correction = False
-        if use_eigvecs_correction:
-            #orthogonalise degenerate eigvecs
-            indices_degenerate_batches = [[0]]
-            for i in range(len(eigvals)-1):
-                if np.abs(eigvals[i] - eigvals[i+1]) < 1e-8:  # if eigenvalues are degenerate
-                    indices_degenerate_batches[-1].append(i+1) # append the index to the last batch
-                else:
-                    indices_degenerate_batches.append([i+1]) # else start a new batch
-            for indices in indices_degenerate_batches:
-                if len(indices) > 1:
-                    try:
-                        eigvecs[:,indices] =  functions.orthonormalise(eigvecs[:,indices])  # replace the degenerate eigenvectors with orthogonalised ones
-                    except Exception as e:
-                        config.warnings.add(f"orthonormalisation of degenerate eigenvectors failed at some k-point")
-                        #raise e
-            # Now normalise the vectors to match condition T^+ Gammma T = Gamma
-            normalisation_matching_SpinW = True
-            if normalisation_matching_SpinW:
-                temp2 = (Gamma @ herm_conj(eigvecs) @ Gamma @ eigvecs).round(8) #rounding is essential to discard small imaginary parts here!
-                temp2 += Gamma * 1e-15  # add small value to avoid division by zero; np.eye(temp2.shape[0], dtype=config.dtype_complex)
-                #normalisation_factor = 1 / np.sqrt(temp2)
-
-                normalisation_factor = np.diag([1/ np.sqrt(temp2[i,i]) for i in range(2*N)])
-                
-                #this should match the approach of matlab
-                eigvecs = eigvecs @ normalisation_factor
-            #this was the approach taken in the comp project
-            else:
-                temp2 = (herm_conj(eigvecs) @ Gamma @ eigvecs).round(8) #rounding is essential to discard small imaginary parts here!
-                temp2 += Gamma * 1e-15  # add small value to avoid division by zero; np.eye(temp2.shape[0], dtype=config.dtype_complex)
-                #normalisation_factor = 1 / np.sqrt(temp2)
-
-                normalisation_factor = np.diag([1/ np.sqrt(temp2[i,i]) for i in range(2*N)])
-                
-                
-                for i in range(N):
-                    eigvecs[:, i] = normalisation_factor[i, i] * eigvecs[:, i]
-                    eigvecs[:, i+N] = normalisation_factor[i, i] * eigvecs[:, i+N]
-            #the normaisation is only done with the positive eigenvalues (see comp)
-            # for i in range(N):
-            #     eigvecs[:, i] = normalisation_factor[i, i] * eigvecs[:, i]
-            #     eigvecs[:, i+N] = normalisation_factor[i, i] * eigvecs[:, i+N]
-            # temp3 = (herm_conj(eigvecs) @ Gamma @ eigvecs).round(8)
-            # #first making sure they match the condtion and the taking the inverse to get to the state transformation
-            # config.warnings.add("transposing eigvecs and taking inverse")
-            # eigvecs = la.inv(eigvecs.T)
-            # assert np.allclose(
-            #     np.abs(herm_conj(eigvecs) @ Gamma @ eigvecs), np.eye(2*N, dtype=config.dtype_complex), atol=0.5), "The eigenvectors are not normalised correctly!"
+        eigvals, eigvecs = Bogoliubov_diagonalisation_and_normalisation(config, H_, N, Gamma, use_eigvecs_correction=use_eigvecs_correction)
         H_diag_grid[*k_index,:, :] = (Gamma) @ np.diag(eigvals)
         eigvecs_grid[*k_index,:, : ] = eigvecs
         eigvals_grid[*k_index,:] = eigvals
@@ -486,6 +516,71 @@ def diagonalising_Hamiltonian(config, H, shape_k_parts, N,  use_eigvecs_correcti
     VALUES_TO_SAVE["Hamiltonian_not_diagonalised"].append(H)
     
     return H_diag_grid, eigvecs_grid
+
+def Bogoliubov_diagonalisation_and_normalisation(config: Config, H_: np.ndarray, N: int, Gamma: np.ndarray, use_eigvecs_correction=True):
+    eigvals, eigvecs = la.eig(Gamma @ H_)
+    eigvals = np.round(eigvals, 8)  # rounding to avoid numerical issues and discarding small imaginary parts
+    eigvecs = np.round(eigvecs, 8)  
+    #debug_temp = eigvecs @ Gamma @ H_ @ la.inv(eigvecs)
+    
+    #sorting the eigenvalues and eigenvectors in descending order
+    idx_sorted_eigvals = np.argsort(-eigvals.real)
+    eigvals = eigvals[idx_sorted_eigvals]
+    eigvecs = eigvecs[:, idx_sorted_eigvals]
+    
+
+    # config.warnings.add(f"take out eigvecs correction!!!")
+    # use_eigvecs_correction = False
+    if use_eigvecs_correction:
+        #orthogonalise degenerate eigvecs
+        indices_degenerate_batches = [[0]]
+        for i in range(len(eigvals)-1):
+            if np.abs(eigvals[i] - eigvals[i+1]) < 1e-8:  # if eigenvalues are degenerate
+                indices_degenerate_batches[-1].append(i+1) # append the index to the last batch
+            else:
+                indices_degenerate_batches.append([i+1]) # else start a new batch
+        for indices in indices_degenerate_batches:
+            if len(indices) > 1:
+                try:
+                    eigvecs[:,indices] =  functions.orthonormalise(eigvecs[:,indices])  # replace the degenerate eigenvectors with orthogonalised ones
+                except Exception as e:
+                    config.warnings.add(f"orthonormalisation of degenerate eigenvectors failed at some k-point")
+                    #raise e
+        # Now normalise the vectors to match condition T^+ Gammma T = Gamma
+        normalisation_matching_SpinW = True
+        if normalisation_matching_SpinW:
+            temp2 = (Gamma @ herm_conj(eigvecs) @ Gamma @ eigvecs).round(8) #rounding is essential to discard small imaginary parts here!
+            temp2 += Gamma * 1e-15  # add small value to avoid division by zero; np.eye(temp2.shape[0], dtype=config.dtype_complex)
+            #normalisation_factor = 1 / np.sqrt(temp2)
+
+            normalisation_factor = np.diag([1/ np.sqrt(temp2[i,i]) for i in range(2*N)])
+            
+            #this should match the approach of matlab
+            eigvecs = eigvecs @ normalisation_factor
+        #this was the approach taken in the comp project
+        else:
+            temp2 = (herm_conj(eigvecs) @ Gamma @ eigvecs).round(8) #rounding is essential to discard small imaginary parts here!
+            temp2 += Gamma * 1e-15  # add small value to avoid division by zero; np.eye(temp2.shape[0], dtype=config.dtype_complex)
+            #normalisation_factor = 1 / np.sqrt(temp2)
+
+            normalisation_factor = np.diag([1/ np.sqrt(temp2[i,i]) for i in range(2*N)])
+            
+            
+            for i in range(N):
+                eigvecs[:, i] = normalisation_factor[i, i] * eigvecs[:, i]
+                eigvecs[:, i+N] = normalisation_factor[i, i] * eigvecs[:, i+N]
+        
+        #the normaisation is only done with the positive eigenvalues (see comp)
+            # for i in range(N):
+            #     eigvecs[:, i] = normalisation_factor[i, i] * eigvecs[:, i]
+            #     eigvecs[:, i+N] = normalisation_factor[i, i] * eigvecs[:, i+N]
+            # temp3 = (herm_conj(eigvecs) @ Gamma @ eigvecs).round(8)
+            # #first making sure they match the condtion and the taking the inverse to get to the state transformation
+            # config.warnings.add("transposing eigvecs and taking inverse")
+            # eigvecs = la.inv(eigvecs.T)
+            # assert np.allclose(
+            #     np.abs(herm_conj(eigvecs) @ Gamma @ eigvecs), np.eye(2*N, dtype=config.dtype_complex), atol=0.5), "The eigenvectors are not normalised correctly!"
+    return eigvals, eigvecs
 
 def current_Hamiltonian_to_use(
     config: Config, q_grid,  material:Material,spins:List[float]=[], J_bonds_general:List[List[float]]=[], dist_bonds_general:List[List[float]]=[]
@@ -518,68 +613,6 @@ def current_Hamiltonian_to_use(
     return (H, eigvecs),(H_deriv, eigvecs_deriv)
 
 
-def main(config: Config, material: Material):
-
-    #set global values in configuration and assert basic settings
-    assert config.number_k_points is None, "number_k_points shouldnt be set"
-    config.number_k_points = 1
-    assert np.all(config.amount_k_values[config.amount_k_values!=1]%2==0), "amount_k_values should be even numbers or 1 (for unused dimensions) for the path through the grid working properly"
-    
-    
-    for d in range(material.dimension):
-        config.number_k_points *= config.amount_k_values[d]
-   
-    amount_k_values = config.amount_k_values[0]
-    amount_w_values = config.amount_w_values
-    dimension = material.dimension
-   
-  
-
-    COMPUTATION_INFO["D"] = dimension
-    COMPUTATION_INFO["k"] = amount_k_values
-    COMPUTATION_INFO["w"] = amount_w_values
-    # a_values,running_param_2=np.linspace(0.3,0.7,3),np.linspace(0.5,1.5,3)
-
-    assert material is not None, "Material has to be given "
-                
-    draw_atoms_new_bond_system(material=material)
-    
-    lv = material.lattice_vectors
-
-    grid_fineness = config.amount_k_values
-
-    q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], grid_fineness[:dimension] , amount_BZ = config.amount_BZ)
-
-    config.additional_values["q_grid"] = q_values
-    
-
-    
-    if config.path_load_pref_convolutions != "":
-        pref_grid, *_ = functions.load_grid_from_file(
-            config.path_load_pref_convolutions
-        )
-    else:
-        print("calculating new pref_grid")
-        energy_dependent_part, T, eigvalue_grid, w_values, eigvalues_deriv, T_deriv = calc_H_T_w_on_grid(
-            config=config,
-            q_values=q_values,
-            material=material,
-        )
-    config.debug_timer.print_difference("calculated/ loaded T (pref) grid", config.debug_timing)
-
-    # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values_along_path= None, sqw_4_xyz_along_path= None)
-    
-    calculate_sqw_spectra(config, q_values_grid=q_values, w_values=w_values, material=material, energy_dependent_part=energy_dependent_part, T=T, eigvalue_grid=eigvalue_grid, eigvalues_deriv=eigvalues_deriv, T_deriv=T_deriv)
-    
-    config.debug_timer.print_difference("done with all convolutions", config.debug_timing)
-        
-    
-    functions.save_config_to_json(config)
-
-    
-    # plotting_additional_values()
-
-    
    
 
 def sqw_components_calc_general_tau(material: Material, config: Config, amount_tau_values):
@@ -1046,6 +1079,11 @@ def calc_H_T_w_on_grid(
    
     eigvalues = np.einsum('...ii->...i', H_tau_dependent)  # extract diagonal elements
     eigvalues_deriv = np.einsum('...ii->...i', H_tau_dependent_deriv) if config.compute_H_derivatives else None
+    
+    #add to material
+    material.energies = eigvalues
+    material.T = T
+    
     return energy_dependent_part_q_shifted, T, eigvalues, w_values, eigvalues_deriv, T_deriv #energy_dependent_part_q_shifted*normalisation_Nk
 
 
@@ -1253,8 +1291,16 @@ def calculate_sqw_spectra(
             #deal with divergencies
             if config.cut_diverging_spectral_weights:
                 sqw_prime_of_a_ad_without_k_pref = deal_with_divergencies(residues=sqw_prime_of_a_ad_without_k_pref, config=config, material=material, q_values=q_values_grid)
-                sqw_prime_of_a_ad_k = deal_with_divergencies(residues=sqw_prime_of_a_ad_k, config=config, material=material, q_values=q_values_grid)
+                sqw_prime_of_a_ad_k = deal_with_divergencies(residues=sqw_prime_of_a_ad_k, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
             
+            #plotting intenisties of different branches for debugging
+            if config.debug_Sa_ad:
+                sym_energies , _ = functions.give_symmetries_of_tensors(material.energies.transpose(0,4,1,2,3),number_axis_to_include=2, return_conjugated_symmetries=False)
+                for indices in sym_energies:
+                    sqw_intens_summed_degenerate_energies = np.zeros_like(sqw_prime_of_a_ad_k[...,0])
+                    for (t,l) in indices[1:]: #first is information
+                        sqw_intens_summed_degenerate_energies += sqw_prime_of_a_ad_k[...,l]
+                    functions.plot_sqw_ad_a_intensities(material=material, config=config, sqw_intensities=sqw_intens_summed_degenerate_energies, q_values_grid=q_values_grid, VALUES_TO_SAVE=VALUES_TO_SAVE, title=f"sqw'_ad_a intensities at (tau),branches  {indices}")
                 
             #adding the energy dependent part
             if config.debug_Sa_ad:
@@ -1272,7 +1318,7 @@ def calculate_sqw_spectra(
             sqw_prime_of_a_ad_without_k_pref_with_w = (1/sqw_prime_of_a_ad_without_k_pref_with_w.shape[-1]) * np.einsum('tcd...l,l->tcd...',sqw_prime_of_a_ad_without_k_pref_with_w, extraction_only_creation_operator, optimize='optimal')
             #sqw_prime_of_a_ad_k = (1/sqw_prime_of_a_ad_k.shape[-1]) * np.einsum('tcd...l,l->tcd...',sqw_prime_of_a_ad_k, extraction_only_creation_operator)
             
-            assert np.max(np.abs(sqw_prime_of_a_ad - np.einsum("tcd...,...cd->tcd...",sqw_prime_of_a_ad_without_k_pref_with_w, k_dependent_prefactor, optimize='optimal'))) < 1e-3, "k prefactor not matching in sqw_prime_of_a_ad"
+            # assert np.max(np.abs(sqw_prime_of_a_ad - np.einsum("tcd...,...cd->tcd...",sqw_prime_of_a_ad_without_k_pref_with_w, k_dependent_prefactor, optimize='optimal'))) < 1e-3, "k prefactor not matching in sqw_prime_of_a_ad"
             #aa_conv = functions.convolute_grids(sqw_prime_of_a_ad[0,0,0,:,:,:], sqw_prime_of_a_ad[0,0,0,:,:,:], dimension=2)
 
             #flipping the indices to match my convention
@@ -1554,7 +1600,7 @@ def calculate_sqw_spectra(
             sqw_intensities = (1/sqw_prime_of_a_ad_k.shape[-1]) * np.einsum('tcd...l,l->tcd...',sqw_prime_of_a_ad_k, extraction_only_creation_operator)
             
             #deal with divergencies
-            sqw_intensities = deal_with_divergencies(residues=sqw_intensities, config=config, material=material, q_values=q_values_grid, use_averaging=False)
+            sqw_intensities = deal_with_divergencies(residues=sqw_intensities, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
             #plot in between
             functions.plot_sqw_ad_a_intensities(material=material, config=config, sqw_intensities=sqw_intensities, VALUES_TO_SAVE=VALUES_TO_SAVE, q_values_grid=q_values_grid)
             
@@ -1819,14 +1865,14 @@ def calculate_sqw_spectra(
                 for i in eigvalues_to_plot_indices:
                     result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
                         eigvalue_grid[t,:, :, :, i],
-                        relative_grid_points=material.relative_grid_points_path,
+                        relative_grid_points=material.extended_relative_grid_points_path,
                         q_grid=q_values_grid,
                         no_w_values=True,
                         plot_path=False,
                     )
                     result_along_path = np.array(result_along_path)[:,0] # I think due to the missing energy dimension there it is a list with one element
                     
-                    plt.plot(result_along_path, label=f"comp: {i}")
+                    plt.plot(result_along_path, label=f"comp: {i}", linewidth=2*material.N - i + 2)
                     plt.xticks(xticks_pos, xticks_labels)
                     plt.legend()
         config.debug_timer.print_difference("after slicing sqw components for plotting", config.debug_timing)
@@ -1946,6 +1992,8 @@ def calculate_sqw_spectra(
 
     # plt.figure("DOS")
     # plt.plot(functions.sum_k_dependency(grid= conv))
+    
+    return sqw_2_xyz, sqw_4_xyz, q_values_extended
 
 def normalise_to_total_sum_rule(sqw_2, sqw_4, material: Material, config: Config):
     #calculating the total sum rule
@@ -1967,18 +2015,48 @@ def normalise_to_total_sum_rule(sqw_2, sqw_4, material: Material, config: Config
 def calculate_complete_RIXS_spectrum_for_sqw_xyz(
                         config: Config,
                         material: Material,
-                        q_values_along_path: np.ndarray,
-                        sqw_4_xyz_along_path: np.ndarray,
+                        q_values: np.ndarray,
+                        sqw_4_xyz: np.ndarray,
+                        sqw_2_xyz: np.ndarray,
                         w_in = -10, w_out=0,  
                         debug_time_duration=False,
                         debug_RIXS_operator=False,
                         load_saved_grids = False,
-                        experimental_compute_non_squared_use_commutative = False
+                        experimental_compute_non_squared_use_commutative = False,
+                        factor_x_point_to_max_angle = 1
                         ):
     # polarisation_in_sigma = True
     # polarisation_out_sigma = True #false is pi polarised
     import pandas as pd
     config.debug_timer.print_difference("start calculating RIXS operator")
+
+    sqw_4_xyz = np.load("outputs/sqw_intensities/results.npz")["sqw_4_xyz"]
+    sqw_2_xyz = np.load("outputs/sqw_intensities/results.npz")["sqw_2_xyz"]
+    q_values = np.load("outputs/sqw_intensities/results.npz")["q_values"]
+
+    #------------------------------extract sqw and q values along a path------------------------------
+    relative_grid_points=[np.array([0,0,0]),np.array([0.5,0,0])]
+    startpoint, directions, steps = path_through_grid_from_relative_points(relative_grid_points, q_values)
+    path = [startpoint]
+    for a in range(len(directions)):
+        #each time the direction is changed, the value of the k-value is added to the xticks
+        for b in range(steps[a]):
+            # if np.any(path[-1]+directions[i] < 0):
+                
+            #     break #if the next point is out of bounds, we stop the path
+            path.append(path[-1]+directions[a])
+            path[-1] = path[-1]%q_values.shape[:-1]
+    path = np.array(path)
+    
+    sqw_4_xyz_along_path = sqw_4_xyz[..., path[:,0], path[:,1], path[:,2]]
+    sqw_2_xyz_along_path = sqw_2_xyz[..., path[:,0], path[:,1], path[:,2]]
+    q_values_along_path = q_values[path[:,0], path[:,1], path[:,2]]
+    
+    #temp set only to x-value
+    q_values_along_path = q_values_along_path[:,0]
+    # sqw_4_xyz_along_path,_,_ = functions.path_through_k_grid(config,grid= sqw_4_xyz, q_grid=q_values, )
+    # q_values_along_path,_,_ = functions.path_through_k_grid(config,grid= q_values, q_grid=q_values, relative_grid_points=[np.array([0,0,0]),np.array([1,0,0])])
+
     def give_index_of_closest_value(array, value):
         """
         Find the index of the closest value in a numpy array to a given value.
@@ -1994,18 +2072,29 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
         return idx
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    fig_spectrum_4, axs_spectrum_4 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_spectrum_4 = axs_spectrum_4.flatten()  # make indexing easier: axs[0..3]
+    
+    fig_spectrum_2, axs_spectrum_2 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_spectrum_2 = axs_spectrum_2.flatten()  # make indexing easier: axs[0..3]
+    
+    fig_spectrum_complete, axs_spectrum_complete = plt.subplots(2, 2, figsize=(12, 8))
+    axs_spectrum_complete = axs_spectrum_complete.flatten()  # make indexing easier: axs[0..3]
+    
+    fig_coeff_4, axs_coeff_4 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_coeff_4 = axs_coeff_4.flatten()  # make indexing easier: axs[0..3]
+
+    fig_coeff_2, axs_coeff_2 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_coeff_2 = axs_coeff_2.flatten()  # make indexing easier: axs[0..3]
+
 
     RIXS_config = [
         (polarisation_in_sigma, polarisation_out_sigma)
         for polarisation_in_sigma in [False,True]
         for polarisation_out_sigma in [False, True]
     ]
-    #temporary
-    steps_k = 1000
-    a=1
-    q_values_along_path = np.linspace(0, np.pi/a, steps_k)
     
-     # Define spin operators as symbolic variables--------------------------------------------------------------
+     # ------------------------------Define spin operators as symbolic variables--------------------------------------------------------------
     Sx, Sy, Sz = sp.symbols('Sx Sy Sz', commutative=experimental_compute_non_squared_use_commutative)
     S_op_list = [Sx, Sy, Sz]
     # Splus, Smin = symbols('S_pl S_min', commutative=experimental_compute_non_squared_use_commutative)
@@ -2017,7 +2106,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
     a1g, eg, t1u, t2g = sp.symbols('a1g eg t1u t2g')
 
     
-    # Construct the RIXS matrix----------------------------------------------------------------------------
+    # ------------------------------Construct the RIXS matrix----------------------------------------------------------------------------
     RIXSMatrix = sp.Matrix([
             [
                 a1g + 2 * (Sx**2 - (1/3)*S_sq) * eg,
@@ -2083,10 +2172,10 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
             RIXSMatrix = sp.simplify(RIXSMatrix.subs(prefactor_dict_of_w))
 
             q_analytical = sp.symbols('q', real=True)
-           
-            beta = sp.acos(q_analytical / (sp.pi / a))
-            
-            
+            x_point = np.max(q_values_along_path)
+            beta = sp.acos(q_analytical * factor_x_point_to_max_angle / x_point)
+
+
             #pi polarised
             if polarisation_in_sigma:
                 epsilon_in = sp.Matrix([0,0, 1])
@@ -2105,26 +2194,105 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
             # for i in range(3):
             #     for j in range(3):
             #         dict_S_sqrd_to_indices[S_op_list[i]*S_op_list[j]] = (i,j)
-            coeff_list_symbolic = [[0 for _ in range(3)] for _ in range(3)]
-            for i in range(3):
-                for j in range(3):
-                    coeff=coeff_dict_of_S_operators.get(S_op_list[i]*S_op_list[j])
-                    coeff_list_symbolic[i][j] = coeff if coeff is not None else sp.S.Zero #if the coefficient is not in the dict
+            coeff_list_symbolic_4 = [[0 for _ in range(3)] for _ in range(3)]
+            coeff_list_symbolic_2 = [0 for _ in range(3)]
+            for a in range(3):
+                coeff_2 = coeff_dict_of_S_operators.get(S_op_list[a])
+                coeff_list_symbolic_2[a] = coeff_2 if coeff_2 is not None else sp.S.Zero #if the coefficient is not in the dict
+                    
+                for b in range(3):
+                    
+                    coeff_4=coeff_dict_of_S_operators.get(S_op_list[a]*S_op_list[b])
+                    coeff_list_symbolic_4[a][b] = coeff_4 if coeff_4 is not None else sp.S.Zero #if the coefficient is not in the dict
                    
                     # print(f"coeff {i},{j}")
                     # pprint(coeff_list_symbolic[i][j])
             
-            #substitute the q_values
-            coeff_array_R = np.zeros((3, 3, q_values_along_path.shape[0]), dtype=config.dtype_complex)
+            #substitute the q_values_along_path
+            coeff_array_R_4 = np.zeros((3, 3, q_values_along_path.shape[0]), dtype=config.dtype_complex)
+            coeff_array_R_2 = np.zeros((3, q_values_along_path.shape[0]), dtype=config.dtype_complex)
             for k in range(q_values_along_path.shape[0]):
                 for a in range(3):
+                    coeff_array_R_2[a,k] = coeff_list_symbolic_2[a].subs({q_analytical: q_values_along_path[k]})
                     for b in range(3):
-                        coeff_array_R[a,b,k] = coeff_list_symbolic[a][b].subs({q_analytical: q_values_along_path[k]})
+                        coeff_array_R_4[a,b,k] = coeff_list_symbolic_4[a][b].subs({q_analytical: q_values_along_path[k]})
 
+            coeff_array_spectrum_2 = np.einsum('ak,ck->ack', np.conj(coeff_array_R_2), coeff_array_R_2, optimize='optimal')
+            coeff_array_spectrum_4 = np.einsum('abk,cdk->abcdk', np.conj(coeff_array_R_4), coeff_array_R_4, optimize='optimal')
             
-            coeff_array_spectrum = np.einsum('abk,cdk->abcdk', np.conj(coeff_array_R), coeff_array_R, optimize='optimal')
+            spectrum_2 = np.einsum('ack,acwk->wk', coeff_array_spectrum_2, sqw_2_xyz_along_path, optimize='optimal')
+            spectrum_4 = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum_4, sqw_4_xyz_along_path, optimize='optimal')
             
-            spectrum = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum, sqw_4_xyz_along_path, optimize='optimal')
+            #plot all coefficients with non zero spectra
+            #plt.figure("coeff_arrays pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
+            symmetries_coeff, _ = functions.give_symmetries_of_tensors(coeff_array_spectrum_4, 4, return_conjugated_symmetries=False, threshold=1e-10, rounding_decimals=10)
+            for i,s in enumerate(symmetries_coeff):
+                (a,b,c,d) = s[1] 
+                if np.any(np.abs(sqw_4_xyz_along_path[a,b,c,d,:])>1e-10):
+                    axs_coeff_4[number_config].plot(np.real(coeff_array_spectrum_4[a,b,c,d,:]), label=f"Re coeff 4 {a}{b}{c}{d}", linewidth = len(symmetries_coeff)+2 - i)
+                    # axs_coeff[number_config].plot(np.imag(coeff_array_spectrum_4[a,b,c,d,:]), label=f"Im coeff 4 {a}{b}{c}{d}", linestyle="--", linewidth = len(symmetries_coeff)+2 - i)
+            axs_coeff_4[number_config].legend()
+
+            symmetries_coeff_2, _ = functions.give_symmetries_of_tensors(coeff_array_spectrum_2, 2, return_conjugated_symmetries=False, threshold=1e-10, rounding_decimals=10)
+            for i,s in enumerate(symmetries_coeff_2):
+                (a,b) = s[1] 
+                if np.any(np.abs(sqw_2_xyz_along_path[a,b,:])>1e-10):
+                    axs_coeff_2[number_config].plot(np.real(coeff_array_spectrum_2[a,b,:]), label=f"Re coeff 2 {a}{b}", linewidth = len(symmetries_coeff_2)+2 - i)
+                    # axs_coeff[number_config].plot(np.imag(coeff_array_spectrum_2[a,b,c,d,:]), label=f"Im coeff 2 {a}{b}{c}{d}", linestyle="--", linewidth = len(symmetries_coeff_2)+2 - i)
+            axs_coeff_2[number_config].legend()
+
+            #plt.figure("RIXS Spectrum 4 pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
+            grid = np.real(spectrum_4)
+            mappable4 = axs_spectrum_4[number_config].pcolormesh(grid, norm=SymLogNorm(
+                                        linthresh=1e-5,          # linear range around zero
+                                        linscale=1.0,            # scale of the linear range
+                                        vmin=np.min(grid),
+                                        vmax=np.max(grid),
+                                        base=10
+                                    ))
+            axs_spectrum_4[number_config].set_xlabel("k-points along path")
+            axs_spectrum_4[number_config].set_ylabel("Energy Loss (w_in - w_out)")
+            # plt.colorbar()
+
+            #plt.figure("RIXS Spectrum 2 pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
+            grid = np.real(spectrum_2)
+            mappable2 = axs_spectrum_2[number_config].pcolormesh(grid, norm=SymLogNorm(
+                                        linthresh=1e-5,          # linear range around zero
+                                        linscale=1.0,            # scale of the linear range
+                                        vmin=np.min(grid),
+                                        vmax=np.max(grid),
+                                        base=10
+                                    ))
+            axs_spectrum_2[number_config].set_xlabel("k-points along path")
+            axs_spectrum_2[number_config].set_ylabel("Energy Loss (w_in - w_out)")
+            # plt.colorbar()
+
+            #plt.figure("RIXS Spectrum complete pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
+
+            spectrum_2_padded = np.zeros_like(spectrum_4)
+            spectrum_2_padded[:spectrum_2.shape[0], :] = spectrum_2
+            grid = np.real(spectrum_2_padded + spectrum_4)
+            mappable_complete = axs_spectrum_complete[number_config].pcolormesh(grid, norm=SymLogNorm(
+                                        linthresh=1e-5,          # linear range around zero
+                                        linscale=1.0,            # scale of the linear range
+                                        vmin=np.min(grid),
+                                        vmax=np.max(grid),
+                                        base=10
+                                    ))
+
+            fig_spectrum_complete.colorbar(mappable_complete, ax=axs_spectrum_complete[number_config])
+            fig_spectrum_2.colorbar(mappable2, ax=axs_spectrum_2[number_config])
+            fig_spectrum_4.colorbar(mappable4, ax=axs_spectrum_4[number_config])
+            
+            axs_spectrum_complete[number_config].set_xlabel("k-points along path")
+            axs_spectrum_complete[number_config].set_ylabel("Energy Loss (w_in - w_out)")
+            
+            
+            
+            config.debug_timer.print_difference(f"done calculating RIXS spectrum", debug_time_duration)
+    
+    plt.show()
+
 def sqw_prime_to_sqw(config: Config, sqw_prime: np.ndarray, material: Material):           
     if not material.is_incommensurate():
         assert sqw_prime.shape[0] == config.amount_tau_values, f"sqw_prime first dimension (tau) size {sqw_prime.shape[0]} does not match config.amount_tau_values {config.amount_tau_values}"
@@ -2347,34 +2515,42 @@ def herm_conj(U, axis:tuple = None):
         raise ValueError("U must be a square matrix")
     return np.swapaxes(np.conjugate(U), axis[0], axis[1])
 
-def deal_with_divergencies(residues, q_values, material:Material, config:Config, max_value=1e5, use_averaging = False):
+def deal_with_divergencies(residues, q_values, material:Material, config:Config, max_value=1e5, use_averaging_TdT = False):
 
     max_value = max_value * 1/config.number_k_points
 
-    if use_averaging: #averaging idea need testing still
-        assert len(residues.shape) == 6 #t i j K
+    if use_averaging_TdT: #averaging idea still needs testing
+        decrease_ratio = 1/1.1
+        refinement_steps = 30
+        fraction_to_neighbour_to_include = 0.5
+        assert len(residues.shape) == 7 #t i j K l
+        assert material.is_incommensurate() == False, "refining grid only implemented for commensurate materials yet"
         
         indices_divergencies = np.array(np.where(np.abs(residues) > max_value))
-        indices_divergencies = np.unique(np.array(indices_divergencies).T[:,3:], axis=0) # returns only the k_indices each one only once
-        if indices_divergencies.shape[0] > 0:
-            refined_grid, grid_volume = give_refined_grid_around_point(q_values, point_idx= indices_divergencies[0], decrease_ratio=1/np.sqrt(10),dimension=material.dimension, refinement_factor=10, fraction_to_neighbour_to_include=0.1)
-            (H_refined, eigvecs_refined),_ = general_Ham_types_AFM_FM_paper_4(
-            config = config,
-            k_ = refined_grid,
-            material=material
-        )
-            # #!!!!!!!!!!Taking the absoulte value here!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # # eigvecs_refined = np.abs(eigvecs_refined)
-            T_herm_conj = np.conjugate(eigvecs_refined).swapaxes(-1,-2)
-            T = eigvecs_refined
-            #attention taking whole trace here!
-            residues_refind = np.einsum('...lc,...dl->cd...', T_herm_conj, T, optimize='optimal')
-        
-            eigvecs_refined_int = np.zeros((2*material.N, 2*material.N), dtype=config.dtype_complex)
-            for i in range(2*material.N):
-                for j in range(2*material.N):
-                    eigvecs_refined_int[i,j] = functions.integrate_nd(residues_refind[i,j,:,:,:], refined_grid, dimension=material.dimension) 
-            print("")
+        indices_divergencies = np.unique(np.array(indices_divergencies).T[:,3:-1], axis=0) # returns only the k_indices each one only once
+        for index_div in indices_divergencies:
+            if indices_divergencies.shape[0] > 0:
+                refined_grid, grid_volume = give_refined_grid_around_point(q_values, point_idx= index_div, decrease_ratio=decrease_ratio,dimension=material.dimension, refinement_factor=refinement_steps, fraction_to_neighbour_to_include=fraction_to_neighbour_to_include)
+                (H_refined, eigvecs_refined),_ = general_Ham_types_AFM_FM_paper_4(
+                config = config,
+                k_ = refined_grid,
+                material=material
+            )
+                # #!!!!!!!!!!Taking the absoulte value here!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # # eigvecs_refined = np.abs(eigvecs_refined)
+                T_herm_conj = np.conjugate(eigvecs_refined).swapaxes(-1,-2)
+                T = eigvecs_refined
+               
+                residues_refined = np.einsum('...lc,...dl->cd...l', T_herm_conj, T, optimize='optimal')
+                config.debug_timer.print_difference("starting numerical integration", config.debug_timing)
+                # eigvecs_refined_int = np.zeros((2*material.N, 2*material.N), dtype=config.dtype_complex)
+                for i in range(2*material.N):
+                    for j in range(2*material.N):
+                        for l in range(2*material.N):
+                            #refining only for commesnurate (t=0) implemented
+                            residues[0,i,j,*index_div,l] = 1/(grid_volume)*functions.integrate_nd(residues_refined[i,j,:,:,:,l], refined_grid, dimension=material.dimension) 
+                
+                config.debug_timer.print_difference("done with numerical integration", config.debug_timing)
         #eigvecs_refined = eigvecs_refined.mean(axis=(0, 1, 2))  # averaging over the refined grid
     else:
         residues[np.abs(residues) > max_value] = 0

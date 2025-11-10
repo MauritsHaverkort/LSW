@@ -30,11 +30,16 @@ class Material:
                     self.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([0, 0, 0])]
                 case 3:
                     self.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([1/2, 1/2, 1/2]), np.array([0, 0, 0])]
-
+        self.extended_relative_grid_points_path = [extension*np.array(point) for point in self.relative_grid_points_path]
         self.name = name
         self.config = config
         self.extension = extension  # Default extension factor for k-grid
         
+        #arrays to store results
+        self.energies:np.ndarray = None
+        self.T:np.ndarray = None
+        self.sqw_2:np.ndarray = None
+        self.sqw_4:np.ndarray = None
         #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(3)]
        
         
@@ -52,7 +57,35 @@ class Material:
         """Check if the material is incommensurate based on its tau values."""
         return np.any(self.tau != np.array([0, 0, 0]))
 
-        
+    def return_combinations_up_to_distance(self, atoms, max_distance):
+        """return all combinations of unique atom pairs and unit cells for every distance up to max_distance"""
+        max_extension = int(np.ceil(max_distance / np.min(np.linalg.norm(self.lattice_vectors, axis=1))))
+        unit_cell_indices = [np.array([i, j, k]) for i in range(0, max_extension + 1)
+                             for j in range(0, max_extension + 1)
+                             for k in range(0, max_extension + 1)]
+        atoms_extended = [(a, uc_idx, uc_idx + a.position) for uc_idx in unit_cell_indices for a in np.array(atoms).flatten()]
+
+        combinations = []
+        distances = []
+        for atom1 in atoms:
+            atom1_uc, atom1_pos = np.array([0,0,0]), atom1.position
+            for (atom2, atom2_uc, atom2_pos) in atoms_extended:
+                if atom1 != atom2:  # ensure unique pairs
+                    distance = np.linalg.norm((atom1_pos - atom2_pos)@self.lattice_vectors)
+                    if distance <= max_distance:
+                        #TODO: might need better way if lattice vectors are very small or big
+                        index_d = np.where(np.isclose(distances, distance, atol=1e-2))[0]
+                        if index_d.size > 0:
+                            index_d = index_d[0]
+                            if not np.any([atom2==c[0] and np.all(c[1]==atom2_uc) and atom1 == c[2] and np.all(c[3]==atom1_uc)  for c in combinations[index_d]]):  # avoid duplicate pairs
+                                combinations[index_d].append([atom1,atom1_uc, atom2, atom2_uc])
+                        else:
+                            distances.append(distance)
+                            combinations.append([[atom1,atom1_uc, atom2, atom2_uc]])
+        distances = np.array(distances)
+        combinations = [combinations[i] for i in np.argsort(distances)]
+        distances = np.sort(distances)
+        return combinations, distances
 
     def set_bond_atoms(self, atoms:List[List[Atom]], bonds:List[Bond]):
         """Sets the atoms and bonds of the material."""
@@ -225,4 +258,8 @@ class Material:
         self.bonds_distances = bonds_distances
         self.spins = spins
         return J_bonds,bonds_distances, spins
+    
+    if __name__ == "__main__":
+        import LSW
+        LSW.call_main()
     

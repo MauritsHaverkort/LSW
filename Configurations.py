@@ -81,7 +81,7 @@ def config_main():
         use_my_calculation_TT_switched=False,
         use_SpinW_mat_form_factors=False,
         use_calc_of_S_a_ad=False,
-        normalise_to_sum_rule=True,
+        normalise_to_sum_rule=False,
     
 
         # ---- Grid / spectrum sizes ----
@@ -127,15 +127,15 @@ def config_experimental(name=""):
     config_tryout_paper.name = name if name else "Experimental Configuration"
 
     config_tryout_paper.load_saved_grid = False
-    fast_grid_size = 10
+    fast_grid_size = 20
     big_grid_size = 30
     fast = True
-    fast=False
+    # fast=False
     if fast:
-        config_tryout_paper.amount_k_values = [fast_grid_size, fast_grid_size, 1]
+        config_tryout_paper.amount_k_values = [fast_grid_size, fast_grid_size, fast_grid_size]
         config_tryout_paper.amount_w_values = fast_grid_size
     else:
-        config_tryout_paper.amount_k_values = [big_grid_size, big_grid_size, 1]
+        config_tryout_paper.amount_k_values = [big_grid_size, big_grid_size, big_grid_size]
         config_tryout_paper.amount_w_values = big_grid_size
 
     config_tryout_paper.amount_BZ = 1

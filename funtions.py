@@ -32,6 +32,48 @@ def array_to_str(array):
 
 import numpy as np
 
+def is_hermitian(A, tol=1e-10):
+        return np.allclose(A, A.conj().T, atol=tol)
+
+def is_positive_definite(H, tol=1e-12, verbose=True):
+    """
+    Test whether a Hermitian matrix H is positive definite.
+    
+    Parameters
+    ----------
+    H : (N,N) array_like
+        Complex or real Hermitian matrix.
+    tol : float
+        Numerical tolerance for positive eigenvalues.
+    verbose : bool
+        Print diagnostic messages.
+        
+    Returns
+    -------
+    bool : True if H > 0 (all eigenvalues > tol)
+    """
+    # Check Hermiticity first
+    if not np.allclose(H, H.conj().T, atol=tol):
+        if verbose:
+            print("Matrix is not Hermitian (H ≠ H†)")
+        return False
+
+    # Try Cholesky factorization (fastest)
+    try:
+        np.linalg.cholesky(H)
+        if verbose:
+            print("Matrix is positive definite (Cholesky succeeded).")
+        return True
+    except np.linalg.LinAlgError:
+        # If Cholesky fails, check eigenvalues for diagnostic info
+        eigvals = np.linalg.eigvalsh(H)
+        if verbose:
+            print("Eigenvalues:", eigvals)
+        return np.all(eigvals > tol)
+
+def get_total_size(array: np.ndarray) -> int:
+    return array.size * array.itemsize
+
 def analyze_matrix(matrix):
     # Convert to NumPy array for convenience
     arr = np.array(matrix, dtype=object)  # object dtype allows for mixed types (e.g., None)
@@ -270,7 +312,7 @@ def give_highest_indices_of_matrix(matrix, number_of_indices=5):
         print(res[-1])
     return res
 
-def first_order_perturbation_degenerate(H, dH, deg_tol=1e-10):
+def first_order_perturbation_degenerate(dH, E, U, Gamma, deg_tol=1e-10):
     """
     First-order (static) perturbation theory with degeneracies.
 
@@ -291,29 +333,38 @@ def first_order_perturbation_degenerate(H, dH, deg_tol=1e-10):
            (columns are d|n>/dλ). Inside each degenerate block we enforce
            parallel-transport: the component within the block is zero.
     """
-    H = np.asarray(H)
     dH = np.asarray(dH)
     # Diagonalize H
-    E, U = la.eig(H)  # H U = U diag(E)
-    N = H.shape[0]
-
+    #E, U = la.eig(H)  # H U = U diag(E)
+    M = dH.shape[0]
+    #sorting again the eigenvalues and eigenvectors since now they were multiplied with Gamma
+    # idx_sorted_eigvals = np.argsort(-E.real)
+    # E = E[idx_sorted_eigvals]
+    # U = U[:, idx_sorted_eigvals]
+    # dH = dH[np.ix_(idx_sorted_eigvals, idx_sorted_eigvals)]
+    
     # Helper: build degenerate blocks from sorted E
-    blocks = []
-    start = 0
-    for i in range(N - 1):
-        if abs(E[i+1] - E[i]) > deg_tol:
-            blocks.append(np.arange(start, i + 1))
-            start = i + 1
-    blocks.append(np.arange(start, N))  # last block
-
+    blocks = [[0]]
+    
+    for i in range(1,M):# first index already in block
+        new_block = True
+        for b in blocks:
+            if abs(E[i] - E[b].mean()) < deg_tol:
+                b.append(i)
+                new_block = False
+                break
+        if new_block:
+            blocks.append([i])
+    blocks=[np.array(b) for b in blocks]
     # Rotate eigenvectors within each block to diagonalize P dH P
     U_rot = U.copy()
-    dE = np.empty(N, dtype=np.result_type(H, dH, np.float64))
+    dE = np.empty(M, dtype=np.complex128)
     for blk in blocks:
         U_blk = U_rot[:, blk]                       # (N, g)
         W = U_blk.conj().T @ dH @ U_blk            # (g, g), Hermitian
-        wvals, V = la.eig(W)                         # diagonalize inside block
-        U_rot[:, blk] = U_blk @ V                  # rotate basis in block
+        wvals, V = la.eig(W) #np.diag(Gamma[blk,blk]) @  diagonalize inside block
+        V_herm_conj = np.conj(V.T)
+        U_rot[:, blk] = U_blk @ V          # rotate basis in block
         dE[blk] = wvals.real                       # eigenvalue derivatives
 
     # Precompute projected dH in the rotated basis
@@ -324,7 +375,7 @@ def first_order_perturbation_degenerate(H, dH, deg_tol=1e-10):
     Ecol = E[:, None]
     for blk in blocks:
         # indices outside this degenerate subspace
-        out = np.setdiff1d(np.arange(N), blk, assume_unique=True)
+        out = np.setdiff1d(np.arange(M), blk, assume_unique=True)
         if out.size == 0:
             continue
         # Hp_out_blk: (nout, g) with entries <m|dH|n>, m ∉ blk, n ∈ blk
@@ -341,6 +392,173 @@ def first_order_perturbation_degenerate(H, dH, deg_tol=1e-10):
         # Inside-block component is set to zero (parallel-transport gauge)
 
     return E, U_rot, dE, dU
+
+def first_order_perturbation_degenerate_paraunitary(dH, E, U, Gamma, deg_tol=1e-10):
+    """
+    First-order perturbation theory with degeneracies for a paraunitary (pseudo-/para-Hermitian) problem.
+
+    Context
+    -------
+    We assume the *unperturbed* eigenproblem is for the bosonic/BdG Liouvillian-like operator
+        L0 = Gamma @ H0,
+    with right eigenpairs (E_n, v_n) already known:
+        L0 @ v_n = E_n v_n,
+        U = [v_0, v_1, ...]  (columns are right eigenvectors),
+    and metric (indefinite) Gamma (Hermitian, involutory in bosonic BdG: Gamma^2 = I).
+
+    A small perturbation of H0 -> H0 + λ dH induces a perturbation of L0:
+        L(λ) = Gamma @ H(λ) = L0 + λ * (Gamma @ dH).
+
+    The *left* eigenvectors are the Γ-duals of the right eigenvectors:
+        W^\dagger = S^{-1} U^\dagger Gamma,   where S = U^\dagger Gamma U (Gram in Γ-metric).
+    With the common bosonic normalization we target S = diag(s_n), s_n = ±1.
+
+    Inputs
+    ------
+    dH    : (N,N) Hermitian array (the perturbation of H, not multiplied by Gamma).
+    E     : (M,) eigenvalues of L0 (real; sorted as given). M is the number of columns in U.
+    U     : (N,M) right eigenvectors of L0 (columns).
+    Gamma : (N,N) Hermitian indefinite metric (e.g., diag(+1,...,+1,-1,...,-1)).
+    deg_tol : float, threshold to group |E_i - E_j| <= deg_tol as degenerate.
+
+    Returns
+    -------
+    E         : (M,) unchanged eigenvalues (as given in input; we do not resort globally here).
+    U_rot     : (N,M) eigenvectors after *intrablock* rotation to diagonalize the projected perturbation
+                in the Γ-metric (a smooth gauge inside each degenerate block).
+    dE        : (M,) first-order energy corrections.
+    dU        : (N,M) first-order eigenvector derivatives in the chosen gauge (d|n>/dλ).
+                Inside each degenerate block we impose parallel-transport (no intrablock component).
+
+    Notes
+    -----
+    • First-order shifts use the left–right biorthogonal pairing in the Γ-metric:
+          dE_n = <w_n | (Gamma dH) | v_n> / <w_n|v_n>.
+      With the Γ-dual choice above and Gamma^2 = I, this equals
+          dE_n = (v_n^\dagger dH v_n) / s_n, where s_n = v_n^\dagger Gamma v_n = ±1.
+
+    • Degenerate blocks (indices B) are handled by the generalized eigenproblem
+          W c = ΔE G c,
+      where G = U_B^\dagger Gamma U_B  (Gram in Γ-metric)
+            W = U_B^\dagger dH   U_B   (note: Γ dH sandwiched with Γ-duals collapses to dH).
+      We then rotate U within the block by C whose columns solve the problem. We also
+      re-G-normalize C so that (C^\dagger G C) = G_target (diagonal sign matrix of the block).
+
+    • Off-block eigenvector derivatives use
+          |δv_n> = sum_{m∉block} |v_m>  [ <w_m| (Gamma dH) |v_n> / (E_n - E_m) ].
+      In matrix form, with S = diag(s), this becomes
+          K_{m n} = ( (U^\dagger dH U)_{m n} / s_m ) / (E_n - E_m).
+      That is: divide the numerator by the sign s_m of the *left* state.
+
+    • We assume the input U is already reasonably Γ-orthogonal (no Jordan blocks).
+      We gently re-normalize columns to have v_n^\dagger Γ v_n = ±1 (and record s_n).
+    """
+
+    dH = np.asarray(dH)
+    Gamma = np.asarray(Gamma)
+    U = np.asarray(U)
+    E = np.asarray(E)
+
+    N, M = U.shape
+    assert dH.shape == (N, N)
+    assert Gamma.shape == (N, N)
+    assert E.shape == (M,)
+
+    # --- 0) Γ-gram and (re)normalization to s_n = ±1 --------------------------
+    S = U.conj().T @ Gamma @ U  # (M,M) Gram in Γ-metric; should be ~ diagonal (±1 on diag) if U is paraunitary
+    # Extract signs and re-normalize columns so that diag becomes strictly ±1.
+    s_raw = np.real(np.diag(S))
+    # # Protect against tiny norms (shouldn't happen for proper modes):
+    # s_raw[np.isclose(s_raw, 0.0, atol=1e-14)] = 1.0
+    scal = 1.0 / np.sqrt(np.abs(s_raw))
+    U = U @ np.diag(scal)               # rescale columns
+    S = U.conj().T @ Gamma @ U          # refresh Gram
+    s = np.sign(np.real(np.diag(S)))    # s_n = ±1
+    # Enforce exact diagonal ±1 by a small diagonal correction:
+    U = U @ np.diag(1.0 / np.sqrt(np.abs(np.real(np.diag(S)))))  # second pass for stability
+    S = U.conj().T @ Gamma @ U
+    # At this point: S ≈ diag(s). We take s = sign(diag(S)) as the mode signature.
+
+    # --- 1) Build degenerate blocks from sorted E ------------------------------
+    blocks = [[0]]
+    for i in range(1, M):
+        placed = False
+        for b in blocks:
+            if abs(E[i] - np.mean(E[b])) <= deg_tol:
+                b.append(i)
+                placed = True
+                break
+        if not placed:
+            blocks.append([i])
+    blocks = [np.array(b, dtype=int) for b in blocks]
+
+    # --- 2) Rotate inside each degenerate block (Γ-generalized diagonalization) -
+    U_rot = U.copy()
+    dE = np.empty(M, dtype=np.complex128)
+
+    for blk in blocks:
+        U_blk = U_rot[:, blk]                 # (N,g)
+        # Gram and projected "W" in Γ-metric:
+        G = U_blk.conj().T @ Gamma @ U_blk    # (g,g) ~ diag(±1)
+        W = U_blk.conj().T @ dH @ U_blk       # (g,g)
+        # Solve the generalized eigenproblem: W c = (ΔE) G c
+        # (SciPy eig handles generalized problems.)
+        wvals, C = la.eig(W, G)
+
+        # G-orthonormalize C so that C^\dagger G C = G_target = diag(signs of the original block)
+        # First build G_C = C^\dagger G C, then whiten it to the block's sign-diagonal.
+        G_C = C.conj().T @ G @ C
+        # Target signature (take the signs from the original G diagonal):
+        s_blk = np.sign(np.real(np.diag(G)))
+        G_target = np.diag(s_blk)
+        # Map G_C -> G_target via right-side transform R so that C' = C R and (C')^\dagger G C' = G_target.
+        # One way: compute H = G^{-1/2} G_C G^{-1/2} in the metric induced by G_target; but here G is close to diag(s).
+        # A robust, simple fix is: R = (G_C)^{-1/2} followed by a rephase to match signs -> yields C'^\dagger G C' ≈ I.
+        # Then we left-multiply by a diagonal Sqrt(G_target) if you want ±1 explicitly. Since G_target^2=I, it's just signs.
+        # We'll do: R = invsqrt(G_C), then "sign-correct" columns to enforce the desired s_blk.
+        # (la.sqrtm is fine at this small g; for speed, eigh on Hermitian would be nicer.)
+        R = la.inv(la.sqrtm(G_C))
+        C_fix = C @ R
+        # After this, C_fix^\dagger G C_fix ≈ I. To imprint ±1, we just rescale columns by sqrt(|s_blk|)=1 and flip phases if needed.
+        # (s_blk are ±1 already; if you want exactly G_target, you could multiply columns with (-1) where s_blk=-1; not necessary for correctness.)
+
+        # Rotate basis in the block:
+        U_rot[:, blk] = U_blk @ C_fix
+        # First-order energy corrections are the generalized eigenvalues:
+        dE[blk] = wvals
+
+    # --- 3) Precompute projected matrices in the rotated basis -----------------
+    # NOTE: for all matrix elements <w_m| (Gamma dH) |v_n> we use:
+    #        <w_m| = (1/s_m) <v_m| Gamma
+    #  =>    <w_m| (Gamma dH) |v_n> = (1/s_m) (v_m^\dagger dH v_n)
+    # Hence we only need U_rot^\dagger dH U_rot and the sign vector s.
+    Hp_dH = U_rot.conj().T @ dH @ U_rot         # (M,M)
+    S_rot = np.real(np.diag(U_rot.conj().T @ Gamma @ U_rot))  # should still be ±1 per column
+    s_rot = np.sign(S_rot)
+    srot_inv = 1.0 / s_rot
+
+    # --- 4) Eigenvector derivatives (parallel transport inside block) ----------
+    dU = np.zeros_like(U_rot, dtype=U_rot.dtype)
+    for blk in blocks:
+        out = np.setdiff1d(np.arange(M), blk, assume_unique=True)
+        if out.size == 0:
+            continue
+        # Numerators:  <w_m| (Gamma dH) |v_n> = (Hp_dH[m,n]) / s_m
+        numer = (Hp_dH[np.ix_(out, blk)].T * srot_inv[out]).T  # (nout,g)
+        # Denominators: (E_n - E_m)
+        denom = (E[blk][None, :] - E[out][:, None])
+        if np.any(np.abs(denom) <= deg_tol):
+            raise ValueError("Detected overlapping blocks (tiny energy gap to an 'outside' state). "
+                             "Increase deg_tol or include those states in the degenerate block.")
+        K_out_blk = numer / denom
+        # Contribution to d|n>/dλ from outside states only:
+        dU[:, blk] += U_rot[:, out] @ K_out_blk
+
+    # For completeness, ensure the inside-block (parallel-transport) component is zero:
+    # (Already true by construction — we never added intrablock pieces.)
+
+    # Energies E unchanged (these are the unperturbed values). dE are first-order shifts.
+    return E, U_rot, dE.real, dU
 
 def orthonormalise(A):
     """
@@ -828,19 +1046,22 @@ def plot_max_x_projection(values, title="Max X Projection", xlabel="W", ylabel="
 
     return fig
 
-def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values_grid, VALUES_TO_SAVE):
+def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values_grid, VALUES_TO_SAVE, title = ""):
     try:
         #fig = plt.figure(f"intensities k dependent tau:{t}")
-        M = 2*material.N
+        M = material.N
         fig_grid, axs_grid = plt.subplots(M, M, figsize=(12, 10))
-        fig_grid.suptitle(f"intensities sqw ad_a(NxN grid)")
+        if title != "":
+            fig_grid.suptitle(title)
+        else:
+            fig_grid.suptitle(f"intensities sqw ad_a(NxN grid)")
         for a in range(M):
             for b in range(M):
                 ax = axs_grid[a, b]
                 
                 intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
                     config,
-                    relative_grid_points=material.relative_grid_points_path,
+                    relative_grid_points=material.extended_relative_grid_points_path,
                     dimension=material.dimension,
                     grid=sqw_intensities[0,a, b, :, :, :],
                     q_grid=q_values_grid,

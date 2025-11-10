@@ -448,8 +448,8 @@ def test_eig():
     print("Eigenvectors:\n", eigvecs)
 
 def test_integration():
-    dimension = 3
-    n=0.9
+    dimension = 2
+    n=1
     def function_to_integrate(k):
         magnitude_k = np.linalg.norm(k, axis=-1)
         return 1/magnitude_k**n#**2 #k[:,:,:,0] #only in one direction 
@@ -468,7 +468,7 @@ def test_integration():
                                                                     , decrease_ratio=decrease_ratio
                                                                     ,dimension=dimension,
                                                                         refinement_factor=refinement_factor, 
-                                                                        fraction_to_neighbour_to_include=0.1)
+                                                                        fraction_to_neighbour_to_include=0.5)
                 if np.any(refined_grid[0,0,0]>refined_grid[-1,0,0]): #necessary in the orginal case I assume that the grid is periodic but here it is not
                     refined_grid = -refined_grid
                 function_of_k = function_to_integrate(refined_grid)
@@ -484,16 +484,20 @@ def test_integration():
 
     a=np.max(refined_grid)
     
-    print(2/(1-n)*a**(1-n))
+    #print(2/(1-n)*a**(1-n))
     print(grid_volume)
     print(a)
 
     plt.figure()
     plt.plot([function_of_k[*((i,)*dimension+(0,)*(3-dimension))] for i in range(function_of_k.shape[0])])
+
+
+    test_integration_2d_divergent(a,n)
+    
     plt.show()
     return results
 
-def test_integration_2d_divergent():
+def test_integration_2d_divergent(a,n):
     # import sympy as sp
 
     # # symbols
@@ -512,12 +516,14 @@ def test_integration_2d_divergent():
     import numpy as np
     from scipy import integrate
 
-    a = 0.0128 
-    f = lambda y, x: 1.0/np.sqrt(x*x + y*y)
+ 
+    f = lambda y, x: 1.0/np.sqrt(x*x + y*y)**n
 
     # Integrate over [0,a]^2; the integrand is integrable at (0,0)
+    
     val, err = integrate.dblquad(f, 0.0, a, lambda x: 0.0, lambda x: a)
     print(4*val, err)  # should be close to 2*a*np.arcsinh(1)
+    print("Expected:", 4*2*a*np.arcsinh(1))
 
 
 
@@ -535,5 +541,4 @@ if __name__ == "__main__":
     #test_interaction()
     # test_sympy()
     # test_eig()
-    #print(test_integration())
-    test_integration_2d_divergent()
+    print(test_integration())

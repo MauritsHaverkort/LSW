@@ -244,6 +244,121 @@ def D12_FM_AFM_simple_cubic_NNN_interactions_supercell(config: Config, J, J2, a,
     # all_atoms.append(atoms[0])
     return material
 
+def Fe2O3_hematite_unitcell(
+    config,
+    J=None,
+    a: float = 5.0346,
+    c: float = 13.7473,
+    S_Fe: float = 5/2,
+    S_O: float = 0.0,
+    z_fe: float = 0.35517,
+    x_o: float = 0.3051,
+    spin_dir: np.ndarray = np.array([0.0, 0.0, 1.0]),
+    AFM: bool = True,
+    extension: int = 1,
+    name: str = "Fe2O3_hematite_hex_conventional"
+):
+    """
+    Build a Material for alpha-Fe2O3 (hematite) in the conventional hexagonal cell.
+    - Does NOT add bonds (user requested).
+    - Defaults (a, c, z_fe, x_o) taken from experimental CIFs (Finger & Hazen / AMCSD).
+    - Returns a Material instance with atoms filled in.
+    """
+
+    # hexagonal conventional lattice vectors (Cartesian)
+    a1 = np.array([a, 0.0, 0.0])
+    a2 = np.array([-0.5 * a, 0.5 * np.sqrt(3) * a, 0.0])
+    a3 = np.array([0.0, 0.0, c])
+    lv = [a1, a2, a3]
+
+    # create material object (similar signature to your example)
+    normal_vector = np.array([1.0, 0.0, 0.0])  # placeholder; adjust if your pipeline needs specific rotation plane
+    material = Material(
+        config=config,
+        lattice_vectors=lv,
+        extension=extension,
+        tau=np.array([0.0, 0.0, 0.0]),
+        normal_vector_to_rotation_plane=normal_vector,
+        dimension=3,
+        name=name,
+    )
+
+    # Determine sign for AFM (used to flip Fe spins on sublattice 2)
+    sign_spin_dir = -1.0 if AFM else 1.0
+
+    # fractional basis positions (hexagonal conventional cell)
+    # We place the conventional 6 Fe and 9 O positions by expanding the basic Wyckoff coordinates.
+    # The fractional coordinates below follow common CIF conventions for R-3c (hexagonal setting).
+    # Source for default parameters: Finger & Hazen experimental CIF / AMCSD. :contentReference[oaicite:1]{index=1}
+
+    # Fe Wyckoff (one unique: (0,0,z)) expanded to 6 fractional positions of the conventional hex cell
+    fe_frac = [
+        (0.0, 0.0, z_fe),
+        (0.0, 0.0, (-z_fe) % 1.0),
+        (1.0/3.0, 2.0/3.0, 0.5 + z_fe),
+        (2.0/3.0, 1.0/3.0, 0.5 - z_fe),
+        (1.0/3.0, 2.0/3.0, 0.5 - z_fe),
+        (2.0/3.0, 1.0/3.0, 0.5 + z_fe),
+    ]
+
+    # O Wyckoff (one unique: (x,0,1/4)) expanded to 9 fractional positions
+    # note: many CIFs report x ~ 0.305 - 0.309 and z = 1/4 for the O unique position
+    x = x_o
+    o_frac = [
+        ( x,     0.0, 0.25),
+        (-x % 1, 0.0, 0.75),
+        (0.0,    x,   0.25),
+        (0.0,  -x % 1, 0.75),
+        ( -x % 1, 1.0 - x % 1, 0.25),   # symmetry equivalents in hex setting
+        ( 1.0 - x % 1, x, 0.75),
+        (1.0/3.0 + x, 2.0/3.0 + 0.0, 0.25),
+        (2.0/3.0 - x, 1.0/3.0 + 0.0, 0.75),
+        (2.0/3.0 + x, 1.0/3.0 - x, 0.25),
+    ]
+
+    
+
+    # Build atoms list
+    atoms: List["Atom"] = []
+
+    # Create Fe atoms and assign alternating spin sublattices (simple two-sublattice AFM pattern).
+    # If you need the true canted AFM configuration of hematite (weak ferromagnetism), adjust spin_dir per Fe.
+    for i, f in enumerate(fe_frac):
+        pos = np.array(f)
+        # assign alternating sign: even indices => +spin_dir, odd => -spin_dir (for simple AFM)
+        sgn = 1.0 if (i % 2 == 0) else sign_spin_dir
+        atoms.append(Atom(pos, type=i, S=S_Fe, spin_dir=sgn * spin_dir))
+    
+    J_values = [6.0,1.6,-29.7,-23.2,-1.0,0.5,-0.1,-0.3,-0.1]
+    bonds = []
+    combinations, distances = material.return_combinations_up_to_distance(atoms, 3*a)
+    for j in J_values:
+        for combs in combinations:
+            atom1, uc1, atom2, uc2 = combs[0]
+            assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
+            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j))
+    # Create O atoms (oxygen typically treated spinless in Heisenberg models; S_O kept for completeness)
+    # for j, f in enumerate(o_frac):
+    #     pos = frac_to_cart(f)
+    #     atoms.append(Atom(pos, type=1, S=S_O, spin_dir=np.array([0.0, 0.0, 0.0])))
+
+    # set atoms into material (no bonds added)
+    # functions.sort_atoms_for_type is used in your pipeline; keep same call
+    # bonds = []  
+    # for a in atoms:
+    #     bonds.append(Bond(material, atoms[0], a, unit_cell_of_atom_2=np.array([0,0,0]), j=1))  # placeholder bonds with zero J
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+
+    # default k-path / grid path (3D)
+    material.relative_grid_points_path = [
+        np.array([0.0, 0.0, 0.0]),
+        0.5 * np.array([1.0, 0.0, 0.0]),
+        0.5 * np.array([1.0, 1.0, 0.0]),
+        0.5 * np.array([1.0, 1.0, 1.0]),
+        np.array([0.0, 0.0, 0.0]),
+    ]
+
+    return material
 
 def General_D_FM_AFM_simple_cubic(config: Config, J, a, S1, S2, d=3, spin_dir=np.array([0, 0, 1])):
     
@@ -406,12 +521,14 @@ def D2_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     # all_atoms.append(atoms[0])
     return material
 
-def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True):
+def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, J2 = None,spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True):
 
     #config.dimension = 2
     # config.amount_BZ = 1 #this is done since I am using the supercell calculations and thus have to take the phase factor into account
     
     #d = 2
+    if J2 is None:
+        J2 = J
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
 
@@ -440,22 +557,22 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, s
             material, atoms[0], atoms[2], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[2], unit_cell_of_atom_2=np.array([-1, 0, 0]), j=J
+            material, atoms[0], atoms[2], unit_cell_of_atom_2=np.array([-1, 0, 0]), j=J2
         ),
         Bond(
             material, atoms[0], atoms[3], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[0], atoms[3], unit_cell_of_atom_2=np.array([0, -1, 0]), j=J
+            material, atoms[0], atoms[3], unit_cell_of_atom_2=np.array([0, -1, 0]), j=J2
         ),
         Bond(
-            material, atoms[1], atoms[2], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
+            material, atoms[1], atoms[2], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J2
         ),
         Bond(
             material, atoms[1], atoms[3], unit_cell_of_atom_2=np.array([1, 0, 0]), j=J
         ),
         Bond(
-            material, atoms[1], atoms[3], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
+            material, atoms[1], atoms[3], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J2
         ),
         Bond(
             material, atoms[1], atoms[2], unit_cell_of_atom_2=np.array([0, 1, 0]), j=J
@@ -469,6 +586,58 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, s
     match material.dimension:
         case 1:
             material.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
+        case 2:
+            material.relative_grid_points_path = [np.array([0, 0, 0]), 0.5*np.array([1, 0, 0]), 0.5*np.array([1, 1, 0]), np.array([0, 0, 0])]
+        case 3:
+            material.relative_grid_points_path = [np.array([0, 0, 0]), 0.5*np.array([1, 0, 0]), 0.5*np.array([1, 1, 0]), 0.5*np.array([1, 1, 1]), np.array([0, 0, 0])]
+
+
+    return material
+
+def D1_AFM_FM_simple_cubic_supercell(config: Config, J, a, S1, S2, J2= None, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True):
+    
+    if J2 is None:
+        J2 = J
+    lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
+    normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
+
+    material = Material(config=config,lattice_vectors=lv, 
+                        extension=2,
+                        tau=np.array([0,0,0]),
+                        normal_vector_to_rotation_plane=normal_vector,
+                        dimension=1,
+                        name=f"D2 AFM SC Supercell" if AFM else "D1 FM SC Supercell")
+
+    sign_spin_dir = -1 if AFM else 1
+    
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        
+        
+        Atom(relative_position_atom_2*np.array([a, 0, 0]), type=1, S=S2, spin_dir=sign_spin_dir*spin_dir),
+        
+        # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+    ]
+    bonds = [
+        Bond(
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
+        ),
+        Bond(
+            material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([-1, 0, 0]), j=J2
+        ),
+        
+    ]
+    
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    
+    
+    match material.dimension:
+        case 1:
+            material.relative_grid_points_path = [np.array([0, 0, 0]), np.array([0.5, 0, 0]),np.array([1, 0, 0])]
         case 2:
             material.relative_grid_points_path = [np.array([0, 0, 0]), 0.5*np.array([1, 0, 0]), 0.5*np.array([1, 1, 0]), np.array([0, 0, 0])]
         case 3:

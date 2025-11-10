@@ -26,6 +26,23 @@ function call_main(config){
     material = D2_AFM_FM_simple_cubic_non_rotated_supercell(config, ...) // define material
     main(config, material);
 }
+function main(config, material) {
+
+    // --- generate q-grid ---
+    q_grid = give_q_grid_d(config, material.dimension);
+
+    // --- calculate Hamiltonian and diagonalise ---
+    (E_part, T, eig_grid, w_values, eig_deriv, T_deriv) 
+        = calc_H_T_w_on_grid(config, q_grid, material);
+
+    // --- calculate S(q,ω) spectra ---
+    (sqw2_xyz, sqw4_xyz) 
+        = calculate_sqw_spectra(config, q_grid, w_values,
+                                material,
+                                E_part, T, eig_grid,
+                                eig_deriv, T_deriv);
+
+    }
 
 // example for a material definition function
 function D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J, a, S1, S2,
@@ -379,8 +396,6 @@ function calculate_sqw_spectra(config, // object to store parameters defined bef
     if (material.is_incommensurate()) {
         (sqw4_xyz, sqw4_comps) = sqw_prime_to_sqw(config, material, sqw4_xyz_prime);
 
-        sqw2_xyz_prime = 4 * sqw_prime_from_a_ad_to_xyz_new_conv_S_S(
-                            sqw2_aad, material, config, /*order=*/2);
         (sqw2_xyz, sqw2_comps) = sqw_prime_to_sqw(config, sqw2_xyz_prime, material);
 
         // --- symmetrize over supercell rotations (eq. 38) ---
