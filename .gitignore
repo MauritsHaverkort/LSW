@@ -5,7 +5,7 @@ conv/
 grids/
 config/
 working_logs/
-outputs/
+outputs/*
 
 # Ignore all .dat files
 *.dat
