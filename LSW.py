@@ -23,7 +23,7 @@ import rotation as rotation
 import sympy_manipulations as sympy_manipulations
 
 
-from numba import njit, prange
+# from numba import njit, prange
 from dataclasses import dataclass
 import Configurations
 from Configurations import Config
