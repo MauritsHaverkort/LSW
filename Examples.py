@@ -332,9 +332,9 @@ def Fe2O3_hematite_unitcell(
     J_values = [6.0,1.6,-29.7,-23.2,-1.0,0.5,-0.1,-0.3,-0.1]
     bonds = []
     combinations, distances = material.return_combinations_up_to_distance(atoms, 3*a)
-    for j in J_values:
-        for combs in combinations:
-            atom1, uc1, atom2, uc2 = combs[0]
+    for i,j in enumerate(J_values):
+        for combs in combinations[i]:
+            atom1, uc1, atom2, uc2 = combs
             assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
             bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j))
     # Create O atoms (oxygen typically treated spinless in Heisenberg models; S_O kept for completeness)

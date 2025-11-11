@@ -1,4 +1,3 @@
-# Ignore all folders listed in the screenshot
 __pycache__/
 complete/
 conv/

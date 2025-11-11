@@ -29110,3 +29110,12 @@ Total time: 252641ms
 20335ms | Δ RAM: +0.0 KB --> done with all plotting 
 --------------DONE------------------ 
 Total time: 160769ms 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_09-55-16 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-01-26 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-04-59 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-21-30 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-29-18 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-33-06 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-37-06 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-38-18 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_10-40-12 
