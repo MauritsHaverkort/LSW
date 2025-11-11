@@ -70,7 +70,7 @@ def config_main():
     
         # ---- Numerics & dtypes ----
         dtype_complex=np.complex128,
-        Gamma=0.04,
+        Gamma=25,
 
         # ---- Feature toggles / computation switches ----
         compute_H_derivatives=False,

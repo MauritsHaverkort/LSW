@@ -29208,3 +29208,23 @@ Total time: 50423ms
 14084ms | Δ RAM: +0.0 KB --> done with all plotting 
 --------------DONE------------------ 
 Total time: 33745ms 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-01-06 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-02-19 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-02-59 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-11-24 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-12-47 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-16-01 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-19-50 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_12-20-09 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_13-44-42 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-04-47 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-07-54 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-17-10 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-18-36 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-20-43 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-23-08 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-23-30 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_14-35-03 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_15-23-52 
+1ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_15-24-24 
+0ms | Δ RAM: +0.0 KB --> starting: 2025-11-11_15-26-59 

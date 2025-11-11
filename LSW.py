@@ -2,12 +2,14 @@ import numpy as np
 import sympy as sp
 import scipy as scipy
 import scipy.linalg as la
+import matplotlib as matplotlib
 import copy
 from scipy.fft import fftn, ifftn
 from scipy.signal import fftconvolve
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
+from matplotlib import cm
 from typing import List, Callable  # Import List for type hints
 from matplotlib.colors import LogNorm, SymLogNorm
 from sympy import pprint
@@ -104,13 +106,14 @@ def call_main():
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=-1, J2=0, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=-1, J2=0, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
 
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
             
             #Fe2O3
-            # Examples.Fe2O3_hematite_unitcell(config, AFM=False),
+            # Examples.Fe2O3_hematite_hexagonal(config, AFM=True),
+            Examples.Fe2O3_rhombohedral(config, AFM=True),
             
             # Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1])),
             # Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0])),
@@ -175,7 +178,7 @@ def main(config: Config, material: Material):
         calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= None, sqw_4_xyz= None, sqw_2_xyz= None)
                     
 
-    draw_atoms_new_bond_system(material=material, DRAW_BONDS=True, DRAW_SPINS=True)
+    draw_atoms_new_bond_system(material=material, DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=True)
     
     lv = material.lattice_vectors
 
@@ -2387,7 +2390,10 @@ def normalized_vector(v):
 
 
 
-def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=True):
+def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE = False):
+    if DRAW_BONDS_ONCE_PER_DISTANCE:
+        DRAW_BONDS = False
+    
     fig = plt.figure("structure plot")
     colors = [
         "blue",
@@ -2438,6 +2444,13 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
     
     positions_occupied = []
     bonds_drawn = []
+    distances_drawn = []
+    J_values = [np.trace(bond.j) for bond in material.bonds] #
+    
+    cmap = cm.get_cmap('bwr')#cm.get_cmap('coolwarm')
+    norm = matplotlib.colors.TwoSlopeNorm(vmin=np.min(J_values), vcenter=0, vmax=np.max(J_values))
+    #norm = matplotlib.colors.Normalize(vmin=np.min(J_values), vmax=np.max(J_values))
+    
     for bond in material.bonds:
         atom0 = bond.atom0
         atom1 = bond.atom1
@@ -2453,10 +2466,15 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
             ax.scatter(pos_n[0], pos_n[1], pos_n[2], color=colors[atom1.type], s=50, marker="o") 
         #only draw bond once
         pos_set = (x, y, z, pos_n[0], pos_n[1], pos_n[2])
-        if DRAW_BONDS and (pos_set not in bonds_drawn):
+        if DRAW_BONDS and (pos_set not in bonds_drawn) or (DRAW_BONDS_ONCE_PER_DISTANCE and la.norm(bond.d_absolut) not in distances_drawn):
             bonds_drawn.append(pos_set)
+            distances_drawn.append(la.norm(bond.d_absolut))
             u, v, w = pos_n[0], pos_n[1], pos_n[2]
             color_bond = "green" if np.trace(bond.j)>0 else "blue"
+            
+            
+
+            colors_mapped = cmap(norm(np.trace(bond.j)))
             ax.quiver(
                 x,
                 y,
@@ -2465,8 +2483,8 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
                 v - y,
                 w - z,
                 arrow_length_ratio=0.05,
-                linewidth=np.abs(la.trace(bond.j)),
-                color=color_bond,
+                linewidth=1,
+                color=colors_mapped,
             )  # , color=['r', 'g', 'b'], arrow_length_ratio=0.1
         if atom0.S != 0 and DRAW_SPINS:
             rotation_matrix = np.round(rotation.rot_vec(np.dot(material.tau*2*np.pi, bond.unit_cell_of_atom_0), material.normal_vector_to_rotation_plane), 3)
@@ -2484,6 +2502,10 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
                 arrow_length_ratio=0.2 * np.abs(atom0.S),
             )  # , color=['r', 'g', 'b'], arrow_length_ratio=0.1
     set_axes_equal(ax)
+    sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array(J_values)
+    cbar = fig.colorbar(sm, ax=ax, shrink=0.5, aspect=10)
+    cbar.set_label('Tr[J]', rotation=270, labelpad=15)
     
     VALUES_TO_SAVE["figs_for_pdf"].append(fig)
     # plt.show()
