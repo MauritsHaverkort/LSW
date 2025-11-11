@@ -60,9 +60,10 @@ class Material:
     def return_combinations_up_to_distance(self, atoms, max_distance):
         """return all combinations of unique atom pairs and unit cells for every distance up to max_distance"""
         max_extension = int(np.ceil(max_distance / np.min(np.linalg.norm(self.lattice_vectors, axis=1))))
-        unit_cell_indices = [np.array([i, j, k]) for i in range(0, max_extension + 1)
-                             for j in range(0, max_extension + 1)
-                             for k in range(0, max_extension + 1)]
+        extension_d = (max_extension,)*self.dimension+(0,)*(3 - self.dimension)
+        unit_cell_indices = [np.array([i, j, k]) for i in range(0, extension_d[0] + 1)
+                             for j in range(0, extension_d[1] + 1)
+                             for k in range(0, extension_d[2] + 1)]
         atoms_extended = [(a, uc_idx, uc_idx + a.position) for uc_idx in unit_cell_indices for a in np.array(atoms).flatten()]
 
         combinations = []
@@ -70,7 +71,8 @@ class Material:
         for atom1 in atoms:
             atom1_uc, atom1_pos = np.array([0,0,0]), atom1.position
             for (atom2, atom2_uc, atom2_pos) in atoms_extended:
-                if atom1 != atom2:  # ensure unique pairs
+                
+                if atom1 != atom2 or np.any(atom1_uc != atom2_uc):  # ensure no pairing between same positions
                     distance = np.linalg.norm((atom1_pos - atom2_pos)@self.lattice_vectors)
                     if distance <= max_distance:
                         #TODO: might need better way if lattice vectors are very small or big

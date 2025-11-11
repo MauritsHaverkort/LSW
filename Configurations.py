@@ -130,7 +130,7 @@ def config_experimental(name=""):
     fast_grid_size = 20
     big_grid_size = 30
     fast = True
-    # fast=False
+    fast=False
     if fast:
         config_tryout_paper.amount_k_values = [fast_grid_size, fast_grid_size, fast_grid_size]
         config_tryout_paper.amount_w_values = fast_grid_size

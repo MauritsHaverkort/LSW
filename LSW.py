@@ -104,12 +104,13 @@ def call_main():
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            
+            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=-1, J2=0, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
             
             #Fe2O3
-            Examples.Fe2O3_hematite_unitcell(config, AFM=False),
+            # Examples.Fe2O3_hematite_unitcell(config, AFM=False),
             
             # Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1])),
             # Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0])),
@@ -174,7 +175,7 @@ def main(config: Config, material: Material):
         calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= None, sqw_4_xyz= None, sqw_2_xyz= None)
                     
 
-    draw_atoms_new_bond_system(material=material, DRAW_BONDS=False, DRAW_SPINS=False)
+    draw_atoms_new_bond_system(material=material, DRAW_BONDS=True, DRAW_SPINS=True)
     
     lv = material.lattice_vectors
 
@@ -2436,21 +2437,24 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
         ax.quiver(0, 0, 0, lv[0], lv[1], lv[2], color='black', arrow_length_ratio=0.1, linewidth=2)
     
     positions_occupied = []
+    bonds_drawn = []
     for bond in material.bonds:
         atom0 = bond.atom0
         atom1 = bond.atom1
         pos = np.einsum("i,ij->j",(atom0.position + bond.unit_cell_of_atom_0),material.lattice_vectors)
         pos_n = np.einsum("i,ij->j",(atom1.position + bond.unit_cell_of_atom_1),material.lattice_vectors)
         x, y, z = pos[0], pos[1], pos[2]
-        #dont draw multiple times the same atom if it is connected to multiple bonds
+         #dont draw multiple times the same atom if it is connected to multiple bonds
         if (pos[0], pos[1], pos[2]) not in positions_occupied:
             ax.scatter(pos[0], pos[1], pos[2], color=colors[atom0.type], s=50, marker="o") 
             positions_occupied.append((pos[0], pos[1], pos[2]))
         if (pos_n[0], pos_n[1], pos_n[2]) not in positions_occupied:
             positions_occupied.append((pos_n[0], pos_n[1], pos_n[2]))
             ax.scatter(pos_n[0], pos_n[1], pos_n[2], color=colors[atom1.type], s=50, marker="o") 
-        #only draw bond if at least one of the atoms is not already drawn (to avoid double drawing bonds)
-        if DRAW_BONDS and ((pos[0], pos[1], pos[2]) not in positions_occupied or (pos_n[0], pos_n[1], pos_n[2]) not in positions_occupied):
+        #only draw bond once
+        pos_set = (x, y, z, pos_n[0], pos_n[1], pos_n[2])
+        if DRAW_BONDS and (pos_set not in bonds_drawn):
+            bonds_drawn.append(pos_set)
             u, v, w = pos_n[0], pos_n[1], pos_n[2]
             color_bond = "green" if np.trace(bond.j)>0 else "blue"
             ax.quiver(

@@ -594,6 +594,55 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, J
 
     return material
 
+def D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a, S1, S2, J2 = None,spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True):
+    if J2 is None:
+        J2 = J
+    lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
+    normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
+
+    material = Material(config=config,lattice_vectors=lv, extension=2,tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name=f"D2 AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}")
+
+    sign_spin_dir = -1 if AFM else 1
+    
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        
+        Atom(relative_position_atom_2*np.array([a, a, 0]), type=1, S=S1, spin_dir=spin_dir),
+        
+        
+        Atom(relative_position_atom_2*np.array([a, 0, 0]), type=2, S=S2, spin_dir=sign_spin_dir*spin_dir),
+        
+        Atom(relative_position_atom_2*np.array([0, a, 0]), type=3, S=S2, spin_dir=sign_spin_dir*spin_dir),
+        
+        # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+    ]
+    J_values = [1,0,0]
+    bonds = []
+    combinations, distances = material.return_combinations_up_to_distance(atoms, 2*a)
+    for i,j in enumerate(J_values):
+        for combs in combinations[i]:
+            atom1, uc1, atom2, uc2 = combs
+            assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
+            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j))
+            
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    
+    
+    match material.dimension:
+        case 1:
+            material.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
+        case 2:
+            material.relative_grid_points_path = [np.array([0, 0, 0]), 0.5*np.array([1, 0, 0]), 0.5*np.array([1, 1, 0]), np.array([0, 0, 0])]
+        case 3:
+            material.relative_grid_points_path = [np.array([0, 0, 0]), 0.5*np.array([1, 0, 0]), 0.5*np.array([1, 1, 0]), 0.5*np.array([1, 1, 1]), np.array([0, 0, 0])]
+
+
+    return material
+    
 def D1_AFM_FM_simple_cubic_supercell(config: Config, J, a, S1, S2, J2= None, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True):
     
     if J2 is None:
