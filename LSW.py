@@ -206,9 +206,9 @@ def main(config: Config, material: Material):
     # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values_along_path= None, sqw_4_xyz_along_path= None)
     
     sqw_2_xyz, sqw_4_xyz, q_values = calculate_sqw_spectra(config, q_values_grid=q_values, w_values=w_values, material=material, energy_dependent_part=energy_dependent_part, T=T, eigvalue_grid=eigvalue_grid, eigvalues_deriv=eigvalues_deriv, T_deriv=T_deriv)
-    
-    # np.savez("outputs/sqw_intensities/results.npz", sqw_2_xyz=sqw_2_xyz, sqw_4_xyz=sqw_4_xyz, q_values=q_values, w_values=w_values)
-    
+    if config.save_grid_to_file:
+        np.savez(f"outputs/sqw_intensities/results{config.timestamp}.npz", sqw_2_xyz=sqw_2_xyz, sqw_4_xyz=sqw_4_xyz, q_values=q_values, w_values=w_values)
+
     config.debug_timer.print_difference("done with computing sqw_4 and sqw_2", config.debug_timing)
     
     # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz)
@@ -1929,7 +1929,7 @@ def calculate_sqw_spectra(
             q_values_grid[0, :, 0],
             q_values_grid[0, 0, :],
         )
-        #if relative points are given:
+        #if relative points are given in material (standard case):
         if material.relative_grid_points_path is not None:
             startpoint, directions, steps = functions.path_through_grid_from_relative_points(relative_points=material.relative_grid_points_path, q_grid=q_values_grid)
             result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 

@@ -5,6 +5,12 @@ grids/
 config/
 working_logs/
 outputs/*
+old/
+
+Configurations.py
+debug_timing_log.txt
+temp.py
+storage.py
 
 # Ignore all .dat files
 *.dat
