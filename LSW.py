@@ -1869,7 +1869,7 @@ def calculate_sqw_spectra(
                 for i in eigvalues_to_plot_indices:
                     result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
                         eigvalue_grid[t,:, :, :, i],
-                        relative_grid_points=material.extended_relative_grid_points_path,
+                        relative_grid_points=material.get_extended_relative_grid_points_path(),
                         q_grid=q_values_grid,
                         no_w_values=True,
                         plot_path=False,

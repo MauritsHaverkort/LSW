@@ -30,7 +30,7 @@ class Material:
                     self.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([0, 0, 0])]
                 case 3:
                     self.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1/2, 0, 0]), np.array([1/2, 1/2, 0]), np.array([1/2, 1/2, 1/2]), np.array([0, 0, 0])]
-        self.extended_relative_grid_points_path = [extension*np.array(point) for point in self.relative_grid_points_path]
+        # self.extended_relative_grid_points_path = [extension*np.array(point) for point in self.relative_grid_points_path]
         self.name = name
         self.config = config
         self.extension = extension  # Default extension factor for k-grid
@@ -53,6 +53,10 @@ class Material:
         self.mat_R2 = np.outer(self.normal_vector_to_rotation_plane, self.normal_vector_to_rotation_plane)
         self.mat_R1 = (np.eye(3) - 1j * mat_nx - self.mat_R2) / 2
     
+    def get_extended_relative_grid_points_path(self):
+        return [self.extension*np.array(point) for point in self.relative_grid_points_path]
+
+
     def is_incommensurate(self):
         """Check if the material is incommensurate based on its tau values."""
         return np.any(self.tau != np.array([0, 0, 0]))
