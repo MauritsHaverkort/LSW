@@ -1061,7 +1061,7 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
                 
                 intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
                     config,
-                    relative_grid_points=material.extended_relative_grid_points_path,
+                    relative_grid_points=material.get_extended_relative_grid_points_path(),
                     dimension=material.dimension,
                     grid=sqw_intensities[0,a, b, :, :, :],
                     q_grid=q_values_grid,
