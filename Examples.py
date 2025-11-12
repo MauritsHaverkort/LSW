@@ -394,7 +394,7 @@ def Fe2O3_rhombohedral(
     material = Material(
         config=config,
         lattice_vectors=lv,
-        extension=1,
+        extension=2,
         tau=np.array([0.0, 0.0, 0.0]),
         normal_vector_to_rotation_plane=np.array([1, 0, 0]),
         dimension=3,

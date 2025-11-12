@@ -1737,7 +1737,7 @@ def calculate_sqw_spectra(
                         
                         intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
                             config,
-                            relative_grid_points=material.relative_grid_points_path,
+                            relative_grid_points=material.get_extended_relative_grid_points_path(),
                             dimension=material.dimension,
                             grid=sqw_intensities[a, b, :, :, :],
                             q_grid=q_values_grid,
@@ -1767,7 +1767,7 @@ def calculate_sqw_spectra(
                             for i in range(2 * material.N):
                                 intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
                                     config,
-                                    relative_grid_points=material.relative_grid_points_path,
+                                    relative_grid_points=material.get_extended_relative_grid_points_path(),
                                     dimension=material.dimension,
                                     grid=sqw_prime_k[t, a, b, :, :, :, i],
                                     q_grid=q_values_grid,
