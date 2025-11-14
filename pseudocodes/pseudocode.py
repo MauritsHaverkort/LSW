@@ -461,14 +461,14 @@ def calculate_sqw_spectra(
         
         
         
-        sqw_prime_4_of_xyz = sqw_prime_from_a_ad_to_xyz_new_conv_S_S(sqw_prime_a_ad=sqw_prime_4_ad_a, material=material, config=config)
+        sqw_prime_4_of_xyz = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=sqw_prime_4_ad_a, material=material, config=config)
         
         
         
         sqw_4_xyz, sqw_4_components = sqw_prime_to_sqw(config=config, material=material, sqw_prime=sqw_prime_4_of_xyz)
         
     
-    sqw_prime_2_xyz = 4*sqw_prime_from_a_ad_to_xyz_new_conv_S_S(sqw_prime_a_ad=sqw_prime_2_ad_a, material=material, config=config, order_of_operator=2)
+    sqw_prime_2_xyz = 4*sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=sqw_prime_2_ad_a, material=material, config=config, order_of_a_operator=2)
     # assert np.max(np.abs(sqw_prime_of_xyz_comp - sqw_prime_2_xyz)) < 1e-5, "the two ways of calculating sqw_prime_of_xyz do not match"
 
 
@@ -513,8 +513,8 @@ def calculate_sqw_spectra(
         functions.plot_sqw_ad_a_intensities(material=material, config=config, sqw_intensities=sqw_intensities, VALUES_TO_SAVE=VALUES_TO_SAVE, q_values_grid=q_values_grid)
         
         #transforming to xyz
-        sqw_intensities = sqw_prime_from_a_ad_to_xyz_new_conv_S_S(sqw_prime_a_ad=material.transform_basis_i_order_i_to_n1_n2(sqw_intensities, axis_to_skip=1, backtransform=True)
-                , material=material, config=config, order_of_operator=2)
+        sqw_intensities = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=material.transform_basis_i_order_i_to_n1_n2(sqw_intensities, axis_to_skip=1, backtransform=True)
+                , material=material, config=config, order_of_a_operator=2)
         #transforming to sqw from sqw'
         sqw_intensities, sqw_components = sqw_prime_to_sqw(config, sqw_intensities, material=material)
         #symmetrising

@@ -208,9 +208,31 @@ def compare_tensors(a,b):
         return
     print(f"[MASKED] max, mean, median, std distance np.abs((a-b))/abs(a)): {np.max(relative_difference_masked)}, {np.mean(relative_difference_masked)}, {np.median(relative_difference_masked)}, {np.std(relative_difference_masked)}")
 
+def return_grid_samples_of_tensors(tensor, number_axis_to_exclude, reduction):
+    # result = np.zeros((tensor.shape[:number_axis_to_exclude] + (tuple(np.ceil(np.array(tensor.shape[number_axis_to_exclude:]) / reduction).astype(int),))), dtype=np.complex128)
+    """returns a sampled version of the tensor where every 'reduction' value is taken --> all axis that are included are collapsed into one single axis
+    should be used to compare large tensors for symmetries
+    """
+    old_shape = tensor.shape[number_axis_to_exclude:]
+    axis_indices = []
+    for i,s in enumerate(old_shape):
+        axis_indices.append(np.arange(0,s,reduction))
+    mesh = np.meshgrid(*axis_indices, indexing='ij')
+    combos = np.stack(mesh, axis=-1).reshape(-1, len(axis_indices))
+
+    result = np.zeros(tensor.shape[:number_axis_to_exclude] + (combos.shape[0],), dtype=tensor.dtype)
+    for spatial_index in np.ndindex(tensor.shape[:number_axis_to_exclude]):
+        for new_index,old_idx in enumerate(combos):
+            result[spatial_index + (new_index,)] = tensor[spatial_index + tuple(old_idx)]
+    return result
+
 def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, use_median_relative_difference=True, rounding_decimals = 2, return_conjugated_symmetries=True):
     """given a tensor this returns a list of lists of indices that are the same"""
     assert number_axis_to_include != None, "number_axis_to_include must be provided"
+    compare_only_a_sample = True
+    
+    tensor = return_grid_samples_of_tensors(tensor, number_axis_to_include, reduction=5) if compare_only_a_sample else tensor
+    
     def is_similar_max_diff(a, b, threshold):
         return np.max(np.abs(a - b)) < threshold
     def conjugated_is_similar(a, b, threshold):
@@ -262,7 +284,7 @@ def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, u
             conj_symmetries.append([])
     
 
-    #construct a tnesor of the same shape as the axis to include but just fill it with the corresponding symmetry class index --> for further testing of symmetries
+    #construct a tensor of the same shape as the axis to include but just fill it with the corresponding symmetry class index --> for further testing of symmetries
     tensor_of_symm_class_index = np.zeros(tensor.shape[:number_axis_to_include], dtype=int)
     for sym_class_index,sym_class in enumerate(symmetries+conj_symmetries):
         for item in sym_class:
@@ -275,6 +297,159 @@ def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, u
         if len(sym)>0:
             sym.insert(0, (f"conjugated indices",sym_idx))
     result = symmetries + conj_symmetries if return_conjugated_symmetries else symmetries
+    return result, tensor_of_symm_class_index
+
+def give_symmetries_of_tensors_fast(
+    tensor,
+    number_axis_to_include,
+    *,
+    mode="maxdiff",                # "maxdiff" | "median_rel"
+    threshold=1e-2,
+    rounding_decimals=2,           # used in "median_rel"
+    return_conjugated_symmetries=True,
+    chunk_rows=None                # set an int to process in chunks if memory is tight
+):
+    """
+    Vectorized grouping of subtensors taken from the first `number_axis_to_include` axes.
+
+    We flatten each subtensor (the remaining axes) to a 1D row, build a canonical
+    byte key per row (and its conjugate), and group by identical keys via np.unique.
+    """
+
+    assert number_axis_to_include is not None
+    lead_shape = tensor.shape[:number_axis_to_include]
+    tail_shape = tensor.shape[number_axis_to_include:]
+    n_rows = int(np.prod(lead_shape))
+    n_cols = int(np.prod(tail_shape))
+
+    # View as a 2D array: rows = indices over the included axes; columns = flattened subtensor.
+    X = tensor.reshape(n_rows, n_cols)
+
+    # --- Build canonical keys -------------------------------------------------
+    # Two fast modes:
+    # (A) "maxdiff": quantize values by bin size = threshold to approximate max-abs-diff < threshold.
+    # (B) "median_rel": normalize each row by its median(abs(.)) to remove scale, then round.
+    #     This approximates your "median relative diff" check but is vectorized.
+
+    def _quantize_maxdiff_block(block):
+        # Quantize to integer bins so rows within threshold map to same bins.
+        # Using np.round(block/threshold) keeps any two entries within < threshold in the same or adjacent bins,
+        # which is good for grouping; it’s conservative (slightly stricter) but very fast.
+        return np.round(block / threshold).astype(np.int64)
+
+    def _normalize_median_rel_block(block):
+        # Row-wise scale by median(abs), ignoring zeros; then round to decimals.
+        med = np.median(np.abs(block), axis=1, keepdims=True)
+        med[med < 1e-12] = 1.0  # avoid division-by-zero; for all-zero rows we leave as-is
+        Y = block / med
+        return np.round(Y, decimals=rounding_decimals)
+
+    def _block_to_keys(block):
+        """Return (keys, conj_keys) as bytes for this block."""
+        if mode == "maxdiff":
+            Q = _quantize_maxdiff_block(block)
+            QC = _quantize_maxdiff_block(np.conj(block))
+        elif mode == "median_rel":
+            Q = _normalize_median_rel_block(block)
+            QC = _normalize_median_rel_block(np.conj(block))
+        else:
+            raise ValueError("mode must be 'maxdiff' or 'median_rel'")
+
+        # Ensure deterministic dtype for bytes keys
+        if np.iscomplexobj(Q):
+            # split complex into two real parts for stable bytes
+            Qr = np.asarray(Q.real, dtype=np.float64)
+            Qi = np.asarray(Q.imag, dtype=np.float64)
+            QC_r = np.asarray(QC.real, dtype=np.float64)
+            QC_i = np.asarray(QC.imag, dtype=np.float64)
+            key_bytes  = np.hstack([Qr, Qi]).view(np.uint8).reshape(len(Q), -1).copy()
+            ckey_bytes = np.hstack([QC_r, QC_i]).view(np.uint8).reshape(len(QC), -1).copy()
+        else:
+            key_bytes  = np.asarray(Q,  dtype=np.float64).view(np.uint8).reshape(len(Q),  -1).copy()
+            ckey_bytes = np.asarray(QC, dtype=np.float64).view(np.uint8).reshape(len(QC), -1).copy()
+
+        # Join each row’s bytes into a single Python bytes object (works well with np.unique on object dtype)
+        keys  = key_bytes.view(np.uint8).reshape(len(Q), -1)
+        ckeys = ckey_bytes.view(np.uint8).reshape(len(QC), -1)
+        keys  = np.array([memoryview(row).tobytes() for row in keys], dtype=object)
+        ckeys = np.array([memoryview(row).tobytes() for row in ckeys], dtype=object)
+        return keys, ckeys
+
+    # Process entire matrix or in chunks to save memory
+    labels = np.empty(n_rows, dtype=np.int64)
+    conj_flags = np.zeros(n_rows, dtype=np.bool_)  # True if matched via conjugate
+
+    # We’ll assign class ids with a dict incrementally to avoid storing giant object arrays at once.
+    table = {}  # key -> class_id
+    next_class = 0
+
+    def _assign(keys, ckeys, row_offset):
+        nonlocal next_class
+        for i, (k, ck) in enumerate(zip(keys, ckeys)):
+            # Canonicalize: pick min(k, ck) so conjugates share classes when desired
+            if return_conjugated_symmetries:
+                if ck < k:
+                    canon = ck
+                    is_conj = True
+                else:
+                    canon = k
+                    is_conj = False
+            else:
+                canon = k
+                is_conj = False
+
+            cls = table.get(canon)
+            if cls is None:
+                cls = next_class
+                table[canon] = cls
+                next_class += 1
+
+            labels[row_offset + i] = cls
+            conj_flags[row_offset + i] = is_conj
+
+    if chunk_rows is None or chunk_rows >= n_rows:
+        k, ck = _block_to_keys(X)
+        _assign(k, ck, 0)
+    else:
+        for start in range(0, n_rows, chunk_rows):
+            stop = min(start + chunk_rows, n_rows)
+            k, ck = _block_to_keys(X[start:stop])
+            _assign(k, ck, start)
+
+    # Build output group lists (indices over the first axes)
+    symmetries = [[] for _ in range(int(labels.max()) + 1)]
+    conj_symmetries = [[] for _ in range(int(labels.max()) + 1)] if return_conjugated_symmetries else None
+
+    # Map row index -> multi-index
+    multi_idx = np.array(np.unravel_index(np.arange(n_rows), lead_shape)).T  # shape (n_rows, ndim)
+
+    for row, cls in enumerate(labels):
+        tup = tuple(multi_idx[row])
+        if return_conjugated_symmetries and conj_flags[row]:
+            conj_symmetries[cls].append(tup)
+        else:
+            symmetries[cls].append(tup)
+
+    # tensor_of_symm_class_index (same as before)
+    tensor_of_symm_class_index = labels.reshape(lead_shape)
+
+    # Optionally add headers like you did (kept minimal to avoid extra passes)
+    if return_conjugated_symmetries:
+        result = []
+        for cls, items in enumerate(symmetries):
+            if items:
+                mean_abs = float(np.mean(np.abs(tensor[items[0]])))
+                result.append([f"mean abs value: {mean_abs}", *items])
+        for cls, items in enumerate(conj_symmetries):
+            if items:
+                result.append([("conjugated indices", cls), *items])
+    else:
+        result = []
+        for cls, items in enumerate(symmetries):
+            if items:
+                mean_abs = float(np.mean(np.abs(tensor[items[0]])))
+                result.append([f"mean abs value: {mean_abs}", *items])
+
     return result, tensor_of_symm_class_index
 
 def test_symmetries_sqw_4(symmetries, tensor_of_symm_class_index, material):
@@ -1061,6 +1236,7 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
                 
                 intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
                     config,
+                    material=material,
                     relative_grid_points=material.get_extended_relative_grid_points_path(),
                     dimension=material.dimension,
                     grid=sqw_intensities[0,a, b, :, :, :],
@@ -1210,7 +1386,8 @@ def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relat
     path=[startpoint]
     result=[]
     xticks_pos=[]
-    xticks_labels=[]
+    xticks_labels= np.round(np.einsum("ia, aj -> ij", relative_grid_points,np.array(material.get_reciprocal_lattice_vectors())),2).tolist() if (material is not None and relative_grid_points is not None) else []
+    xticks_labels = [np.array(label) for label in xticks_labels]
     def add_xticks_pos_labels():
         if q_grid is not None:
             xticks_pos.append(len(path)-1)
@@ -1218,7 +1395,11 @@ def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relat
             # path[-1][mask_overshoot_grid_size] = np.array(q_grid.shape[:-1])[mask_overshoot_grid_size]-1
             # if np.any(mask_overshoot_grid_size):
             #     config.warnings.add("some grid points exceeded the grid size and were set to the maximum value of the grid.")
-            xticks_labels.append(np.round(q_grid[path[-1][0],path[-1][1],path[-1][2]],2))
+            if (material is None or relative_grid_points is None):
+                xticks_labels.append(np.round(q_grid[*path[-1]],2))
+            # xticks_labels.append(np.round(q_grid[*path[-1]],2))
+            # if np.all(xticks_labels[-1] == 0) and relative_grid_points is not None and np.any(relative_grid_points[len(xticks_labels)-1] != np.array([0,0,0])):
+            #     xticks_labels[-1] = np.round(2*q_grid[*path[-2]]-q_grid[*path[-3]],2) # extrapolate linearly if the label is zero since it is already wrapped around
         elif max_value_k is not None:
             xticks_pos.append(len(path)-1) #-1 since path has already one element
             xticks_labels.append(np.round((path[-1])/len(grid[1])*max_value_k,2)) #TODO: this doesnt fit completely since the path doesnt start at 1 but at 0
@@ -1443,6 +1624,74 @@ def convolute_grids_fft(grid1, grid2, dimension=3, double_convolution=False, gri
     # Output shape ((deg)*W, K1, K2, K3?, trailing...)
     return conv_spatial
 
+def convolute_grids_fft_phases(grid1, grid2, d_in_first_unit_cell, dimension=3, double_convolution=False, grid3=None, use_real=True):
+    """
+    Fast version: vectorized via FFT.
+    grid* shape: (W, K1, K2, K3?) with only the first `dimension` spatial dims used.
+    Returns shape ((deg)*W, K1, K2, K3?) where deg=2 or 3.
+    """
+    from scipy.fft import fftn, ifftn, fft, ifft, rfftn, irfftn
+
+    assert grid1.shape[1:1+dimension] == grid2.shape[1:1+dimension]
+    if double_convolution:
+        assert grid3 is not None and grid3.shape[1:1+dimension] == grid1.shape[1:1+dimension]
+
+    def shift_grid_by_vector(grid, d_vector):
+        """Shifts the grid in k-space by a phase factor corresponding to d_vector in real space."""
+        # shifted_grid = np.zeros_like(grid, dtype=complex)
+        shift_indices = np.round(np.array(grid.shape[1:])*d_vector).astype(int)
+        shifted_grid = np.roll(grid, shift=shift_indices, axis=tuple(range(1, 4)))
+        return shifted_grid
+    temp = shift_grid_by_vector(grid1, d_vector=d_in_first_unit_cell)
+    W = grid1.shape[0]
+    spatial_shape = grid1.shape[1:1+dimension]
+    # Preserve trailing singleton dims up to 3
+    trailing = grid1.shape[1+dimension:]
+    out_W = (3 if double_convolution else 2) * W
+
+    # Choose real FFTs if inputs are real to save time/memory
+    rfft = use_real and np.isrealobj(grid1) and np.isrealobj(grid2) and (not double_convolution or np.isrealobj(grid3))
+    fftn_fn, ifftn_fn = (rfftn, irfftn) if rfft else (fftn, ifftn)
+
+    # 1) FFT over spatial axes for each w-slice
+    axes = tuple(range(1, 1+dimension))
+    A_hat = fftn_fn(grid1, s=None, axes=axes)
+    B_hat = fftn_fn(grid2, s=None, axes=axes)
+    if double_convolution:
+        C_hat = fftn_fn(grid3, s=None, axes=axes)
+
+    B_hat = shift_grid_by_vector(B_hat, d_vector=d_in_first_unit_cell)
+    # 2) Convolution along w using FFT (treat each spatial-frequency bin independently)
+    #    conv over w: for each spatial bin, (A_hat *_w B_hat)[t] = sum_i A_hat[i]*B_hat[t-i]
+    #    Compute via FFT along axis=0.
+    #    Zero-pad length to out_W for 'full' convolution length = W+W-1 (here you sum to index i+j),
+    #    but your code uses i from j..W-1 and accumulates into w_index+w_index_2 (length 2W),
+    #    so we pad to 2W (or 3W for triple).
+    W = grid1.shape[0]
+    
+    pad_W = out_W
+    def wfft(x):
+        return fft(x, n=pad_W, axis=0) #n is zero padding! if pad_W > x.shape[0]
+    def iwfft(x):
+        return ifft(x, n=pad_W, axis=0)
+
+    AB_hat_w = iwfft(wfft(A_hat) * wfft(B_hat))  # shape: (out_W, *spatial_freq_shape, *trailing)
+
+    if double_convolution:
+        ABC_hat_w = iwfft(wfft(AB_hat_w) * wfft(C_hat))  # convolve once more along w
+        H_w = ABC_hat_w
+    else:
+        H_w = AB_hat_w
+
+    # 3) Inverse FFT over spatial axes to get back k-space convolution for every w-sum index
+    #    Take real part if inputs were real (tiny imag from numerics).
+    conv_spatial = ifftn_fn(H_w, s=None, axes=axes)
+    if rfft:
+        conv_spatial = conv_spatial.real
+    # Output shape ((deg)*W, K1, K2, K3?, trailing...)
+    return conv_spatial
+
+
 def sum_k_dependency(grid):
     """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
     if grid.ndim < 2:
@@ -1577,7 +1826,7 @@ def save_figures_as_images_to_pdf(
             fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
             if len(config.warnings) != 0 and i==0: 
                 warning_str = ""
-                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values} // G: {config.Gamma} \n tau:{material.tau} normal: {material.normal_vector_to_rotation_plane} spin direction: {material.atoms[0][0].dir} \n amount BZ: {config.amount_BZ} // use extended k-space: {config.experimental_plots_on_extended_grid} \n Gamma {config.Gamma}"
+                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values} // G: {config.Gamma} \n tau:{material.tau} normal: {material.normal_vector_to_rotation_plane} spin direction: {material.atoms[0][0].dir} \n extension: {material.extension} // use extended k-space: {config.experimental_plots_on_extended_grid} \n Gamma {config.Gamma}"
                 for w in config.warnings:
                     warning_str = warning_str + f"\n{w}"
                 fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')
@@ -1595,6 +1844,15 @@ def save_figures_as_images_to_pdf(
             plt.tight_layout(rect=[0, 0, 1, 0.95])
             pdf.savefig(fig)
             plt.close(fig)
+        if material.sqw_4_symmetries is not None:
+            info_str = "sqw 4 symmetries \n"
+            for sym in material.sqw_4_symmetries:
+                info_str += f"{sym}\n"
+            fig_text = plt.figure(figsize=(8.5, 11), dpi=dpi)
+            fig_text.clf()
+            fig_text.text(0.5, 0.5, info_str, ha="center", va="center", wrap=True, fontsize=12)
+            pdf.savefig(fig_text)
+            plt.close(fig_text)
 
 # def save_config_to_json(config, filename: str = None):
 #     from LSW import Configurations  # Local import to avoid circular dependency

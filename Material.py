@@ -5,6 +5,7 @@ from Atoms import Atom
 from Bonds import Bond
 import rotation  
 import Configurations as Config
+from funtions import give_reciprocal_lv
 
 class Material:
     def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None, extension:int =1):
@@ -40,6 +41,8 @@ class Material:
         self.T:np.ndarray = None
         self.sqw_2:np.ndarray = None
         self.sqw_4:np.ndarray = None
+        self.sqw_4_symmetries:np.ndarray = None
+        self.sqw_2_symmetries:np.ndarray = None
         #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(3)]
        
         
@@ -56,6 +59,8 @@ class Material:
     def get_extended_relative_grid_points_path(self):
         return [self.extension*np.array(point) for point in self.relative_grid_points_path]
 
+    def get_reciprocal_lattice_vectors(self):
+        return give_reciprocal_lv(self.lattice_vectors)
 
     def is_incommensurate(self):
         """Check if the material is incommensurate based on its tau values."""

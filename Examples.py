@@ -378,6 +378,8 @@ def Fe2O3_rhombohedral(
     ONLY Fe atoms are placed. No oxygen, no bonds.
     """
 
+    config.Gamma = 25
+    
     # --- lattice vectors from a_rh and alpha ---
     ang = np.deg2rad(alpha)
     # Standard rhombohedral primitive vectors (equal length, equal angles)
@@ -603,6 +605,8 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, J
     # config.amount_BZ = 1 #this is done since I am using the supercell calculations and thus have to take the phase factor into account
     
     #d = 2
+    config.Gamma = 0.04
+    
     if J2 is None:
         J2 = J
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
@@ -611,6 +615,7 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, J
     material = Material(config=config,lattice_vectors=lv, extension=2,tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name=f"D2 AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}")
 
     sign_spin_dir = -1 if AFM else 1
+    
     
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -663,7 +668,7 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, J
         case 1:
             material.relative_grid_points_path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
         case 2:
-            material.relative_grid_points_path = [np.array([0, 0, 0]), 0.5*np.array([1, 0, 0]), 0.5*np.array([1, 1, 0]), np.array([0, 0, 0])]
+            material.relative_grid_points_path = [np.array([0, 0, 0]), 1/material.extension*np.array([1, 0, 0]), 1/material.extension*np.array([1, 1, 0]), np.array([0, 0, 0])]
         case 3:
             material.relative_grid_points_path = [np.array([0, 0, 0]), 0.5*np.array([1, 0, 0]), 0.5*np.array([1, 1, 0]), 0.5*np.array([1, 1, 1]), np.array([0, 0, 0])]
 

@@ -525,7 +525,44 @@ def test_integration_2d_divergent(a,n):
     print(4*val, err)  # should be close to 2*a*np.arcsinh(1)
     print("Expected:", 4*2*a*np.arcsinh(1))
 
+def normalisation_plotting():
+    import re
+    filename = "total_integral_intensities.txt"
 
+    with open(filename, "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
+
+    # --- Parse lines like "2 504: (3.054...)" ---
+    pattern = re.compile(r"(\d+)\s+(\d+):\s+\(([^)]+)\)")
+
+    data = []
+    for line in lines:
+        match = pattern.match(line)
+        if not match:
+            continue  # skip malformed lines
+        group, x, val_str = match.groups()
+        val = complex(val_str.replace(" ", ""))
+        data.append((int(group), int(x), val))
+
+    data = np.array(data, dtype=object)
+
+    # --- Separate and plot each group ---
+    groups = np.unique(data[:, 0])
+
+    plt.figure(figsize=(8, 5))
+    for g in groups:
+        mask = data[:, 0] == g
+        xs = data[mask, 1].astype(int)
+        ys = np.array([np.real(y) for y in data[mask, 2]])
+        plt.plot(xs, ys, "o-", label=f"Group {g}")
+
+    plt.xlabel("total grid size (w,K)")
+    plt.ylabel("total sum sqw_2 / sqw_4")
+    plt.title("normalisation testing")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
@@ -541,4 +578,5 @@ if __name__ == "__main__":
     #test_interaction()
     # test_sympy()
     # test_eig()
-    print(test_integration())
+    # print(test_integration())
+    normalisation_plotting()
