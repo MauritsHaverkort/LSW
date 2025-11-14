@@ -43,7 +43,7 @@ class Material:
         self.sqw_4:np.ndarray = None
         self.sqw_4_symmetries:np.ndarray = None
         self.sqw_2_symmetries:np.ndarray = None
-        #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(3)]
+        #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(self.config.amount_spatial_S_operator)]
        
         
         mat_nx = np.array(
@@ -162,17 +162,17 @@ class Material:
     def return_spatial_indices(self, order_of_operator=2):
         """Returns the spatial indices for the given order of operator."""
         if order_of_operator == 2:
-            return [[alpha, beta] for alpha in range(3) for beta in range(3)]
+            return [[alpha, beta] for alpha in range(self.config.amount_spatial_S_operator) for beta in range(self.config.amount_spatial_S_operator)]
         elif order_of_operator == 4:
-            return [[alpha, beta,  gamma, delta] for alpha in range(3) for beta in range(3) for gamma in range(3) for delta in range(3)]
+            return [[alpha, beta,  gamma, delta] for alpha in range(self.config.amount_spatial_S_operator) for beta in range(self.config.amount_spatial_S_operator) for gamma in range(self.config.amount_spatial_S_operator) for delta in range(self.config.amount_spatial_S_operator)]
         else:
             raise ValueError("Invalid order_of_operator. Must be 2 or 4.")
     def return_sqw_prime_components(self, order_of_operator=2):
         """Returns the sqw_prime components for the given order of operator."""
         if order_of_operator == 2:
-            return [[tau, alpha, beta] for alpha in range(3) for beta in range(3) for tau in range(self.config.amount_tau_values)]
+            return [[tau, alpha, beta] for alpha in range(self.config.amount_spatial_S_operator) for beta in range(self.config.amount_spatial_S_operator) for tau in range(self.config.amount_tau_values)]
         elif order_of_operator == 4:
-            return [[tau, alpha, beta,  gamma, delta] for alpha in range(3) for beta in range(3) for gamma in range(3) for delta in range(3) for tau in range(self.config.amount_tau_values)]
+            return [[tau, alpha, beta,  gamma, delta] for alpha in range(self.config.amount_spatial_S_operator) for beta in range(self.config.amount_spatial_S_operator) for gamma in range(self.config.amount_spatial_S_operator) for delta in range(self.config.amount_spatial_S_operator) for tau in range(self.config.amount_tau_values)]
         else:
             raise ValueError("Invalid order_of_operator. Must be 2 or 4.")
     def return_order_of_a_ad_operator_indices(self, order_of_operator=2):

@@ -176,7 +176,7 @@ def test_current_Hamiltonian(
     config: Config, k_array: np.ndarray, Bz, Ba_z, material: Material, spins: List[float] = [], J_bonds_general: List[List[float]] = [], dist_bonds_general: List[List[float]] = [],
     use_looping_over_k_for_old_H=True
 ):
-    from LSW import general_Ham_types_AFM_FM_old, general_Ham_types_AFM_FM_paper_4, post_process, general_Ham_types_AFM_FM_paper_old, plotting_additional_values
+    from LSW import general_Ham_types_AFM_FM_old, general_Hamiltonian, post_process, general_Ham_types_AFM_FM_paper_old, plotting_additional_values
     state_cr_input_untransformed = config.state_cr_input_untransformed
     state_an_input_untransformed = config.state_an_input_untransformed
 
@@ -260,7 +260,7 @@ def test_grid_spectral_weight_computation(config:Config):
     k_values_scalar, k_values, xticks_label, xticks_pos = (
         functions.path_k_space(path, config.amount_k_values, a1)
     ) 
-    from LSW import example_1_General_D_FM_AFM_bonds, general_Ham_types_AFM_FM_paper_4, calc_H_T_w_on_grid
+    from LSW import example_1_General_D_FM_AFM_bonds, general_Hamiltonian, calc_H_T_w_on_grid
     material = example_1_General_D_FM_AFM_bonds(
                     -1, -1, 1, config.a, S1=config.S, S2=-config.S, d=config.dimension
                 )
@@ -270,7 +270,7 @@ def test_grid_spectral_weight_computation(config:Config):
     )
     lv = material.lattice_vectors
     
-    H, state_cr, state_anihil, eigvecs=general_Ham_types_AFM_FM_paper_4(
+    H, state_cr, state_anihil, eigvecs=general_Hamiltonian(
                 config,
                 k_=np.array(k_values),
                 material=material,

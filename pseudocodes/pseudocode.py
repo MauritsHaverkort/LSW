@@ -146,7 +146,7 @@ def calc_H_T_w_on_grid(
     
     return energy_dependent_part_q_shifted, T, eigvalues, w_values, eigvalues_deriv, T_deriv #energy_dependent_part_q_shifted*normalisation_Nk
 
-def general_Ham_types_AFM_FM_paper_4(
+def general_Hamiltonian(
     config: Config,
     k_:np.ndarray, #array of k-values
     material: Material,

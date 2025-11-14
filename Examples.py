@@ -438,6 +438,25 @@ def Fe2O3_rhombohedral(
     ]
     return material
 
+def D1_2_atom_cluster(config: Config, J, a, S1, S2, spin_dir=np.array([0, 0, 1]), spin_dir_2=-np.array([0, 0, 1])):
+    lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
+    normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)
+
+    material = Material(config=config, lattice_vectors=lv, extension=2, tau=np.array([0, 0, 0]), normal_vector_to_rotation_plane=normal_vector, dimension=1, name="D1_2_atom_cluster")
+
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        Atom(np.array([a, 0, 0]), type=1, S=S2, spin_dir=spin_dir_2),
+    ]
+    
+    bonds = [
+        Bond(material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J)
+    ]
+
+    material.set_bond_atoms(atoms = functions.sort_atoms_for_type(atoms), bonds=bonds)
+
+    return material
+
 def General_D_FM_AFM_simple_cubic(config: Config, J, a, S1, S2, d=3, spin_dir=np.array([0, 0, 1])):
     
     #config.dimension = d

@@ -124,7 +124,7 @@ def call_main():
             
             #AFM supercell
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=-1, J2=0, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
 
@@ -135,6 +135,8 @@ def call_main():
             # Examples.Fe2O3_hematite_hexagonal(config, AFM=True),
             # Examples.Fe2O3_rhombohedral(config, AFM=True),
             
+            #tryout materials
+            Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1, spin_dir=np.array([0, 0, 1]), spin_dir_2=-np.array([0, 0, 1])),
             # Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1])),
             # Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0])),
             # Examples.spin_helix_tut30_D2(config, J=1, a=1, S1=1, d=2),
@@ -253,7 +255,7 @@ def J_of_k(S: float, bonds: List[np.ndarray], J_couplings: List[float], k_: np.n
 
 
 
-def general_Ham_types_AFM_FM_paper_4(
+def general_Hamiltonian(
     config: Config,
     k_:np.ndarray, #array of k-values
     material: Material,
@@ -628,7 +630,7 @@ def current_Hamiltonian_to_use(
         plt.show()
     
        
-    (H, eigvecs),(H_deriv, eigvecs_deriv) = general_Ham_types_AFM_FM_paper_4(
+    (H, eigvecs),(H_deriv, eigvecs_deriv) = general_Hamiltonian(
         config = config,
         k_ = q_grid,
         material=material,
@@ -808,6 +810,7 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
     Sop_i = []
     atoms = material.atoms
     for i in range(material.N):
+        
         u = atoms[i][0].u
         ub = np.conjugate(u)
         v = atoms[i][0].v
@@ -815,6 +818,8 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
         a_op.append(sp.symbols("a"+str(i),commutative=False))
         ad_op.append(Dagger(a_op[i]))
         Sop_i.append(np.sqrt(S)/2 * (ub * a_op[i] + u * ad_op[i]) + v * (S-ad_op[i]*a_op[i]))
+        Sop_i[-1]= np.concatenate((Sop_i[-1],np.array([sp.S(1)]))) #add a unit operator
+        
 
     Sop_i = np.array(Sop_i)
    
@@ -853,9 +858,9 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
     def create_coeff_matrix(order_of_xyz_operator=order_of_xyz_operator):
         Sop_i_dagger = np.zeros_like(Sop_i, dtype=object)
         for i in range(material.N):
-            for alpha in range(3):
+            for alpha in range(Sop_i.shape[1]):
                 Sop_i_dagger[i,alpha] = Dagger(Sop_i[i,alpha])
-        assert np.all(Sop_i_dagger == Sop_i), "Sop_i is not Hermitian, something is wrong"
+        assert (np.all(Sop_i_dagger == Sop_i)), "Sop_i is not Hermitian, something is wrong"
 
         if order_of_xyz_operator == 2:
             #changed to conv S S
@@ -1309,6 +1314,8 @@ def calculate_sqw_spectra(
             sqw_prime_of_a_ad_without_k_pref = deal_with_divergencies(residues=sqw_prime_of_a_ad_without_k_pref, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=config.use_averaging_TdT)
             sqw_prime_of_a_ad_k = deal_with_divergencies(residues=sqw_prime_of_a_ad_k, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
         
+        sqw_prime_of_a_ad_without_k_pref = 1/(config.number_k_points * config.amount_w_values) * sqw_prime_of_a_ad_without_k_pref
+        
         #plotting intenisties of different branches for debugging
         if config.debug_Sa_ad:
             sym_energies , _ = functions.give_symmetries_of_tensors(material.energies.transpose(0,4,1,2,3),number_axis_to_include=2, return_conjugated_symmetries=False)
@@ -1624,14 +1631,8 @@ def calculate_sqw_spectra(
         config.debug_timer.print_difference("done normalising to sum rule", config.debug_timing)
 
     #print normalisation
-    actual_sum_2 = np.sum(sqw_2_xyz)
-    actual_sum_4 = np.sum(sqw_4_xyz) if sqw_4_xyz is not None else None
-    value = int(config.number_k_points) * int(config.amount_w_values)
-    os.makedirs("outputs", exist_ok=True)
-    filename = f"total_integral_intensities.txt"
-    with open(filename, "a", encoding="utf-8") as f:
-        f.write(f"2 {value}: {actual_sum_2}\n")
-        f.write(f"4 {value}: {actual_sum_4}\n") if sqw_4_xyz is not None else None
+    print_normalisation(config=config, sqw_2=sqw_2_xyz, sqw_4=sqw_4_xyz)
+    
     #construct only the intensities (for testing)
     #--------------------------------------------------------------------------------------------------------------------------------
     if config.debug_Sa_ad:
@@ -1753,8 +1754,8 @@ def calculate_sqw_spectra(
                         names_plots.append(f"sqw_prime_of_a_ad_t{t}_i{i}_isad1{is_ad_1}_j{j}_isad2{is_ad_2}")
     if config.plots_to_show_print["sqw_prime_elements"][0]:
         for t in range(config.amount_tau_values):
-            for a in range(3):
-                for b in range(3):
+            for a in range(config.amount_spatial_S_operator):
+                for b in range(config.amount_spatial_S_operator):
                     results.append(sqw_prime_2_xyz[t,a,b,:,:,:])
                     names_plots.append(f"sqw_prime_of_xyz_t{t}_a{a}_b{b}")
 
@@ -1768,8 +1769,8 @@ def calculate_sqw_spectra(
             #fig = plt.figure(f"intensities k dependent tau:{t}")
             fig_grid, axs_grid = plt.subplots(3, 3, figsize=(12, 10))
             fig_grid.suptitle(f"intensities sqw (3x3 grid)")
-            for a in range(3):
-                for b in range(3):
+            for a in range(config.amount_spatial_S_operator):
+                for b in range(config.amount_spatial_S_operator):
                     ax = axs_grid[a, b]
                     
                     intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
@@ -1799,8 +1800,8 @@ def calculate_sqw_spectra(
                 #fig = plt.figure(f"intensities k dependent tau:{t}")
                 fig_grid, axs_grid = plt.subplots(3, 3, figsize=(12, 10))
                 fig_grid.suptitle(f"intensities sqw' dependent tau:{t} (3x3 grid)")
-                for a in range(3):
-                    for b in range(3):
+                for a in range(config.amount_spatial_S_operator):
+                    for b in range(config.amount_spatial_S_operator):
                         ax = axs_grid[a, b]
                         for i in range(2 * material.N):
                             intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
@@ -1821,8 +1822,8 @@ def calculate_sqw_spectra(
                 fig_grid.tight_layout(rect=[0, 0.03, 1, 0.95])
                 if config.plots_to_show_print["intensities_sqw_prime"][1]:
                     VALUES_TO_SAVE["figs_for_pdf"].append(fig_grid)
-                # for a in range(3):
-                #     for b in range(3):
+                # for a in range(config.amount_spatial_S_operator):
+                #     for b in range(config.amount_spatial_S_operator):
                 #         for i in range(2*material.N):
                 #             intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
                 #                     relative_grid_points=material.relative_grid_points_path,
@@ -1927,7 +1928,7 @@ def calculate_sqw_spectra(
 
     if config.plots_to_show_print["max_x_projection_sqw"][0] and material.dimension > 1:      
         #xx, w, K, first eigvector 
-        for i in range(3):
+        for i in range(config.amount_spatial_S_operator):
             slice_ = (i,i,)+ (slice(None),)+(slice(None),)*material.dimension + (0,)*(3-material.dimension)+(0,)
             if np.any(sqw_2_xyz[slice_])> 10e-5:
                 break
@@ -2027,6 +2028,20 @@ def calculate_sqw_spectra(
     
     return sqw_2_xyz, sqw_4_xyz, q_values_extended
 
+def print_normalisation(config, sqw_2, sqw_4):
+    actual_sum_2 = np.sum(sqw_2)
+    actual_sum_4 = np.sum(sqw_4) if sqw_4 is not None else None
+    value = int(config.number_k_points) * int(config.amount_w_values)
+    
+    # actual_sum_2 /= value
+    # actual_sum_4 /= value if sqw_4 is not None else None
+
+    os.makedirs("outputs", exist_ok=True)
+    filename = f"total_integral_intensities.txt"
+    with open(filename, "a", encoding="utf-8") as f:
+        f.write(f"2 {value}: {actual_sum_2}\n")
+        f.write(f"4 {value}: {actual_sum_4}\n") if sqw_4 is not None else None
+
 def normalise_to_total_sum_rule(sqw_2, sqw_4, material: Material, config: Config):
     #calculating the total sum rule
     atoms = material.atoms
@@ -2055,16 +2070,17 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
                         debug_RIXS_operator=False,
                         load_saved_grids = False,
                         experimental_compute_non_squared_use_commutative = False,
-                        factor_x_point_to_max_angle = 1
+                        factor_x_point_to_max_angle = 1,
+                        filename="results2025-11-14_11-52-22.npz"
                         ):
     # polarisation_in_sigma = True
     # polarisation_out_sigma = True #false is pi polarised
     import pandas as pd
     config.debug_timer.print_difference("start calculating RIXS operator")
 
-    sqw_4_xyz = np.load("outputs/sqw_intensities/results.npz")["sqw_4_xyz"]
-    sqw_2_xyz = np.load("outputs/sqw_intensities/results.npz")["sqw_2_xyz"]
-    q_values = np.load("outputs/sqw_intensities/results.npz")["q_values"]
+    sqw_4_xyz = np.load(f"outputs/sqw_intensities/{filename}")["sqw_4_xyz"]
+    sqw_2_xyz = np.load(f"outputs/sqw_intensities/{filename}")["sqw_2_xyz"]
+    q_values = np.load(f"outputs/sqw_intensities/{filename}")["q_values"]
 
     #------------------------------extract sqw and q values along a path------------------------------
     relative_grid_points=[np.array([0,0,0]),np.array([0.5,0,0])]
@@ -2129,6 +2145,8 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
      # ------------------------------Define spin operators as symbolic variables--------------------------------------------------------------
     Sx, Sy, Sz = sp.symbols('Sx Sy Sz', commutative=experimental_compute_non_squared_use_commutative)
     S_op_list = [Sx, Sy, Sz]
+    if config.amount_spatial_S_operator == 4:
+        S_op_list.append(sp.S(1)) #unit operator
     # Splus, Smin = symbols('S_pl S_min', commutative=experimental_compute_non_squared_use_commutative)
     # Smin = sp.conjugate(Splus)  # Define S- as the conjugate of S+
     # Define total spin squared
@@ -2223,16 +2241,16 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
             eff_scattering_operator_polarisation_dependent=give_eff_scattering_operator_polarisation_dependent(epsilon_in=epsilon_in, epsilon_out=epsilon_out)
             coeff_dict_of_S_operators = sympy_manipulations.nc_coeff_dict(eff_scattering_operator_polarisation_dependent[0,0]) #[0,0] is just to get from shape (1,1) to scalar
             # dict_S_sqrd_to_indices = {}
-            # for i in range(3):
-            #     for j in range(3):
+            # for i in range(config.amount_spatial_S_operator):
+            #     for j in range(config.amount_spatial_S_operator):
             #         dict_S_sqrd_to_indices[S_op_list[i]*S_op_list[j]] = (i,j)
-            coeff_list_symbolic_4 = [[0 for _ in range(3)] for _ in range(3)]
-            coeff_list_symbolic_2 = [0 for _ in range(3)]
-            for a in range(3):
+            coeff_list_symbolic_4 = [[0 for _ in range(config.amount_spatial_S_operator)] for _ in range(config.amount_spatial_S_operator)]
+            coeff_list_symbolic_2 = [0 for _ in range(config.amount_spatial_S_operator)]
+            for a in range(config.amount_spatial_S_operator):
                 coeff_2 = coeff_dict_of_S_operators.get(S_op_list[a])
                 coeff_list_symbolic_2[a] = coeff_2 if coeff_2 is not None else sp.S.Zero #if the coefficient is not in the dict
                     
-                for b in range(3):
+                for b in range(config.amount_spatial_S_operator):
                     
                     coeff_4=coeff_dict_of_S_operators.get(S_op_list[a]*S_op_list[b])
                     coeff_list_symbolic_4[a][b] = coeff_4 if coeff_4 is not None else sp.S.Zero #if the coefficient is not in the dict
@@ -2241,12 +2259,12 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
                     # pprint(coeff_list_symbolic[i][j])
             
             #substitute the q_values_along_path
-            coeff_array_R_4 = np.zeros((3, 3, q_values_along_path.shape[0]), dtype=config.dtype_complex)
-            coeff_array_R_2 = np.zeros((3, q_values_along_path.shape[0]), dtype=config.dtype_complex)
+            coeff_array_R_4 = np.zeros((config.amount_spatial_S_operator, config.amount_spatial_S_operator, q_values_along_path.shape[0]), dtype=config.dtype_complex)
+            coeff_array_R_2 = np.zeros((config.amount_spatial_S_operator, q_values_along_path.shape[0]), dtype=config.dtype_complex)
             for k in range(q_values_along_path.shape[0]):
-                for a in range(3):
+                for a in range(config.amount_spatial_S_operator):
                     coeff_array_R_2[a,k] = coeff_list_symbolic_2[a].subs({q_analytical: q_values_along_path[k]})
-                    for b in range(3):
+                    for b in range(config.amount_spatial_S_operator):
                         coeff_array_R_4[a,b,k] = coeff_list_symbolic_4[a][b].subs({q_analytical: q_values_along_path[k]})
 
             coeff_array_spectrum_2 = np.einsum('ak,ck->ack', np.conj(coeff_array_R_2), coeff_array_R_2, optimize='optimal')
@@ -2604,7 +2622,7 @@ def deal_with_divergencies(residues, q_values, material:Material, config:Config,
         for index_div in indices_divergencies:
             if indices_divergencies.shape[0] > 0:
                 refined_grid, grid_volume = give_refined_grid_around_point(q_values, point_idx= index_div, decrease_ratio=decrease_ratio,dimension=material.dimension, refinement_factor=refinement_steps, fraction_to_neighbour_to_include=fraction_to_neighbour_to_include)
-                (H_refined, eigvecs_refined),_ = general_Ham_types_AFM_FM_paper_4(
+                (H_refined, eigvecs_refined),_ = general_Hamiltonian(
                 config = config,
                 k_ = refined_grid,
                 material=material
