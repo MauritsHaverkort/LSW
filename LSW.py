@@ -126,7 +126,7 @@ def call_main():
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=-1, J2=0, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=-1, J2=0, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
 
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
@@ -136,7 +136,7 @@ def call_main():
             # Examples.Fe2O3_rhombohedral(config, AFM=True),
             
             #tryout materials
-            Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1, spin_dir=np.array([0, 0, 1]), spin_dir_2=-np.array([0, 0, 1])),
+            # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1, spin_dir=np.array([0, 0, 1]), spin_dir_2=-np.array([0, 0, 1])),
             # Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1])),
             # Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0])),
             # Examples.spin_helix_tut30_D2(config, J=1, a=1, S1=1, d=2),
@@ -881,20 +881,20 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
             right_part = np.einsum('jg,jd->gd', Sop_i, Sop_i) # [g,d]
             for a in range(left_part.shape[0]):
                 for b in range(left_part.shape[1]):
-                    left_part[a,b] = sympy_manipulations.extract_terms_of_order(left_part[a,b], order_of_xyz_operator/2)
-                    right_part[a,b] = sympy_manipulations.extract_terms_of_order(right_part[a,b], order_of_xyz_operator/2)
+                    left_part[a,b] = sympy_manipulations.extract_terms_of_order(left_part[a,b], order_of_a_operator/2)
+                    right_part[a,b] = sympy_manipulations.extract_terms_of_order(right_part[a,b], order_of_a_operator/2)
             #sqw_xyz_symbolic = np.einsum('ia,ib,jg,jd->bagd', Sop_i_dagger, Sop_i_dagger, Sop_i, Sop_i)
             sqw_xyz_symbolic = np.einsum('ab,gd->abgd',left_part, right_part)
         if debug_timing:
             config.debug_timer.print_difference("constructing sqw_symbolic", True)
 
-        operator_list = operator_a_list_from_material(order_of_a_operator=order_of_xyz_operator)
-        
+        operator_list = operator_a_list_from_material(order_of_a_operator=order_of_a_operator)
+
         if debug_timing:
             config.debug_timer.print_difference("constructing operator list", True)
         #creating a matrix of all coefficients of the mapping ad_a -> xyz
-        
-        amount_order_index = len(material.return_order_of_a_ad_operator_indices(order_of_xyz_operator))
+
+        amount_order_index = len(material.return_order_of_a_ad_operator_indices(order_of_a_operator))
         shape_a_ad=(material.N, amount_order_index, material.N, amount_order_index)
         sqw_xyz_coeff_of_ad_a = np.zeros((*sqw_xyz_symbolic.shape,*shape_a_ad), dtype=np.complex128) # shape of the ad_a operators is always [i,order_i,j,order_j] --> first element is tau then 2 to 5 are the once used; old --> [1: order_of_operator +1 ]: first index is tau (not needed here, then all ad_a indices are included that will always match order_if_operators)
         
@@ -903,7 +903,7 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
             #this is the coefficient of the ad_a operator in the sqw_xyz_symbolic
             term_xyz = sqw_xyz_symbolic[*indices_spatial].expand()
             term_xyz_dict = sympy_manipulations.nc_coeff_dict(term_xyz)
-            for idx_ad_a, (indices_ad_a) in enumerate(material.return_ad_a_spectra_indices(order_of_xyz_operator)):
+            for idx_ad_a, (indices_ad_a) in enumerate(material.return_ad_a_spectra_indices(order_of_a_operator)):
                 coeff = term_xyz_dict[operator_list[idx_ad_a]] if operator_list[idx_ad_a] in term_xyz_dict else 0
                 # if coeff != 0 and indices_spatial == [1,0,1,2]:
                 #     print("")
@@ -950,15 +950,17 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
     
     #-----------------------------------------------------------------------------------------------------------------
     
-    if order_of_a_operator == 2:
-        #sqw_xyz = np.einsum('tcd...,abcd->tab...',material.transform_basis_i_order_i_to_n1_n2(sqw_prime_a_ad , 1), sqw_xyz_coeff_of_ad_a)
+    # if order_of_a_operator == 2:
+    #     #sqw_xyz = np.einsum('tcd...,abcd->tab...',material.transform_basis_i_order_i_to_n1_n2(sqw_prime_a_ad , 1), sqw_xyz_coeff_of_ad_a)
             
-        sqw_xyz = np.einsum('abioju,tioju...->tab...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
-    elif order_of_a_operator == 4:
-        if order_of_xyz_operator == 2:
-            sqw_xyz = np.einsum('abioju,tioju... -> tab...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
-        elif order_of_xyz_operator == 4:
-            sqw_xyz = np.einsum('abgdioju,tioju... -> tabgd...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
+    #     sqw_xyz = np.einsum('abioju,tioju...->tab...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
+    # elif order_of_a_operator == 4:
+
+    #should depend only on the order of the xyz operator 
+    if order_of_xyz_operator == 2:
+        sqw_xyz = np.einsum('abioju,tioju... -> tab...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
+    elif order_of_xyz_operator == 4:
+        sqw_xyz = np.einsum('abgdioju,tioju... -> tabgd...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
     if debug_timing:
         config.debug_timer.print_difference("multiplying coefficients with the sqw_ad_a", True)
     config.additional_values["sqw_xyz_coeff_of_ad_a"] = sqw_xyz_coeff_of_ad_a
@@ -1497,7 +1499,7 @@ def calculate_sqw_spectra(
             assert np.max(np.abs(sqw_prime_2_xyz - sqw_prime_of_xyz_direct)) < 1e-5, "the two ways of calculating sqw_prime_of_xyz do not match"
         #constructing the sqw_prime matrix dependent on x,y,z again via the function to confirm that it works correctly
         #the four comes from the fact that in the comp function the 1/2 factor is not included
-        sqw_prime_2_xyz = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=sqw_prime_2_ad_a, material=material, config=config, order_of_a_operator=2, order_of_xyz_operator=2)
+        sqw_prime_2_xyz = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=sqw_prime_2_ad_a, material=material, config=config, order_of_a_operator=2, order_of_xyz_operator=4)
         # assert np.max(np.abs(sqw_prime_of_xyz_comp - sqw_prime_2_xyz)) < 1e-5, "the two ways of calculating sqw_prime_of_xyz do not match"
         
         #these should give back the bare intensities without the energy dependent part (just for debugging, not most elegant way)
