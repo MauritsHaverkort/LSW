@@ -8,7 +8,7 @@ import Configurations as Config
 from funtions import give_reciprocal_lv
 
 class Material:
-    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None, extension:int =1):
+    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None, extension:int =1, alignments:List[np.ndarray]=[]):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
         
@@ -35,14 +35,29 @@ class Material:
         self.name = name
         self.config = config
         self.extension = extension  # Default extension factor for k-grid
+        self.alignments = alignments  # List of alignment vectors (if the material has multiple alignments, that should be summed over)
         
         #arrays to store results
         self.energies:np.ndarray = None
         self.T:np.ndarray = None
-        self.sqw_2:np.ndarray = None
-        self.sqw_4:np.ndarray = None
-        self.sqw_4_symmetries:np.ndarray = None
-        self.sqw_2_symmetries:np.ndarray = None
+        self.phase_factor:np.ndarray = None
+        self.q_values:np.ndarray = None
+        self.w_values:np.ndarray = None
+        
+        self.sqw_2_ad_a_sym_class:np.ndarray = None
+        self.conv_sqw_2_ad_a_sym_classes:np.ndarray = None
+        
+        self.coeff_sym_classes_tioju_4:np.ndarray = None
+        self.coeff_sym_class_tioju_2:np.ndarray = None
+        
+        self.coeff_tioju_xyz_2:np.ndarray = None
+        self.coeff_tioju_xyz_4:np.ndarray = None
+        
+        self.coeff_prime_to_lab_2:np.ndarray = None
+        self.coeff_prime_to_lab_4:np.ndarray = None
+        
+        self.coeff_xyz_rixs_2:np.ndarray = None
+        self.coeff_xyz_rixs:np.ndarray = None
         #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(self.config.amount_spatial_S_operator)]
        
         
@@ -65,6 +80,8 @@ class Material:
     def is_incommensurate(self):
         """Check if the material is incommensurate based on its tau values."""
         return np.any(self.tau != np.array([0, 0, 0]))
+    
+    
 
     def return_combinations_up_to_distance(self, atoms, max_distance):
         """return all combinations of unique atom pairs and unit cells for every distance up to max_distance"""

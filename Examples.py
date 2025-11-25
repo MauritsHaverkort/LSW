@@ -68,26 +68,27 @@ def General_D_FM_AFM_simple_cubic_J1_J2(config:Config,J1, J2 ,a1, a, S1, S2, d=3
     return material
 # adding bonds to my code
 
-def NiO_supercell(config: Config, J=1, a=1, alignement=0):
-    if alignement == 0:
-        spin_dir = np.array([1, -2, 1])
+def NiO_supercell(config: Config, J=1, a=1):
+    # if alignement == 0:
+    #     spin_dir = np.array([1, -2, 1])
         
-    elif alignement == 1:
-        spin_dir = np.array([-2, 1, 1])
+    # elif alignement == 1:
+    #     spin_dir = np.array([-2, 1, 1])
        
-    elif alignement == 2:
-        spin_dir = np.array([1, 1, -2])
+    # elif alignement == 2:
+    #     spin_dir = np.array([1, 1, -2])
         
-    else:
-        raise ValueError("Invalid alignment value. Must be 0, 1, or 2.")
+    # else:
+    #     raise ValueError("Invalid alignment value. Must be 0, 1, or 2.")
     
-    spin_dir = np.array([0,0,1])
-    theta = 0.0* np.pi
+    alignements = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
+    # spin_dir = np.array([0,0,1])
+    # theta = 0.0* np.pi
     
-    spin_dir = rotation.rot_vec(theta,np.array([1,0,0])) @ spin_dir
+    # spin_dir = rotation.rot_vec(theta,np.array([1,0,0])) @ spin_dir
     
     
-    return D2_AFM_simple_cubic_supercell(config, J=J, a=a, S1=1, S2=-1, spin_dir=spin_dir)
+    return DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=J, a=a, S1=1, S2=-1, spin_dir=np.array([0,0,1]), alignements=alignements)
 
 def NiO(config:Config ,J=1,a=1, alignement=0):
     
@@ -694,13 +695,13 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, J
 
     return material
 
-def D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a, S1, S2, J2 = None,spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True):
+def DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a, S1, S2, dimension = 3, J2 = None,spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, AFM = True, alignements=[]):
     if J2 is None:
         J2 = J
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
 
-    material = Material(config=config,lattice_vectors=lv, extension=2,tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=2, name=f"D2 AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}")
+    material = Material(config=config,lattice_vectors=lv, extension=2,tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=dimension, name=f"D2 AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}", alignments=alignements)
 
     sign_spin_dir = -1 if AFM else 1
     
@@ -709,18 +710,32 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a,
     atoms = [
         Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
         
-        Atom(relative_position_atom_2*np.array([a, a, 0]), type=1, S=S1, spin_dir=spin_dir),
+        Atom(relative_position_atom_2*np.array([a, 0, 0]), type=1, S=S2, spin_dir=sign_spin_dir*spin_dir),
         
+        Atom(relative_position_atom_2*np.array([0, a, 0]), type=2, S=S2, spin_dir=sign_spin_dir*spin_dir),
         
-        Atom(relative_position_atom_2*np.array([a, 0, 0]), type=2, S=S2, spin_dir=sign_spin_dir*spin_dir),
+        Atom(relative_position_atom_2*np.array([a, a, 0]), type=3, S=S1, spin_dir=spin_dir),
         
-        Atom(relative_position_atom_2*np.array([0, a, 0]), type=3, S=S2, spin_dir=sign_spin_dir*spin_dir),
+        Atom(relative_position_atom_2*np.array([0, 0, a]), type=4, S=S1, spin_dir=sign_spin_dir*spin_dir),
+        
+        Atom(relative_position_atom_2*np.array([a, 0, a]), type=5, S=S2, spin_dir=spin_dir),
+        
+        Atom(relative_position_atom_2*np.array([0, a, a]), type=6, S=S2, spin_dir=spin_dir),
+        
+        Atom(relative_position_atom_2*np.array([a, a, a]), type=7, S=S1, spin_dir=sign_spin_dir*spin_dir),
         
         # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
         # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
         # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
     ]
-    J_values = [1,0,0]
+    match material.dimension:
+        case 1:
+            atoms = atoms[0:2]
+        case 2:
+            atoms = atoms[0:4]
+        case 3:
+            atoms = atoms[:]
+    J_values = [1]
     bonds = []
     combinations, distances = material.return_combinations_up_to_distance(atoms, 2*a)
     for i,j in enumerate(J_values):
@@ -731,6 +746,11 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a,
             
     material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
     
+    # for c in combinations[0]:
+    #     a1,u1,a2,u2 = c
+    #     print(a1.position+u1)
+    #     print(a2.position+u2)
+    #     print("")
     
     match material.dimension:
         case 1:

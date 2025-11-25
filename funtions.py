@@ -226,13 +226,39 @@ def return_grid_samples_of_tensors(tensor, number_axis_to_exclude, reduction):
             result[spatial_index + (new_index,)] = tensor[spatial_index + tuple(old_idx)]
     return result
 
-def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, use_median_relative_difference=True, rounding_decimals = 2, return_conjugated_symmetries=True):
+def plot_tensor_at_certain_axis(tensor, axis_to_plot_individ, logscale=False):
+    plt.figure("Debug tensor plotting")
+    plt.title(f"shape of tensor {tensor.shape}, plotting of first {axis_to_plot_individ} axis")
+    for idx in np.ndindex(tensor.shape[:axis_to_plot_individ]):
+        
+        plt.plot(tensor[idx].flatten(), label=f"idx {idx}")
+    if logscale:
+        plt.yscale("log")
+    plt.legend()
+    plt.show()
+
+def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=None, 
+                               use_median_relative_difference=True, 
+                               threshold_multiplier = 1e-2, 
+                               rounding_decimals = 2, 
+                               return_conjugated_symmetries=False, 
+                               give_mean_abs_value=False, 
+                               compare_only_a_sample = True):
     """given a tensor this returns a list of lists of indices that are the same"""
     assert number_axis_to_include != None, "number_axis_to_include must be provided"
-    compare_only_a_sample = True
+    if np.any(tensor.shape[number_axis_to_include:]) > 15:
+        reduction = 5
+    else:
+        reduction = 2
     
-    tensor = return_grid_samples_of_tensors(tensor, number_axis_to_include, reduction=5) if compare_only_a_sample else tensor
     
+    if threshold is None:
+        threshold = np.mean(np.abs(tensor))*threshold_multiplier
+    if compare_only_a_sample:
+        rounding_decimals = 10 #when only comparing a sample the smaller differences matter more
+
+    tensor = return_grid_samples_of_tensors(tensor, number_axis_to_include, reduction=reduction) if compare_only_a_sample else tensor
+
     def is_similar_max_diff(a, b, threshold):
         return np.max(np.abs(a - b)) < threshold
     def conjugated_is_similar(a, b, threshold):
@@ -290,14 +316,21 @@ def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=1e-2, u
         for item in sym_class:
             if isinstance(item, tuple):
                 tensor_of_symm_class_index[*item]=sym_class_index
-                
-    for sym in symmetries:
-        sym.insert(0, f"mean abs value: {np.mean(np.abs(tensor[sym[0]]))}")
-    for sym_idx,sym in enumerate(conj_symmetries):
-        if len(sym)>0:
-            sym.insert(0, (f"conjugated indices",sym_idx))
+    if give_mean_abs_value: 
+        for sym in symmetries:
+            sym.insert(0, f"mean abs value: {np.mean(np.abs(tensor[sym[0]]))}")
+        for sym_idx,sym in enumerate(conj_symmetries):
+            if len(sym)>0:
+                sym.insert(0, (f"conjugated indices",sym_idx))
     result = symmetries + conj_symmetries if return_conjugated_symmetries else symmetries
     return result, tensor_of_symm_class_index
+
+def turn_symmetry_list_into_array(symmetry_list, shape_indices):
+    symmetry_array = np.zeros((len(symmetry_list), *shape_indices), dtype=object)
+    for i, sym in enumerate(symmetry_list):
+        for indices in sym:
+            symmetry_array[i, *indices] = 1
+    return symmetry_array
 
 def give_symmetries_of_tensors_fast(
     tensor,
@@ -315,7 +348,7 @@ def give_symmetries_of_tensors_fast(
     We flatten each subtensor (the remaining axes) to a 1D row, build a canonical
     byte key per row (and its conjugate), and group by identical keys via np.unique.
     """
-
+    assert False, "Not in use (not faster than previous implementation)"
     assert number_axis_to_include is not None
     lead_shape = tensor.shape[:number_axis_to_include]
     tail_shape = tensor.shape[number_axis_to_include:]
@@ -917,7 +950,18 @@ def plot_3d_grid_slider(grid,
     
     return fig
     
-
+# def plot_vectors_3d(vectors, title="Debug vector plot", xlabel="X-axis", ylabel="Y-axis"):
+#     """plots a list of 3D vectors"""
+#     fig = plt.figure(title)
+#     ax = fig.add_subplot(111)
+#     for vec in vectors:
+#         ax.plot([0, vec[0]], [0, vec[1]], marker='o')
+#     ax.set_xlabel(xlabel)
+#     ax.set_ylabel(ylabel)
+#     ax.set_title(title)
+#     ax.grid(True)
+#     plt.show()
+#     return fig
 
 def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
               xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True):
@@ -1328,9 +1372,83 @@ def path_through_grid_from_relative_points(relative_points, q_grid:np.ndarray):
         directions.append(direction // divisor)
         steps.append(divisor)
     return startpoint, directions, steps
-        
-        
-        
+
+
+# def path_through_grid_interpolated(grid, relative_grid_points, steps, dimension=None,material=None, config:Config=None ):
+#     from scipy.interpolate import RegularGridInterpolator
+#     """
+#     Takes relative_grid_points and total_steps and returns an interpolated path through the grid.
+#     """
+#     assert grid.ndim == 3, "Grid must be 3D (kx, ky, kz) for interpolation. Current shape: {}".format(grid.shape)
+#     nx,ny,nz = grid.shape
+#     x = np.arange(nx)
+#     y = np.arange(ny)
+#     z = np.arange(nz)
+#     all_relative_grid_points = np.zeros((0,3))
+#     steps = np.linspace(0, 1, steps)
+#     for i in range(1,len(relative_grid_points)):
+#         all_relative_grid_points = np.concatenate((all_relative_grid_points,np.einsum("i,j->ij",steps,relative_grid_points[i])))
+
+#     interp = RegularGridInterpolator((x, y, z), grid, method='linear')
+#     path_coords = np.column_stack([
+#     all_relative_grid_points[:, 0] * (x[-1] - x[0]) + x[0],
+#     all_relative_grid_points[:, 1] * (y[-1] - y[0]) + y[0],
+#     all_relative_grid_points[:, 2] * (z[-1] - z[0]) + z[0],
+#     ])
+#     values_on_path = interp(path_coords)
+    
+#     return values_on_path
+
+def path_through_grid_interpolated(grid, relative_grid_points, steps):
+    from scipy.interpolate import RegularGridInterpolator
+    from scipy.ndimage import map_coordinates
+    """takes a grid of shape (..., X, Y, Z) and relative_grid_points of shape (N, 3) and steps and returns an interpolated path through the grids (...,N)."""
+
+    # grid.shape = (A, B, ..., X, Y, Z)
+    grids_shape = grid.shape[:-3]
+    nx, ny, nz = grid.shape[-3:]
+
+    # Axes
+    x = np.arange(nx)
+    y = np.arange(ny)
+    z = np.arange(nz)
+
+    # ---- Build the interpolated path (same as your code) ----
+    steps_lin = np.linspace(0, 1, steps)
+    if steps == 1:
+        all_rel = relative_grid_points
+    else:
+        all_rel = np.concatenate([
+            np.einsum("i,j->ij", steps_lin, relative_grid_points[i])
+        for i in range(1, len(relative_grid_points))
+    ])
+    path_coords = np.column_stack([
+        all_rel[:, 0] * (nx - 1),
+        all_rel[:, 1] * (ny - 1),
+        all_rel[:, 2] * (nz - 1),
+    ])
+
+    # ---- Prepare grid for vectorized interpolation ----
+    # grid_flat: (batch, nx, ny, nz)
+    batch = np.prod(grids_shape)
+    grid_flat = grid.reshape(batch, nx, ny, nz)
+
+    # Move batch dim to last: (nx, ny, nz, batch)
+    grid_for_interp = np.moveaxis(grid_flat, 0, -1)
+
+    # Create vectorized interpolator
+    # interp = RegularGridInterpolator((x, y, z), grid_for_interp, method="linear", )
+    vals = np.empty((batch, path_coords.shape[0])) 
+    for b in range(batch):
+        #use map_coordinates to have wrapping around the grid
+        vals[b] = map_coordinates(grid_flat[b], path_coords.T, order=1, mode='wrap')
+
+    # Interpolate -> (num_steps_total, batch)
+    #vals = interp(path_coords)
+
+    # Reshape back
+    return vals.reshape(grids_shape + (path_coords.shape[0],))
+
 
 def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relative_grid_points = None, startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, material=None, no_w_values=False):
     """
@@ -1806,6 +1924,9 @@ def save_figures_as_images_to_pdf(
     material= None
 ):
     from matplotlib.backends.backend_pdf import PdfPages
+    from Material import Material
+    
+    material:Material = material  # type hint
     
     material_description = f"{material.name}" if material is not None else "Material Description Not Provided"
     for fig in figures:
@@ -1844,7 +1965,7 @@ def save_figures_as_images_to_pdf(
             plt.tight_layout(rect=[0, 0, 1, 0.95])
             pdf.savefig(fig)
             plt.close(fig)
-        if material.sqw_4_symmetries is not None:
+        if config.use_explicit_calc_of_sqw:
             info_str = "sqw 4 symmetries \n"
             for sym in material.sqw_4_symmetries:
                 info_str += f"{sym}\n"
@@ -2128,7 +2249,7 @@ def decreasing_step_spacing(start: np.ndarray, end: np.ndarray, num_points: int,
         series = np.concatenate((series, np.flip(series_other_side)), axis=0)
     return series
 
-def give_grid_vectors_d(vectors, steps, amount_BZ=1):
+def give_grid_vectors_d(vectors:np.ndarray, steps:List[int], amount_BZ=1):
     """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with the corresponding number of steps."""
     if amount_BZ != 1:
         vectors = [v * amount_BZ for v in vectors]

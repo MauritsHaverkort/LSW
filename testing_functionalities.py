@@ -564,6 +564,61 @@ def normalisation_plotting():
     plt.tight_layout()
     plt.show()
 
+def plt_factor_x_point_to_max_angle():
+    def factor_x_point_to_max_angle(E, lattice_constant = 4.17e-10, #lattice constant in m
+                        hbar = 6.582e-16, #hbar in eV*s
+                        c= 2.992792e8 ):
+        return E*lattice_constant/(hbar*c*np.pi)
+    plt.plot(np.linspace(855,865,100),factor_x_point_to_max_angle(np.linspace(855,865,100)))
+    plt.xlabel("incident Energy (eV)")
+    plt.ylabel("maximal fraction of the Brillouin zone reachable")
+    plt.show()
+    
+def test_interpolation_path():
+    grid = np.random.rand(30, 30, 1)
+    
+    relative_path_points = np.array([[0, 0, 0], [1/3, 0, 0], [1/3, 1/5, 0]])
+
+    interpolated_values = functions.path_through_grid_interpolated(grid, relative_path_points, steps=100)
+    plt.plot(interpolated_values)
+    plt.show()
+    
+def test_plot():
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # Example: fake data
+    Nk  = 100      # number of momentum points
+    NE  = 500      # number of energy points
+    energy = np.linspace(0, 0.8, NE)
+
+    # Replace this with your real data
+    data = np.exp(-(energy[None,:]-0.15)**2/0.002) * (1 + 0.3*np.random.rand(Nk, NE))
+    data += 0.1*np.exp(-(energy[None,:]-0.45)**2/0.01)
+
+    # scaling for vertical offsets
+    offset = 1.0
+
+    fig, ax = plt.subplots(figsize=(6,6))
+
+    # optional colormap
+    colors = plt.cm.viridis(np.linspace(0, 1, Nk))
+
+    for i in range(Nk):
+        ax.plot(
+            energy,
+            data[i] + i * offset,      # <-- important: offset each curve
+            color=colors[i],
+            linewidth=0.8
+        )
+
+    ax.set_xlabel("Energy loss (eV)")
+    ax.set_ylabel("Momentum index")
+    ax.set_title("RIXS-like stacked magnon spectra")
+
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -579,4 +634,7 @@ if __name__ == "__main__":
     # test_sympy()
     # test_eig()
     # print(test_integration())
-    normalisation_plotting()
+    # normalisation_plotting()
+    # plt_factor_x_point_to_max_angle()
+    # test_interpolation_path()
+    test_plot()

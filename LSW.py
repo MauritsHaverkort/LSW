@@ -126,8 +126,9 @@ def call_main():
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=-1, J2=0, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
-
+            # Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            Examples.NiO_supercell(config)
+            
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
             
@@ -196,8 +197,8 @@ def main(config: Config, material: Material):
     assert material is not None, "Material has to be given "
                 
     #tryout RIXS (loaded grid)
-    if False:
-        calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= None, sqw_4_xyz= None, sqw_2_xyz= None)
+    if True:
+        calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(config, material, q_values= None, sqw_4_xyz= None, sqw_2_xyz= None)
                     
 
     draw_atoms_new_bond_system(material=material, DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=True)
@@ -209,6 +210,7 @@ def main(config: Config, material: Material):
     q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], grid_fineness[:dimension] , amount_BZ = config.amount_BZ)
     
     config.additional_values["q_grid"] = q_values
+    material.q_values = q_values
     
 
     
@@ -224,17 +226,32 @@ def main(config: Config, material: Material):
             material=material,
         )
     config.debug_timer.print_difference("calculated/ loaded T (pref) grid", config.debug_timing)
+    material.w_values = w_values
 
     # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values_along_path= None, sqw_4_xyz_along_path= None)
     
     sqw_2_xyz, sqw_4_xyz, q_values = calculate_sqw_spectra(config, q_values_grid=q_values, w_values=w_values, material=material, energy_dependent_part=energy_dependent_part, T=T, eigvalue_grid=eigvalue_grid, eigvalues_deriv=eigvalues_deriv, T_deriv=T_deriv)
     if config.save_grid_to_file:
         np.savez(f"outputs/sqw_intensities/results{config.timestamp}.npz", sqw_2_xyz=sqw_2_xyz, sqw_4_xyz=sqw_4_xyz, q_values=q_values, w_values=w_values)
-
+        np.savez(f"outputs/sqw_intensities/results_coeff{config.timestamp}.npz", 
+                 energies=material.energies,
+                 T=material.T,
+                 phase_factor=material.phase_factor,
+                 sqw_2_ad_a_sym_class=material.sqw_2_ad_a_sym_class,
+                 conv_sqw_2_ad_a_sym_classes=material.conv_sqw_2_ad_a_sym_classes,
+                 coeff_sym_classes_tioju_4=material.coeff_sym_classes_tioju_4,
+                 coeff_sym_class_tioju_2=material.coeff_sym_class_tioju_2,
+                 coeff_tioju_xyz_2=material.coeff_tioju_xyz_2,
+                 coeff_tioju_xyz_4=material.coeff_tioju_xyz_4,
+                 coeff_prime_to_lab_2=material.coeff_prime_to_lab_2,
+                 coeff_prime_to_lab_4=material.coeff_prime_to_lab_4,
+                 coeff_xyz_rixs_2=material.coeff_xyz_rixs_2,
+                 coeff_xyz_rixs_4=material.coeff_xyz_rixs)
     config.debug_timer.print_difference("done with computing sqw_4 and sqw_2", config.debug_timing)
     
-    # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz)
+    calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz, sqw_2_xyz= sqw_2_xyz)
     
+    symmetry_checks(config, material)
     
     functions.save_config_to_json(config)
 
@@ -922,7 +939,7 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
     
     sqw_xyz_coeff_of_ad_a = create_coeff_matrix(order_of_xyz_operator=order_of_xyz_operator)
     
-    temp_result_list = []
+   
 
     #debugging to see if the 4-operator coefficients are the same as the product of two 2-operator coefficients
     # !!!shouldnt work!!! see ON 14.10.
@@ -957,13 +974,22 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
     # elif order_of_a_operator == 4:
 
     #should depend only on the order of the xyz operator 
-    if order_of_xyz_operator == 2:
-        sqw_xyz = np.einsum('abioju,tioju... -> tab...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
-    elif order_of_xyz_operator == 4:
-        sqw_xyz = np.einsum('abgdioju,tioju... -> tabgd...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
-    if debug_timing:
-        config.debug_timer.print_difference("multiplying coefficients with the sqw_ad_a", True)
-    config.additional_values["sqw_xyz_coeff_of_ad_a"] = sqw_xyz_coeff_of_ad_a
+    if config.use_explicit_calc_of_sqw:
+        if order_of_xyz_operator == 2:
+            sqw_xyz = np.einsum('abioju,tioju... -> tab...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
+        elif order_of_xyz_operator == 4:
+            sqw_xyz = np.einsum('abgdioju,tioju... -> tabgd...', sqw_xyz_coeff_of_ad_a, sqw_prime_a_ad, optimize=True)
+        if debug_timing:
+            config.debug_timer.print_difference("multiplying coefficients with the sqw_ad_a", True)
+        config.additional_values["sqw_xyz_coeff_of_ad_a"] = sqw_xyz_coeff_of_ad_a
+    else:
+        sqw_xyz = None
+
+    if order_of_a_operator == 2 and order_of_xyz_operator == 4:
+        material.coeff_tioju_xyz_2 = sqw_xyz_coeff_of_ad_a
+    elif order_of_a_operator == 4 and order_of_xyz_operator == 4:
+        material.coeff_tioju_xyz_4 = sqw_xyz_coeff_of_ad_a
+
     return sqw_xyz
 
 def flip_sqw_prime_ad_a(sqw_prime_a_ad, order_of_operator, material, config):
@@ -1145,10 +1171,10 @@ def give_phase_factor(material: Material, config:Config, q_values:np.ndarray):
             
             exp_minus_i_rj_q = material.e_minus_ikd(pos_j,q_values)
             prefactor = np.sqrt(np.abs(si * s_j)) * np.conj(exp_minus_i_ri_q) * exp_minus_i_rj_q
-            prefactor_tensor[:, :, :, i, j] = prefactor
-            prefactor_tensor[:, :, :, i+N, j] = prefactor
-            prefactor_tensor[:, :, :, i, j+N] = prefactor
-            prefactor_tensor[:, :, :, i+N, j+N] = prefactor
+            prefactor_tensor[..., i, j] = prefactor
+            prefactor_tensor[..., i+N, j] = prefactor
+            prefactor_tensor[..., i, j+N] = prefactor
+            prefactor_tensor[..., i+N, j+N] = prefactor
     return prefactor_tensor
 
 def create_form_factor_matrix(material: Material, config:Config, q_values:np.ndarray):
@@ -1351,6 +1377,7 @@ def calculate_sqw_spectra(
         sqw_prime_of_a_ad = flip_sqw_prime_ad_a(sqw_prime_of_a_ad, order_of_operator=2, material=material, config=config)
         sqw_prime_of_a_ad_without_k_pref_with_w = flip_sqw_prime_ad_a(sqw_prime_of_a_ad_without_k_pref_with_w, order_of_operator=2, material=material, config=config)
         
+        
         # constructing my four particle dependent Sqw'
         sqw_prime_4_ad_a = np.zeros((config.amount_tau_values,material.N,4, material.N,4, 2*config.amount_w_values, *k_shape), dtype=config.dtype_complex)
         sqw_prime_2_ad_a = np.zeros((config.amount_tau_values,material.N,2, material.N,2, config.amount_w_values, *k_shape), dtype=config.dtype_complex)
@@ -1374,23 +1401,52 @@ def calculate_sqw_spectra(
             sqw_prime_2_ad_a = material.transform_basis_i_order_i_to_n1_n2(sqw_prime_of_a_ad, axis_to_skip=1, backtransform=True)
             config.debug_timer.print_difference("done transform_basis_i_order_i_to_n1_n2", config.debug_timing)
             #------------------------------------------------------------------------------------------------------------
-            
-            def experimental_k_dependent_prefactor_on_extended_grid(sqw_prime_grid, extension = 1, q_values=None):
-                    """computes the k-dependent prefactor on a bigger grid (extended BZ and grid_fineness) repeats the sqw_elements and multiplies with the phase factor"""
-                    
-                    extension_factor_tuple = (extension,)*material.dimension+(1,)*(3-material.dimension)
-                    sqw_prime_grid_extended = np.tile(sqw_prime_grid, (1,1,1,1,1,1,)+extension_factor_tuple)
-                    lv = material.lattice_vectors
-                    grid_fineness = config.amount_k_values*np.array(extension_factor_tuple) #elementwise multiplication
-                    dimension = material.dimension
-                    if q_values is None:
-                        q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], list(grid_fineness[:dimension]) , amount_BZ = config.amount_BZ*extension)
+            #search for symmetries in the sqw'_ad_a --> only save once per symmetry class
+            symmety_list_ad_a_2, index_of_symmetries_ad_a_2  = functions.give_symmetries_of_tensors(sqw_prime_2_ad_a,number_axis_to_include=5, return_conjugated_symmetries=False, give_mean_abs_value=False)
+            material.sqw_2_ad_a_sym_class = np.zeros((len(symmety_list_ad_a_2), *sqw_prime_2_ad_a.shape[5:]), dtype=np.complex128)
 
-                    phase_factor = give_phase_factor(material=material, config=config, q_values=q_values)
-                    sqw_prime_grid_extended = np.einsum('tiojuw...,...ij->tiojuw...',sqw_prime_grid_extended, phase_factor[:,:,:,:material.N,:material.N], optimize='optimal')
-                    return sqw_prime_grid_extended, q_values
+
+            #functions.test_symmetries_sqw_4(*functions.give_symmetries_of_tensors(sqw_prime_2_ad_a[0],number_axis_to_include=4, return_conjugated_symmetries=False, give_mean_abs_value=False),material)
+            shape_tioju = sqw_prime_2_ad_a.shape[0:5]
+            for i,sym in enumerate(symmety_list_ad_a_2):
+                material.sqw_2_ad_a_sym_class[i] = sqw_prime_2_ad_a[tuple(sym[0])]
+            material.coeff_sym_class_tioju_2 = functions.turn_symmetry_list_into_array(symmety_list_ad_a_2, shape_indices= sqw_prime_2_ad_a.shape[0:5])
+
+            def give_phase_factor_on_extended_grid(extension = 1, q_values=None):
+                extension_factor_tuple = (extension,)*material.dimension+(1,)*(3-material.dimension)
+                lv = material.lattice_vectors
+                grid_fineness = config.amount_k_values*np.array(extension_factor_tuple) #elementwise multiplication
+                dimension = material.dimension
+                if q_values is None:
+                    q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], list(grid_fineness[:dimension]) , amount_BZ = config.amount_BZ*extension)
+
+                phase_factor = give_phase_factor(material=material, config=config, q_values=q_values)
+                return phase_factor, q_values
+            def experimental_k_dependent_prefactor_on_extended_grid(sqw_prime_grid, extension = 1, q_values=None):
+                """computes the k-dependent prefactor on a bigger grid (extended BZ and grid_fineness) repeats the sqw_elements and multiplies with the phase factor"""
+                extension_factor_tuple = (extension,)*material.dimension+(1,)*(3-material.dimension)
+                sqw_prime_grid_extended = np.tile(sqw_prime_grid, (1,1,1,1,1,1,)+extension_factor_tuple)
+
+                phase_factor, q_values = give_phase_factor_on_extended_grid(extension=extension, q_values=q_values)
+                sqw_prime_grid_extended = np.einsum('tiojuw...,...ij->tiojuw...',sqw_prime_grid_extended, phase_factor[:,:,:,:material.N,:material.N], optimize='optimal')
+                return sqw_prime_grid_extended, q_values
+            
+            
             
             if config.calc_conv_intensities:
+                
+                len_sym_classes = len(material.coeff_sym_class_tioju_2)
+                shape_w_k = material.sqw_2_ad_a_sym_class.shape[1:]
+                convoluted_grids_symmetry_classes = []
+                for s1 in range(material.coeff_sym_class_tioju_2.shape[0]):
+                    convoluted_grids_symmetry_classes.append([])
+                    for s2 in range(material.coeff_sym_class_tioju_2.shape[0]):
+                        convoluted_grids_symmetry_classes[-1].append(functions.convolute_grids_fft(
+                            material.sqw_2_ad_a_sym_class[s1], material.sqw_2_ad_a_sym_class[s2], dimension=material.dimension))
+
+                material.conv_sqw_2_ad_a_sym_classes = np.array(convoluted_grids_symmetry_classes)
+                
+                coeff_sym_classes_tioju_4 = np.zeros((len_sym_classes, len_sym_classes, config.amount_tau_values,material.N,4, material.N,4,),dtype=np.complex128)
                 for t in range(config.amount_tau_values):
                     for i in range(material.N):
                         for j in range(material.N):
@@ -1400,29 +1456,54 @@ def calculate_sqw_spectra(
                                     #     sqw_prime_2_ad_a[t,i,is_ad_1,i,is_ad_2], 
                                     #     sqw_prime_2_ad_a[t,j,is_ad_3,j,is_ad_4], dimension=material.dimension)
                                     # config.warnings.add("using fft convolution new for testing")
-                                    
-                                    temp_1 = functions.convolute_grids_fft(
-                                    sqw_prime_2_ad_a[t,i,is_ad_1,j,is_ad_3], 
-                                    sqw_prime_2_ad_a[t,i,is_ad_2,j,is_ad_4], dimension=material.dimension)
-                                    temp_2 = functions.convolute_grids_fft(
-                                    sqw_prime_2_ad_a[t,i,is_ad_1,j,is_ad_4], 
-                                    sqw_prime_2_ad_a[t,i,is_ad_2,j,is_ad_3], dimension=material.dimension)
-                                    if np.max(temp_1 - temp_2) > 1e-5:
-                                        config.warnings.add(f"convolution order matters")
-                                    sqw_prime_4_ad_a[t,i,order_idx,j,order_idx2] = temp_1 + temp_2
-                                    
+                                    s1 = index_of_symmetries_ad_a_2[t,i,is_ad_1,j,is_ad_3]
+                                    s2 = index_of_symmetries_ad_a_2[t,i,is_ad_2,j,is_ad_4]
+                                    coeff_sym_classes_tioju_4[s1, s2, t,i,order_idx,j,order_idx2] += 1
+                                    s1 = index_of_symmetries_ad_a_2[t,i,is_ad_1,j,is_ad_4]
+                                    s2 = index_of_symmetries_ad_a_2[t,i,is_ad_2,j,is_ad_3]
+                                    coeff_sym_classes_tioju_4[s1, s2, t,i,order_idx,j,order_idx2] += 1
+
+                                    if config.use_explicit_calc_of_sqw:
+                                        temp_1 = functions.convolute_grids_fft(
+                                        sqw_prime_2_ad_a[t,i,is_ad_1,j,is_ad_3], 
+                                        sqw_prime_2_ad_a[t,i,is_ad_2,j,is_ad_4], dimension=material.dimension)
+                                        temp_2 = functions.convolute_grids_fft(
+                                        sqw_prime_2_ad_a[t,i,is_ad_1,j,is_ad_4], 
+                                        sqw_prime_2_ad_a[t,i,is_ad_2,j,is_ad_3], dimension=material.dimension)
+                                        if np.max(temp_1 - temp_2) > 1e-5:
+                                            config.warnings.add(f"convolution order matters")
+                                        sqw_prime_4_ad_a[t,i,order_idx,j,order_idx2] = temp_1 + temp_2
+                                        
                                     #temp = sqw_prime_four_ad_a[t,i,order_idx,j,order_idx2]
                                     # if np.max(np.abs(temp)) > 1e-5: #and np.min(temp) >= 0:
                                     #     results_debug.append(temp)
                                     #     names_debug.append(f"sqw_prime_four_ad_a_{t}_{i}_{order_idx}_{j}_{order_idx2}")
                 #functions.give_symmetries_of_tensors(sqw_prime_4_ad_a, number_axis_to_include=5)
+                
+                material.coeff_sym_classes_tioju_4 = coeff_sym_classes_tioju_4
+                
+                if config.debug_Sa_ad and config.use_explicit_calc_of_sqw:
+                    temp = np.einsum("rs...,rstioju ->tioju...", material.conv_sqw_2_ad_a_sym_classes , coeff_sym_classes_tioju_4)
+                    assert np.max(np.abs(temp - sqw_prime_4_ad_a)) < 1e-6, "experimental convolution with symmetry classes not matching direct convolution"
+                else:
+                    sqw_prime_4_ad_a = np.einsum("rs...,rstioju ->tioju...", material.conv_sqw_2_ad_a_sym_classes , coeff_sym_classes_tioju_4)
+                    
                 config.debug_timer.print_difference("done with all convolutions of a and ad", config.debug_timing)
                 
                 
                 #adding the k-dependent prefactor again AFTER the convolutions
                 if compute_without_k_pref:
                     if config.experimental_plots_on_extended_grid:
-                        sqw_prime_4_ad_a,q_values_extended = experimental_k_dependent_prefactor_on_extended_grid(sqw_prime_4_ad_a, extension=material.extension)
+                        phase_factor, q_values_extended = give_phase_factor_on_extended_grid(extension=material.extension)
+                        material.phase_factor = phase_factor
+                        if config.use_explicit_calc_of_sqw:
+                            extension_factor_tuple = (material.extension,)*material.dimension+(1,)*(3-material.dimension)
+                            temp_sqw_conv = np.tile(material.conv_sqw_2_ad_a_sym_classes, (1,1,1,)+extension_factor_tuple)
+                            sqw_prime_4_ad_a_comp =np.einsum("rsw...,...ij,rstioju ->tiojuw...", temp_sqw_conv , phase_factor[...,:material.N,:material.N], coeff_sym_classes_tioju_4)
+                            
+                            sqw_prime_4_ad_a,q_values_extended = experimental_k_dependent_prefactor_on_extended_grid(sqw_prime_4_ad_a, extension=material.extension)
+                            assert np.max(np.abs(sqw_prime_4_ad_a - sqw_prime_4_ad_a_comp)) < 1e-6, "experimental sqw'_4 with k prefactor not matching with explicit calculation"
+                        
                         # sqw_prime_2_ad_a,q_values_extended = experimental_k_dependent_prefactor_on_extended_grid(sqw_prime_2_ad_a, extension=material.extension, q_values=q_values_extended)
                         # q_values_grid = q_values_extended
                     else:
@@ -1459,11 +1540,23 @@ def calculate_sqw_spectra(
 
                 
                 sqw_prime_4_of_xyz_4 = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=sqw_prime_4_ad_a, material=material, config=config)
+                if config.use_explicit_calc_of_sqw and False:
+                    extension_factor_tuple = (material.extension,)*material.dimension+(1,)*(3-material.dimension)
+                    temp_sqw_conv = np.tile(material.conv_sqw_2_ad_a_sym_classes, (1,1,1,)+extension_factor_tuple) #rswK
+                    #np.einsum("tioju...,iojuabcd->tabcd", sqw_prime_4_ad_a, material.coeff_tioju_xyz_4)
+                    sqw_prime_4_of_xyz_4_comp = np.einsum("rstioju,...ij,abcdioju,rsw...->abcdw..."
+                                         ,material.coeff_sym_classes_tioju_4
+                                         ,material.phase_factor[...,:material.N,:material.N]
+                                         ,material.coeff_tioju_xyz_4
+                                         ,temp_sqw_conv
+                                         ,optimize='optimal')
+                    assert np.max(np.abs(sqw_prime_4_of_xyz_4[0] - sqw_prime_4_of_xyz_4_comp)) < 1e-3, "experimental sqw'_4 from a_ad to xyz not matching with explicit calculation"
+                
                 # sqw_prime_4_of_xyz_2 = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=sqw_prime_4_ad_a, material=material, config=config, order_of_xyz_operator=4, order_of_a_operator=2)
-
-                for t in range(config.amount_tau_values):
-                    results.append(sqw_prime_4_of_xyz_4[t,0,0,0,0])
-                    names_plots.append(f"sqw_prime_four_xyz_xx_xx_t:{t}")
+                if config.use_explicit_calc_of_sqw:
+                    for t in range(config.amount_tau_values):
+                        results.append(sqw_prime_4_of_xyz_4[t,0,0,0,0])
+                        names_plots.append(f"sqw_prime_four_xyz_xx_xx_t:{t}")
                 config.debug_timer.print_difference("done with transforming from a_ad to xyz", config.debug_timing)
                 
                 sqw_4_xyz, sqw_4_components = sqw_prime_to_sqw(config=config, material=material, sqw_prime=sqw_prime_4_of_xyz_4)
@@ -1603,7 +1696,7 @@ def calculate_sqw_spectra(
     config.debug_timer.print_difference("done sqw' to sqw", config.debug_timing)
 
 
-    if np.all(material.tau == np.array([0, 0, 0])):
+    if np.all(material.tau == np.array([0, 0, 0])) and config.use_explicit_calc_of_sqw:
         assert np.max(np.abs(sqw_2_xyz- sqw_prime_2_xyz[0])) < 1e-5, "for tau = 0 the sqw should be the same as the sqw_prime_2_xyz"
     #symmetrising the result (eq 38)
     #------------------------------------------------------------------------------------------------------------------------------
@@ -1627,406 +1720,408 @@ def calculate_sqw_spectra(
         return sqw_symmetrised
     sqw_2_xyz = symmetrise_sqw(sqw_2_xyz, material)
 
-    #------------------------------normalisation to total sum rule--------------------------------------------------------------
-    if config.normalise_to_sum_rule:
-        sqw_2_xyz, sqw_4_xyz = normalise_to_total_sum_rule(sqw_2=sqw_2_xyz,sqw_4=sqw_4_xyz, material=material, config=config)
-        config.debug_timer.print_difference("done normalising to sum rule", config.debug_timing)
+    # all the intermediate plots (xyz etc. are only plotted if explicitly calculated)
+    if config.use_explicit_calc_of_sqw:
+        #------------------------------normalisation to total sum rule--------------------------------------------------------------
+        if config.normalise_to_sum_rule:
+            sqw_2_xyz, sqw_4_xyz = normalise_to_total_sum_rule(sqw_2=sqw_2_xyz,sqw_4=sqw_4_xyz, material=material, config=config)
+            config.debug_timer.print_difference("done normalising to sum rule", config.debug_timing)
 
-    #print normalisation
-    print_normalisation(config=config, sqw_2=sqw_2_xyz, sqw_4=sqw_4_xyz)
-    
-    #construct only the intensities (for testing)
-    #--------------------------------------------------------------------------------------------------------------------------------
-    if config.debug_Sa_ad:
-        #summing over eigenvectors
-        sqw_intensities = (1/sqw_prime_of_a_ad_k.shape[-1]) * np.einsum('tcd...l,l->tcd...',sqw_prime_of_a_ad_k, extraction_only_creation_operator)
+        #print normalisation
+        print_normalisation(config=config, sqw_2=sqw_2_xyz, sqw_4=sqw_4_xyz)
         
-        #deal with divergencies
-        sqw_intensities = deal_with_divergencies(residues=sqw_intensities, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
-        #plot in between
-        functions.plot_sqw_ad_a_intensities(material=material, config=config, sqw_intensities=sqw_intensities, VALUES_TO_SAVE=VALUES_TO_SAVE, q_values_grid=q_values_grid)
-        
-        #transforming to xyz
-        sqw_intensities = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=material.transform_basis_i_order_i_to_n1_n2(sqw_intensities, axis_to_skip=1, backtransform=True)
-                , material=material, config=config, order_of_a_operator=2, order_of_xyz_operator=2)
-        #transforming to sqw from sqw'
-        sqw_intensities, sqw_components = sqw_prime_to_sqw(config, sqw_intensities, material=material)
-        #symmetrising
-        sqw_intensities = symmetrise_sqw(sqw_intensities, material)
-        # Save sqw_intensities to file
-        #np.savez(f"outputs/sqw_intensities/{material.name}_sqw_intensities.npz", sqw_intensities=sqw_intensities)
-
-        #sqw_intensities = scipy.ndimage.zoom(sqw_intensities, zoom=(1,1,2,2,1), order=1)
-
-        config.debug_timer.print_difference("done calculating the intensities of sqw (repeat all without energy part)", config.debug_timing)
-
-        #adding just the convolution of the xx component with itself for direct comparison --> doesnt work with the supercell
-        results.append(functions.convolute_grids_fft(sqw_2_xyz[0,0],sqw_2_xyz[0,0], dimension=material.dimension))
-        names_plots.append(f"sqw_2_xyz_symmetrised_xx_convoluted_with_itself")
-    ########################################################################################################################
-    ########################################################################################################################
-    ################################                          PLOTTING                                ######################
-    ########################################################################################################################
-    ########################################################################################################################
-    #
-    #decide what should be plotted
-    #-----------------------------------------------------------------
-
-    for sqw_components_idx, (alpha,beta) in enumerate(material.return_spatial_indices(2)):#enumerate([[0,0]]):
-    #for sqw_components_idx, (n1,n2) in enumerate([[0,0]]):
-        #for i in range(1):
-        if False: #if I want the individual terms 
-            for i in range(material.N, 2*material.N):
-                #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
-                term = sqw_2_xyz[alpha, beta,:, :, :, :, i]
-                if np.any(term >= 10e-5):
-                    results.append(term)
-                    names_plots.append(f"S_{alpha}_{beta}_N={i} from paper 4")
-                #else: 
-                    #config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
-        term = sqw_2_xyz[alpha, beta]
-        if np.any(abs(term) >= 1e-5) and np.mean(abs(term)) > 1e-5:
-            results.append(term)
-            names_plots.append(f"S_{alpha}_{beta}_N=summed from paper 4")
-        # term = sqw_intensities[alpha, beta]
-        # if np.any(term >= 1e-5) and np.mean(abs(term)) > 1e-5:
-        #     results_debug.append(term)
-        #     names_debug.append(f"S_{alpha}_{beta}_divided by energy part")
-    #------------------------tests and debugging plots------------------------
-    # if np.max(np.imag(T)) > 10e-5:
-    #     config.warnings.add(f"Warning: Some T components have significant imaginary parts of {np.max(np.imag(T))}.")
-    # if np.max(T-T_herm_conj) > 10e-5:
-    #     config.warnings.add(f"Warning: Some T components have significant differences between T and its hermitian conjugate of {np.max(T-T_herm_conj)}.")
-    # if np.max(np.imag(mat_form_factors_without_k_prefactor)) > 10e-5:
-    #     config.warnings.add(f"Warning: Some mat_form_factors_without_k_prefactor components have significant imaginary parts of {np.max(np.imag(mat_form_factors_without_k_prefactor))}.")
-    # if config.use_my_calculation_TT_switched and not config.use_calc_of_S_a_ad:
-    #     temp = np.sum(sqw_prime_comp,axis=-1)-np.sum(sqw_prime_k, axis=-1)
-    #     if np.max(temp) > 10e-5:
-    #         config.warnings.add(f":--------------FOUND DIFFERENCE------------: \nSome sqw_prime components have significant differences between the two calculations of T^+ T switched and form factor matrix complex conjugated. biggest difference: {np.round(np.max(temp), 5)}, mean : {np.round(np.mean(temp), 5)}")
-
-    #sqw_4 plots on extended grid
-    if config.experimental_plots_on_extended_grid and config.calc_conv_intensities:
-        
-        if config.plot_only_once_per_symmetry_class:
-            config.debug_timer.print_difference("before searching for symmetries in sqw 4", config.debug_timing)
-            symmetries, tensor_of_symm_class_index = functions.give_symmetries_of_tensors(sqw_4_xyz, 4, threshold=1e-2, return_conjugated_symmetries=False)
-            material.sqw_4_symmetries = symmetries
-            indices_to_plot = [x[1] for x in symmetries]  #1 since first index is the information about the symmetry
-            config.debug_timer.print_difference("after searching for symmetries in sqw 4", config.debug_timing)
+        #construct only the intensities (for testing)
+        #--------------------------------------------------------------------------------------------------------------------------------
+        if config.debug_Sa_ad:
+            #summing over eigenvectors
+            sqw_intensities = (1/sqw_prime_of_a_ad_k.shape[-1]) * np.einsum('tcd...l,l->tcd...',sqw_prime_of_a_ad_k, extraction_only_creation_operator)
             
-        else:
-            indices_to_plot = material.return_spatial_indices(4)      
-        #no reduction here right now --> done in the material
-        relative_grid_points_reduced = [x * 1 for x in material.relative_grid_points_path]
-        for idx in indices_to_plot:
-            term = sqw_4_xyz[*idx]
-            if np.max(np.abs(term)) > 1e-5:
+            #deal with divergencies
+            sqw_intensities = deal_with_divergencies(residues=sqw_intensities, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
+            #plot in between
+            functions.plot_sqw_ad_a_intensities(material=material, config=config, sqw_intensities=sqw_intensities, VALUES_TO_SAVE=VALUES_TO_SAVE, q_values_grid=q_values_grid)
+            
+            #transforming to xyz
+            sqw_intensities = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=material.transform_basis_i_order_i_to_n1_n2(sqw_intensities, axis_to_skip=1, backtransform=True)
+                    , material=material, config=config, order_of_a_operator=2, order_of_xyz_operator=2)
+            #transforming to sqw from sqw'
+            sqw_intensities, sqw_components = sqw_prime_to_sqw(config, sqw_intensities, material=material)
+            #symmetrising
+            sqw_intensities = symmetrise_sqw(sqw_intensities, material)
+            # Save sqw_intensities to file
+            #np.savez(f"outputs/sqw_intensities/{material.name}_sqw_intensities.npz", sqw_intensities=sqw_intensities)
+
+            #sqw_intensities = scipy.ndimage.zoom(sqw_intensities, zoom=(1,1,2,2,1), order=1)
+
+            config.debug_timer.print_difference("done calculating the intensities of sqw (repeat all without energy part)", config.debug_timing)
+
+            #adding just the convolution of the xx component with itself for direct comparison --> doesnt work with the supercell
+            results.append(functions.convolute_grids_fft(sqw_2_xyz[0,0,0,0],sqw_2_xyz[0,0,0,0], dimension=material.dimension))
+            names_plots.append(f"sqw_2_xyz_symmetrised_xx_convoluted_with_itself")
+        ########################################################################################################################
+        ########################################################################################################################
+        ################################                          PLOTTING                                ######################
+        ########################################################################################################################
+        ########################################################################################################################
+        #
+        #decide what should be plotted
+        #-----------------------------------------------------------------
+
+        for sqw_components_idx, spatial_idx in enumerate(material.return_spatial_indices(4)):#enumerate([[0,0]]):
+        #for sqw_components_idx, (n1,n2) in enumerate([[0,0]]):
+            #for i in range(1):
+            if False: #if I want the individual terms 
+                for i in range(material.N, 2*material.N):
+                    #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
+                    term = sqw_2_xyz[alpha, beta,:, :, :, :, i]
+                    if np.any(term >= 10e-5):
+                        results.append(term)
+                        names_plots.append(f"S_{alpha}_{beta}_N={i} from paper 4")
+                    #else: 
+                        #config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
+            term = sqw_2_xyz[*spatial_idx]
+            if np.any(abs(term) >= 1e-5) and np.mean(abs(term)) > 1e-5:
+                results.append(term)
+                names_plots.append(f"S_{spatial_idx}_N=summed from paper 4")
+            # term = sqw_intensities[alpha, beta]
+            # if np.any(term >= 1e-5) and np.mean(abs(term)) > 1e-5:
+            #     results_debug.append(term)
+            #     names_debug.append(f"S_{alpha}_{beta}_divided by energy part")
+        #------------------------tests and debugging plots------------------------
+        # if np.max(np.imag(T)) > 10e-5:
+        #     config.warnings.add(f"Warning: Some T components have significant imaginary parts of {np.max(np.imag(T))}.")
+        # if np.max(T-T_herm_conj) > 10e-5:
+        #     config.warnings.add(f"Warning: Some T components have significant differences between T and its hermitian conjugate of {np.max(T-T_herm_conj)}.")
+        # if np.max(np.imag(mat_form_factors_without_k_prefactor)) > 10e-5:
+        #     config.warnings.add(f"Warning: Some mat_form_factors_without_k_prefactor components have significant imaginary parts of {np.max(np.imag(mat_form_factors_without_k_prefactor))}.")
+        # if config.use_my_calculation_TT_switched and not config.use_calc_of_S_a_ad:
+        #     temp = np.sum(sqw_prime_comp,axis=-1)-np.sum(sqw_prime_k, axis=-1)
+        #     if np.max(temp) > 10e-5:
+        #         config.warnings.add(f":--------------FOUND DIFFERENCE------------: \nSome sqw_prime components have significant differences between the two calculations of T^+ T switched and form factor matrix complex conjugated. biggest difference: {np.round(np.max(temp), 5)}, mean : {np.round(np.mean(temp), 5)}")
+
+        #sqw_4 plots on extended grid
+        if config.experimental_plots_on_extended_grid and config.calc_conv_intensities:
+            
+            if config.plot_only_once_per_symmetry_class:
+                config.debug_timer.print_difference("before searching for symmetries in sqw 4", config.debug_timing)
+                symmetries, tensor_of_symm_class_index = functions.give_symmetries_of_tensors(sqw_4_xyz, 4, threshold=1e-2, return_conjugated_symmetries=False)
+                material.sqw_4_symmetries = symmetries
+                indices_to_plot = [x[1] for x in symmetries]  #1 since first index is the information about the symmetry
+                config.debug_timer.print_difference("after searching for symmetries in sqw 4", config.debug_timing)
                 
-                # plt.figure(f"sqw_4_xyz_{idx[0]}_{idx[1]}_{idx[2]}_{idx[3]}")
-                # plt.title(f"sqw_4_xyz_{idx[0]}_{idx[1]}_{idx[2]}_{idx[3]}")
-                term_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config,
-                    material=material,
-                    relative_grid_points=relative_grid_points_reduced,
-                    dimension=material.dimension,
-                    grid=term,
-                    q_grid=q_values_extended, #crucial!
-                    no_w_values= False,
-                )
-                VALUES_TO_SAVE["figs_for_pdf"].append(functions.plot_2_1_d_grid(
-                    term_along_path,
-                    f"sqw_4_xyz_{idx[0]}_{idx[1]}_{idx[2]}_{idx[3]}",
-                    config=config,
-                    useLogNorm=config.use_Log_Norm,
-                    range_from_max=10e3,
-                    xticks_pos=xticks_pos,
-                    xticks_labels=xticks_labels,
-                    w_values=w_values,
-                    use_dos=True,
-                    use_intensity_k=True,
-                    dos_grid=term,
-                    plot_also_imaginary_part=False,
-                    ))
-        
-    if config.plots_to_show_print["sqw_prime_a_ad"][0] and config.use_calc_of_S_a_ad:
-        for t in range(config.amount_tau_values):
-            for i in range(material.N):
-                for j in range(material.N):
-                    for (is_ad_1, is_ad_2) in material.return_order_of_a_ad_operator_indices(order_of_operator=4):
-                        results.append(sqw_prime_2_ad_a[t,i,is_ad_1,j,is_ad_2])
-                        names_plots.append(f"sqw_prime_of_a_ad_t{t}_i{i}_isad1{is_ad_1}_j{j}_isad2{is_ad_2}")
-    if config.plots_to_show_print["sqw_prime_elements"][0]:
-        for t in range(config.amount_tau_values):
-            for a in range(config.amount_spatial_S_operator):
-                for b in range(config.amount_spatial_S_operator):
-                    results.append(sqw_prime_2_xyz[t,a,b,:,:,:])
-                    names_plots.append(f"sqw_prime_of_xyz_t{t}_a{a}_b{b}")
-
-    if config.plots_to_show_print["energy_dependent_part_colormap"][0]:
-        for i in range(2*material.N):
-            results.append(energy_dependent_part[0,...,i])
-            names_plots.append(f"energy_dependent_part_tau_0_comp_{i}")
-            
-    if config.plots_to_show_print["intensities_sqw"][0] and config.plots_to_show_print["intensities_sqw"][1]: 
-        try:
-            #fig = plt.figure(f"intensities k dependent tau:{t}")
-            fig_grid, axs_grid = plt.subplots(3, 3, figsize=(12, 10))
-            fig_grid.suptitle(f"intensities sqw (3x3 grid)")
-            for a in range(config.amount_spatial_S_operator):
-                for b in range(config.amount_spatial_S_operator):
-                    ax = axs_grid[a, b]
+            else:
+                indices_to_plot = material.return_spatial_indices(4)      
+            #no reduction here right now --> done in the material
+            relative_grid_points_reduced = [x * 1 for x in material.relative_grid_points_path]
+            for idx in indices_to_plot:
+                term = sqw_4_xyz[*idx]
+                if np.max(np.abs(term)) > 1e-5:
                     
-                    intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
-                        config,
+                    # plt.figure(f"sqw_4_xyz_{idx[0]}_{idx[1]}_{idx[2]}_{idx[3]}")
+                    # plt.title(f"sqw_4_xyz_{idx[0]}_{idx[1]}_{idx[2]}_{idx[3]}")
+                    term_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config,
                         material=material,
-                        relative_grid_points=material.get_extended_relative_grid_points_path(),
+                        relative_grid_points=relative_grid_points_reduced,
                         dimension=material.dimension,
-                        grid=sqw_intensities[a, b, :, :, :],
-                        q_grid=q_values_grid,
-                        no_w_values=True,
+                        grid=term,
+                        q_grid=q_values_extended, #crucial!
+                        no_w_values= False,
                     )
-                    #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
-                    ax.plot(intensities_k_along_path, label=f"I_a{a}_b{b}", linewidth=2)
-                    ax.set_title(f"a={a}, b={b}")
-                    ax.set_xticks(xticks_pos)
-                    ax.set_xticklabels(xticks_labels)
-                    ax.legend(fontsize=7)
-            fig_grid.tight_layout(rect=[0, 0.03, 1, 0.95])
-            if config.plots_to_show_print["intensities_sqw"][1]:
-                VALUES_TO_SAVE["figs_for_pdf"].append(fig_grid)
-        except NameError:
-            config.warnings.add("try to plot sqw but not defined")
+                    VALUES_TO_SAVE["figs_for_pdf"].append(functions.plot_2_1_d_grid(
+                        term_along_path,
+                        f"sqw_4_xyz_{idx[0]}_{idx[1]}_{idx[2]}_{idx[3]}",
+                        config=config,
+                        useLogNorm=config.use_Log_Norm,
+                        range_from_max=10e3,
+                        xticks_pos=xticks_pos,
+                        xticks_labels=xticks_labels,
+                        w_values=w_values,
+                        use_dos=True,
+                        use_intensity_k=True,
+                        dos_grid=term,
+                        plot_also_imaginary_part=False,
+                        ))
+            
+        if config.plots_to_show_print["sqw_prime_a_ad"][0] and config.use_calc_of_S_a_ad:
+            for t in range(config.amount_tau_values):
+                for i in range(material.N):
+                    for j in range(material.N):
+                        for (is_ad_1, is_ad_2) in material.return_order_of_a_ad_operator_indices(order_of_operator=4):
+                            results.append(sqw_prime_2_ad_a[t,i,is_ad_1,j,is_ad_2])
+                            names_plots.append(f"sqw_prime_of_a_ad_t{t}_i{i}_isad1{is_ad_1}_j{j}_isad2{is_ad_2}")
+        if config.plots_to_show_print["sqw_prime_elements"][0]:
+            for t in range(config.amount_tau_values):
+                for a in range(config.amount_spatial_S_operator):
+                    for b in range(config.amount_spatial_S_operator):
+                        results.append(sqw_prime_2_xyz[t,a,b,:,:,:])
+                        names_plots.append(f"sqw_prime_of_xyz_t{t}_a{a}_b{b}")
 
-    if config.plots_to_show_print["intensities_sqw_prime"][0] and config.plots_to_show_print["intensities_sqw_prime"][1]:
-        for t in range(config.amount_tau_values):  
+        if config.plots_to_show_print["energy_dependent_part_colormap"][0]:
+            for i in range(2*material.N):
+                results.append(energy_dependent_part[0,...,i])
+                names_plots.append(f"energy_dependent_part_tau_0_comp_{i}")
+                
+        if config.plots_to_show_print["intensities_sqw"][0] and config.plots_to_show_print["intensities_sqw"][1]: 
             try:
                 #fig = plt.figure(f"intensities k dependent tau:{t}")
                 fig_grid, axs_grid = plt.subplots(3, 3, figsize=(12, 10))
-                fig_grid.suptitle(f"intensities sqw' dependent tau:{t} (3x3 grid)")
+                fig_grid.suptitle(f"intensities sqw (3x3 grid)")
                 for a in range(config.amount_spatial_S_operator):
                     for b in range(config.amount_spatial_S_operator):
                         ax = axs_grid[a, b]
-                        for i in range(2 * material.N):
-                            intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
-                                config,
-                                material=material,
-                                relative_grid_points=material.get_extended_relative_grid_points_path(),
-                                dimension=material.dimension,
-                                grid=sqw_prime_k[t, a, b, :, :, :, i],
-                                q_grid=q_values_grid,
-                                no_w_values=True,
-                            )
-                            #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
-                            ax.plot(intensities_k_along_path, label=f"I_a{a}_b{b}_i{i}", linewidth=material.N - i + 2)
+                        
+                        intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
+                            config,
+                            material=material,
+                            relative_grid_points=material.get_extended_relative_grid_points_path(),
+                            dimension=material.dimension,
+                            grid=sqw_intensities[a, b, :, :, :],
+                            q_grid=q_values_grid,
+                            no_w_values=True,
+                        )
+                        #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
+                        ax.plot(intensities_k_along_path, label=f"I_a{a}_b{b}", linewidth=2)
                         ax.set_title(f"a={a}, b={b}")
                         ax.set_xticks(xticks_pos)
                         ax.set_xticklabels(xticks_labels)
                         ax.legend(fontsize=7)
                 fig_grid.tight_layout(rect=[0, 0.03, 1, 0.95])
-                if config.plots_to_show_print["intensities_sqw_prime"][1]:
+                if config.plots_to_show_print["intensities_sqw"][1]:
                     VALUES_TO_SAVE["figs_for_pdf"].append(fig_grid)
-                # for a in range(config.amount_spatial_S_operator):
-                #     for b in range(config.amount_spatial_S_operator):
-                #         for i in range(2*material.N):
-                #             intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
-                #                     relative_grid_points=material.relative_grid_points_path,
-                #                     dimension=material.dimension,
-                #                     grid=sqw_prime_k[t,a,b,:,:, :, i],
-                #                     q_grid=q_values_grid,
-                #                     no_w_values= True,
-                #                 )
-                #             lw = functions.give_line_width([i, b, a], [2*material.N, 3, 3])
-                #             plt.figure(f"intensities k dependent tau:{t}")
-                #             plt.plot(intensities_k_along_path, label=f"I_a{a}_b{b}_i{i}", linewidth=lw)
-                #             plt.xticks(ticks=xticks_pos, labels=xticks_labels)
-                #             plt.legend()
             except NameError:
-                config.warnings.add("try to plot intensities_k but not defined (prob since calc. S_ad_a)")
+                config.warnings.add("try to plot sqw but not defined")
+
+        if config.plots_to_show_print["intensities_sqw_prime"][0] and config.plots_to_show_print["intensities_sqw_prime"][1]:
+            for t in range(config.amount_tau_values):  
+                try:
+                    #fig = plt.figure(f"intensities k dependent tau:{t}")
+                    fig_grid, axs_grid = plt.subplots(3, 3, figsize=(12, 10))
+                    fig_grid.suptitle(f"intensities sqw' dependent tau:{t} (3x3 grid)")
+                    for a in range(config.amount_spatial_S_operator):
+                        for b in range(config.amount_spatial_S_operator):
+                            ax = axs_grid[a, b]
+                            for i in range(2 * material.N):
+                                intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(
+                                    config,
+                                    material=material,
+                                    relative_grid_points=material.get_extended_relative_grid_points_path(),
+                                    dimension=material.dimension,
+                                    grid=sqw_prime_k[t, a, b, :, :, :, i],
+                                    q_grid=q_values_grid,
+                                    no_w_values=True,
+                                )
+                                #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
+                                ax.plot(intensities_k_along_path, label=f"I_a{a}_b{b}_i{i}", linewidth=material.N - i + 2)
+                            ax.set_title(f"a={a}, b={b}")
+                            ax.set_xticks(xticks_pos)
+                            ax.set_xticklabels(xticks_labels)
+                            ax.legend(fontsize=7)
+                    fig_grid.tight_layout(rect=[0, 0.03, 1, 0.95])
+                    if config.plots_to_show_print["intensities_sqw_prime"][1]:
+                        VALUES_TO_SAVE["figs_for_pdf"].append(fig_grid)
+                    # for a in range(config.amount_spatial_S_operator):
+                    #     for b in range(config.amount_spatial_S_operator):
+                    #         for i in range(2*material.N):
+                    #             intensities_k_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
+                    #                     relative_grid_points=material.relative_grid_points_path,
+                    #                     dimension=material.dimension,
+                    #                     grid=sqw_prime_k[t,a,b,:,:, :, i],
+                    #                     q_grid=q_values_grid,
+                    #                     no_w_values= True,
+                    #                 )
+                    #             lw = functions.give_line_width([i, b, a], [2*material.N, 3, 3])
+                    #             plt.figure(f"intensities k dependent tau:{t}")
+                    #             plt.plot(intensities_k_along_path, label=f"I_a{a}_b{b}_i{i}", linewidth=lw)
+                    #             plt.xticks(ticks=xticks_pos, labels=xticks_labels)
+                    #             plt.legend()
+                except NameError:
+                    config.warnings.add("try to plot intensities_k but not defined (prob since calc. S_ad_a)")
 
 
-    #LEAVE IN: Nice for debugging bog trafo components
-    if config.plots_to_show_print["T_parts_plot"][0]:
-        
-        for t in range(config.amount_tau_values):  
-            fig=plt.figure(f"T components tau:{t} real")
-            fig2=plt.figure(f"T components tau:{t} imag")
+        #LEAVE IN: Nice for debugging bog trafo components
+        if config.plots_to_show_print["T_parts_plot"][0]:
             
+            for t in range(config.amount_tau_values):  
+                fig=plt.figure(f"T components tau:{t} real")
+                fig2=plt.figure(f"T components tau:{t} imag")
                 
-            if config.plots_to_show_print["T_parts_plot"][1]:
-                VALUES_TO_SAVE["figs_for_pdf"].append(fig)
-                VALUES_TO_SAVE["figs_for_pdf"].append(fig2)
-            for i in range(2*material.N):
-                for j in range(2*material.N):
-        # #print only the energy dependent part
-        #     results_debug.append(energy_dependent_part[t])
-        #     names_debug.append(f"energy dependent part tau={t}") 
-                    T_result_along_path, _,_ = functions.path_through_k_grid(config, 
-                        material=material,
-                        relative_grid_points=material.relative_grid_points_path,
-                        dimension=material.dimension,
-                        grid=T[t,:,:, :, i, j],
-                        q_grid=q_values_grid,
-                        no_w_values= True,
-                    )
-                    plt.figure(f"T components tau:{t} real")
-                    plt.plot(np.real(T_result_along_path), label=f"Re T_t{t}_i{i}_j{j}", linewidth=material.N*material.N-(material.N)*i-0.5*j+3)
-                    plt.figure(f"T components tau:{t} imag")
-                    plt.plot(np.imag(T_result_along_path), label=f"Im T_t{t}_i{i}_j{j}", linewidth=material.N*material.N-(material.N)*i-0.5*j+3)
-            plt.legend()
-            plt.figure(f"T components tau:{t} real")
-            plt.legend()
-    #plotting of Hamiltonian
-    if config.plots_to_show_print["Hamiltonian_parts_plot"][0]: #securing this this is not just one slice but the grid calculations
-        for index_H, H in enumerate(VALUES_TO_SAVE["Hamiltonian_not_diagonalised"]):
-            if len(H.shape) != 5: #if the Hamiltonian is not a 3D grid
-                continue
-            fig = plt.figure(f"Hamiltonian {index_H} along path ")
-            if config.plots_to_show_print["Hamiltonian_parts_plot"][1]:
-                VALUES_TO_SAVE["figs_for_pdf"].append(fig)
-                
-            plt.title(f"Hamiltonian along path. \n")
-            for i in range(H.shape[-1]):
-                for j in range(H.shape[-2]):
-                #for j in range([0]): 
-            #plt.figure(f"q_shift {i} 2")
-                    term, xticks_pos, xticks_labels = functions.path_through_k_grid(config, H[:,:,:,i,j],material=material, q_grid=q_values_grid, no_w_values=True, plot_path=False, relative_grid_points=material.relative_grid_points_path)
-                    if np.any(np.round(term,3) != 0):
-                        plt.plot(np.imag(term), label = f"imag {i},{j}", linewidth=10-1*i)
-                        plt.xticks(ticks=xticks_pos, labels=xticks_labels)
-                        plt.plot(np.real(term), label = f"real {i},{j}", linewidth=10-2*i, linestyle="-")
-                        plt.xticks(ticks=xticks_pos, labels=xticks_labels)
-                        plt.legend()
-            
-    #check if there is a difference in the eigvalues of the different modes i
-    if (np.max(np.abs(eigvalue_grid-eigvalue_grid[..., 0, np.newaxis])) > 10e-5):
-        #config.warnings.add(f"Warning: Not all eigvalues give the same energies. biggest difference: {np.max(eigvalue_grid-eigvalue_grid[..., 0, np.newaxis])}")
-        eigvalues_to_plot_indices = range(eigvalue_grid.shape[-1]   ) #plot all eigvalues
-    else:
-        eigvalues_to_plot_indices = [0]
-
-    if config.plots_to_show_print["energy_dependent_part"][0]:
-
-        for t in range(eigvalue_grid.shape[0]):
-            fig = plt.figure(f"energy dependent part eigvalue_grid tau {t}")
-            if config.plots_to_show_print["energy_dependent_part"][1]:
-                VALUES_TO_SAVE["figs_for_pdf"].append(fig)
-            for i in eigvalues_to_plot_indices:
-                result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
-                                                                                             
-                    eigvalue_grid[t,:, :, :, i],
-                    material=material,
-                    relative_grid_points=material.get_extended_relative_grid_points_path(),
-                    q_grid=q_values_grid,
-                    no_w_values=True,
-                    plot_path=False,
-                )
-                result_along_path = np.array(result_along_path)[:,0] # I think due to the missing energy dimension there it is a list with one element
-                
-                plt.plot(result_along_path, label=f"comp: {i}", linewidth=2*material.N - i + 2)
-                plt.xticks(xticks_pos, xticks_labels)
+                    
+                if config.plots_to_show_print["T_parts_plot"][1]:
+                    VALUES_TO_SAVE["figs_for_pdf"].append(fig)
+                    VALUES_TO_SAVE["figs_for_pdf"].append(fig2)
+                for i in range(2*material.N):
+                    for j in range(2*material.N):
+            # #print only the energy dependent part
+            #     results_debug.append(energy_dependent_part[t])
+            #     names_debug.append(f"energy dependent part tau={t}") 
+                        T_result_along_path, _,_ = functions.path_through_k_grid(config, 
+                            material=material,
+                            relative_grid_points=material.relative_grid_points_path,
+                            dimension=material.dimension,
+                            grid=T[t,:,:, :, i, j],
+                            q_grid=q_values_grid,
+                            no_w_values= True,
+                        )
+                        plt.figure(f"T components tau:{t} real")
+                        plt.plot(np.real(T_result_along_path), label=f"Re T_t{t}_i{i}_j{j}", linewidth=material.N*material.N-(material.N)*i-0.5*j+3)
+                        plt.figure(f"T components tau:{t} imag")
+                        plt.plot(np.imag(T_result_along_path), label=f"Im T_t{t}_i{i}_j{j}", linewidth=material.N*material.N-(material.N)*i-0.5*j+3)
                 plt.legend()
-    config.debug_timer.print_difference("after slicing sqw components for plotting", config.debug_timing)
+                plt.figure(f"T components tau:{t} real")
+                plt.legend()
+        #plotting of Hamiltonian
+        if config.plots_to_show_print["Hamiltonian_parts_plot"][0]: #securing this this is not just one slice but the grid calculations
+            for index_H, H in enumerate(VALUES_TO_SAVE["Hamiltonian_not_diagonalised"]):
+                if len(H.shape) != 5: #if the Hamiltonian is not a 3D grid
+                    continue
+                fig = plt.figure(f"Hamiltonian {index_H} along path ")
+                if config.plots_to_show_print["Hamiltonian_parts_plot"][1]:
+                    VALUES_TO_SAVE["figs_for_pdf"].append(fig)
+                    
+                plt.title(f"Hamiltonian along path. \n")
+                for i in range(H.shape[-1]):
+                    for j in range(H.shape[-2]):
+                    #for j in range([0]): 
+                #plt.figure(f"q_shift {i} 2")
+                        term, xticks_pos, xticks_labels = functions.path_through_k_grid(config, H[:,:,:,i,j],material=material, q_grid=q_values_grid, no_w_values=True, plot_path=False, relative_grid_points=material.relative_grid_points_path)
+                        if np.any(np.round(term,3) != 0):
+                            plt.plot(np.imag(term), label = f"imag {i},{j}", linewidth=10-1*i)
+                            plt.xticks(ticks=xticks_pos, labels=xticks_labels)
+                            plt.plot(np.real(term), label = f"real {i},{j}", linewidth=10-2*i, linestyle="-")
+                            plt.xticks(ticks=xticks_pos, labels=xticks_labels)
+                            plt.legend()
+                
+        #check if there is a difference in the eigvalues of the different modes i
+        if (np.max(np.abs(eigvalue_grid-eigvalue_grid[..., 0, np.newaxis])) > 10e-5):
+            #config.warnings.add(f"Warning: Not all eigvalues give the same energies. biggest difference: {np.max(eigvalue_grid-eigvalue_grid[..., 0, np.newaxis])}")
+            eigvalues_to_plot_indices = range(eigvalue_grid.shape[-1]   ) #plot all eigvalues
+        else:
+            eigvalues_to_plot_indices = [0]
+
+        if config.plots_to_show_print["energy_dependent_part"][0]:
+
+            for t in range(eigvalue_grid.shape[0]):
+                fig = plt.figure(f"energy dependent part eigvalue_grid tau {t}")
+                if config.plots_to_show_print["energy_dependent_part"][1]:
+                    VALUES_TO_SAVE["figs_for_pdf"].append(fig)
+                for i in eigvalues_to_plot_indices:
+                    result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
+                                                                                                
+                        eigvalue_grid[t,:, :, :, i],
+                        material=material,
+                        relative_grid_points=material.get_extended_relative_grid_points_path(),
+                        q_grid=q_values_grid,
+                        no_w_values=True,
+                        plot_path=False,
+                    )
+                    result_along_path = np.array(result_along_path)[:,0] # I think due to the missing energy dimension there it is a list with one element
+                    
+                    plt.plot(result_along_path, label=f"comp: {i}", linewidth=2*material.N - i + 2)
+                    plt.xticks(xticks_pos, xticks_labels)
+                    plt.legend()
+        config.debug_timer.print_difference("after slicing sqw components for plotting", config.debug_timing)
 
 
 
-    if config.plots_to_show_print["max_x_projection_sqw"][0] and material.dimension > 1:      
-        #xx, w, K, first eigvector 
-        for i in range(config.amount_spatial_S_operator):
-            slice_ = (i,i,)+ (slice(None),)+(slice(None),)*material.dimension + (0,)*(3-material.dimension)+(0,)
-            if np.any(sqw_2_xyz[slice_])> 10e-5:
-                break
-        fig=functions.plot_max_x_projection(sqw_2_xyz[slice_], title=f"max_x_projection_sqw {i}->{i}")
-        fig.show()
-    elif config.plots_to_show_print["max_x_projection_sqw"][0]:
-        config.warnings.add("dim = 1 so no max_x projection possible ")
-    
-    ########################################################################################################################
-    ########################################################################################################################
-    ################################                          main plots                              ######################
-    ########################################################################################################################
-    ########################################################################################################################
-    
-    
+        if config.plots_to_show_print["max_x_projection_sqw"][0] and material.dimension > 1:      
+            #xx, w, K, first eigvector 
+            for i in range(config.amount_spatial_S_operator):
+                slice_ = (i,i,)+ (slice(None),)+(slice(None),)*material.dimension + (0,)*(3-material.dimension)+(0,)
+                if np.any(sqw_2_xyz[slice_])> 10e-5:
+                    break
+            fig=functions.plot_max_x_projection(sqw_2_xyz[slice_], title=f"max_x_projection_sqw {i}->{i}")
+            fig.show()
+        elif config.plots_to_show_print["max_x_projection_sqw"][0]:
+            config.warnings.add("dim = 1 so no max_x projection possible ")
         
-    #not done before for some debugging plots the smaller grid is necessary
-    if material.extension != 1:
-        q_values_grid = q_values_extended
-    for i, intensity_result in enumerate(results):
+        ########################################################################################################################
+        ########################################################################################################################
+        ################################                          main plots                              ######################
+        ########################################################################################################################
+        ########################################################################################################################
         
-        #print(np.sum(intensity_result))
-        steps = int(q_values_grid.shape[0] / 2)
+        
+            
+        #not done before for some debugging plots the smaller grid is necessary
+        if material.extension != 1:
+            q_values_grid = q_values_extended
+        for i, intensity_result in enumerate(results):
+            
+            #print(np.sum(intensity_result))
+            steps = int(q_values_grid.shape[0] / 2)
 
-        # took out since this d_k is absorbed in the delta function
-        # if config.use_normalisation_of_sepctral_weight:
-        #     #this is the normalisation factor due to the transformation to k-space of the total operator (S^+_rS^+_r for example)
-        #     conv = conv #/ (config.amount_k_values*material.dimension)**1
-        
-        #if relative points are given in material (standard case):
-        if material.relative_grid_points_path is not None:
-            result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
-                relative_grid_points=material.relative_grid_points_path,
-                material=material,
-                steps=steps,
-                dimension=material.dimension,
+            # took out since this d_k is absorbed in the delta function
+            # if config.use_normalisation_of_sepctral_weight:
+            #     #this is the normalisation factor due to the transformation to k-space of the total operator (S^+_rS^+_r for example)
+            #     conv = conv #/ (config.amount_k_values*material.dimension)**1
+            
+            #if relative points are given in material (standard case):
+            if material.relative_grid_points_path is not None:
+                result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
+                    relative_grid_points=material.relative_grid_points_path,
+                    material=material,
+                    steps=steps,
+                    dimension=material.dimension,
+                    grid=intensity_result,
+                    q_grid=q_values_grid,
+                    plot_path=config.plots_to_show_print["structure_plot"][0],
+                )
+                
+            #if a specific path is given:
+            elif config.path_through_grid_directions is not None and config.path_through_grid_steps is not None and config.path_through_grid_startpoint is not None:
+                result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
+                    startpoint=config.path_through_grid_startpoint,
+                    material=material,
+                    directions=config.path_through_grid_directions,
+                    steps=config.path_through_grid_steps,
+                    dimension=material.dimension,
+                    grid=intensity_result,
+                    q_grid=q_values_grid,
+                    plot_path=config.plots_to_show_print["structure_plot"][0],
+                )
+            else: 
+                result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
+                dimension=material.dimension, #this is for taking the standard path through the k-grid
                 grid=intensity_result,
-                q_grid=q_values_grid,
-                plot_path=config.plots_to_show_print["structure_plot"][0],
-            )
-            
-        #if a specific path is given:
-        elif config.path_through_grid_directions is not None and config.path_through_grid_steps is not None and config.path_through_grid_startpoint is not None:
-            result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
-                startpoint=config.path_through_grid_startpoint,
                 material=material,
-                directions=config.path_through_grid_directions,
-                steps=config.path_through_grid_steps,
-                dimension=material.dimension,
-                grid=intensity_result,
                 q_grid=q_values_grid,
-                plot_path=config.plots_to_show_print["structure_plot"][0],
+                plot_path=config.plots_to_show_print["structure_plot"][0]
             )
-        else: 
-            result_along_path, xticks_pos, xticks_labels = functions.path_through_k_grid(config, 
-            dimension=material.dimension, #this is for taking the standard path through the k-grid
-            grid=intensity_result,
-            material=material,
-            q_grid=q_values_grid,
-            plot_path=config.plots_to_show_print["structure_plot"][0]
-        )
+                
             
+            name = names_plots[i]
+            VALUES_TO_SAVE["figs_for_pdf"].append(functions.plot_2_1_d_grid(
+                result_along_path,
+                name,
+                config=config,
+                useLogNorm=config.use_Log_Norm,
+                range_from_max=10e3,
+                xticks_pos=xticks_pos,
+                xticks_labels=xticks_labels,
+                w_values=w_values,
+                use_dos=True,
+                use_intensity_k=True,
+                dos_grid=intensity_result,
+                plot_also_imaginary_part=False,
+                ))
+                
         
-        name = names_plots[i]
-        VALUES_TO_SAVE["figs_for_pdf"].append(functions.plot_2_1_d_grid(
-            result_along_path,
-            name,
-            config=config,
-            useLogNorm=config.use_Log_Norm,
-            range_from_max=10e3,
-            xticks_pos=xticks_pos,
-            xticks_labels=xticks_labels,
-            w_values=w_values,
-            use_dos=True,
-            use_intensity_k=True,
-            dos_grid=intensity_result,
-            plot_also_imaginary_part=False,
-            ))
-            
-    
-        # functions.save_grid_to_file(
-        #     intensity_result,
-        #     *coordinates,
-        #     filename=f"grids/{name}"
-        #     + functions.turn_comp_info_into_str(COMPUTATION_INFO)
-        #     + config.timestamp
-        #     + ".npz",
-        # )
-    # adding the path plot to the pdf
-    if config.plots_to_show_print["path_plot"][0]:
-        fig = plt.figure("Path Through Grid (3D)")
-        if config.plots_to_show_print["path_plot"][1]:
-            VALUES_TO_SAVE["figs_for_pdf"].append(fig)
+            # functions.save_grid_to_file(
+            #     intensity_result,
+            #     *coordinates,
+            #     filename=f"grids/{name}"
+            #     + functions.turn_comp_info_into_str(COMPUTATION_INFO)
+            #     + config.timestamp
+            #     + ".npz",
+            # )
+        # adding the path plot to the pdf
+        if config.plots_to_show_print["path_plot"][0]:
+            fig = plt.figure("Path Through Grid (3D)")
+            if config.plots_to_show_print["path_plot"][1]:
+                VALUES_TO_SAVE["figs_for_pdf"].append(fig)
 
-    # plt.figure("DOS")
-    # plt.plot(functions.sum_k_dependency(grid= conv))
+        # plt.figure("DOS")
+        # plt.plot(functions.sum_k_dependency(grid= conv))
     
     return sqw_2_xyz, sqw_4_xyz, q_values_extended
 
@@ -2080,9 +2175,10 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
     import pandas as pd
     config.debug_timer.print_difference("start calculating RIXS operator")
 
-    sqw_4_xyz = np.load(f"outputs/sqw_intensities/{filename}")["sqw_4_xyz"]
-    sqw_2_xyz = np.load(f"outputs/sqw_intensities/{filename}")["sqw_2_xyz"]
-    q_values = np.load(f"outputs/sqw_intensities/{filename}")["q_values"]
+    if (sqw_2_xyz is None or sqw_4_xyz is None) and config.use_explicit_calc_of_sqw:
+        sqw_4_xyz = np.load(f"outputs/sqw_intensities/{filename}")["sqw_4_xyz"]
+        sqw_2_xyz = np.load(f"outputs/sqw_intensities/{filename}")["sqw_2_xyz"]
+        q_values = np.load(f"outputs/sqw_intensities/{filename}")["q_values"]
 
     #------------------------------extract sqw and q values along a path------------------------------
     relative_grid_points=[np.array([0,0,0]),np.array([0.5,0,0])]
@@ -2097,11 +2193,12 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
             path.append(path[-1]+directions[a])
             path[-1] = path[-1]%q_values.shape[:-1]
     path = np.array(path)
-    
-    sqw_4_xyz_along_path = sqw_4_xyz[..., path[:,0], path[:,1], path[:,2]]
-    sqw_2_xyz_along_path = sqw_2_xyz[..., path[:,0], path[:,1], path[:,2]]
+    if config.use_explicit_calc_of_sqw:
+        sqw_4_xyz_along_path = sqw_4_xyz[..., path[:,0], path[:,1], path[:,2]]
+        sqw_2_xyz_along_path = sqw_2_xyz[..., path[:,0], path[:,1], path[:,2]]
+        
     q_values_along_path = q_values[path[:,0], path[:,1], path[:,2]]
-    
+        
     #temp set only to x-value
     q_values_along_path = q_values_along_path[:,0]
     # sqw_4_xyz_along_path,_,_ = functions.path_through_k_grid(config,grid= sqw_4_xyz, q_grid=q_values, )
@@ -2124,11 +2221,14 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     fig_spectrum_4, axs_spectrum_4 = plt.subplots(2, 2, figsize=(12, 8))
     axs_spectrum_4 = axs_spectrum_4.flatten()  # make indexing easier: axs[0..3]
-    
+    fig_spectrum_4.suptitle("RIXS spectrum of two magnon contributions")
+
     fig_spectrum_2, axs_spectrum_2 = plt.subplots(2, 2, figsize=(12, 8))
+    fig_spectrum_2.suptitle("RIXS spectrum of one magnon contributions")
     axs_spectrum_2 = axs_spectrum_2.flatten()  # make indexing easier: axs[0..3]
     
     fig_spectrum_complete, axs_spectrum_complete = plt.subplots(2, 2, figsize=(12, 8))
+    fig_spectrum_complete.suptitle("Complete RIXS spectrum")
     axs_spectrum_complete = axs_spectrum_complete.flatten()  # make indexing easier: axs[0..3]
     
     fig_coeff_4, axs_coeff_4 = plt.subplots(2, 2, figsize=(12, 8))
@@ -2179,7 +2279,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
     #
     RIXSMatrix=RIXSMatrix.subs({S_sq: Sx*Sx + Sy*Sy + Sz*Sz})  # Substitute S_sq with its expression
     # RIXSMatrix=RIXSMatrix.subs({Sx: (Splus+Smin)/2, Sy: (Splus-Smin)/(2*I)})  # Substitute Sx, Sy, Sz S+ and S-
-
+    
     if not load_saved_grids:
         for number_config,config_rixs in enumerate(RIXS_config):
             polarisation_in_sigma, polarisation_out_sigma = config_rixs
@@ -2271,27 +2371,78 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
 
             coeff_array_spectrum_2 = np.einsum('ak,ck->ack', np.conj(coeff_array_R_2), coeff_array_R_2, optimize='optimal')
             coeff_array_spectrum_4 = np.einsum('abk,cdk->abcdk', np.conj(coeff_array_R_4), coeff_array_R_4, optimize='optimal')
+
+            material.coeff_xyz_rixs = coeff_array_spectrum_4
             
-            spectrum_2 = np.einsum('ack,acwk->wk', coeff_array_spectrum_2, sqw_2_xyz_along_path, optimize='optimal')
-            spectrum_4 = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum_4, sqw_4_xyz_along_path, optimize='optimal')
+            #putting everything together to get the RIXS spectrum
+            if config.use_explicit_calc_of_sqw:
+                spectrum_2 = np.einsum('ack,acwk->wk', coeff_array_spectrum_2, sqw_2_xyz_along_path, optimize='optimal')
+                spectrum_4 = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum_4,  sqw_4_xyz_along_path, optimize='optimal')
+            else:
+                    
+                #summing right now over t values TODO: add sqw'-> sqw
+                phase_factor_along_path = material.phase_factor[
+                        
+                        path[:, 0],
+                        path[:, 1],
+                        path[:, 2],
+                        :material.N,
+                        :material.N
+                ]
+                
+                spectrum_4_coeff = np.einsum("rstioju,kij,abcdioju,abcdk->rsk"
+                                            ,material.coeff_sym_classes_tioju_4
+                                            ,phase_factor_along_path
+                                            ,material.coeff_tioju_xyz_4
+                                            , material.coeff_xyz_rixs, optimize='optimal')
+                spectrum_2_coeff = np.einsum("stioju,kij,abcdioju,abcdk->sk"
+                                            ,material.coeff_sym_class_tioju_2
+                                            ,phase_factor_along_path
+                                            ,material.coeff_tioju_xyz_2
+                                            , material.coeff_xyz_rixs, optimize='optimal')
+
+                # spectrum_4_tryout = np.einsum("rstioju,kij,iojuabcd,rswk->abcdwk"
+                #                              ,material.coeff_sym_classes_tioju_4
+                #                              ,phase_factor_along_path
+                #                              ,material.coeff_tioju_xyz_4
+                #                              ,conv_sqw_2_ad_a_sym_classes_along_path
+                #                              , optimize='optimal')
+                
+                shape_q_grid_sqw = material.conv_sqw_2_ad_a_sym_classes.shape[3:] #rswK
+                conv_sqw_2_ad_a_sym_classes_along_path = material.conv_sqw_2_ad_a_sym_classes[
+                        ...,
+                        path[:, 0] % shape_q_grid_sqw[0],
+                        path[:, 1] % shape_q_grid_sqw[1],
+                        path[:, 2] % shape_q_grid_sqw[2],
+                ]
+                sqw_ad_a_sym_class_along_path = material.sqw_2_ad_a_sym_class[
+                        ...,
+                        path[:, 0] % shape_q_grid_sqw[0],
+                        path[:, 1] % shape_q_grid_sqw[1],
+                        path[:, 2] % shape_q_grid_sqw[2],
+                ]
+
+                spectrum_4 = np.einsum('rsk, rswk->wk', spectrum_4_coeff, conv_sqw_2_ad_a_sym_classes_along_path, optimize='optimal')
+                spectrum_2 = np.einsum('sk, swk->wk', spectrum_2_coeff, sqw_ad_a_sym_class_along_path, optimize='optimal').astype(config.dtype_complex)
             
             #plot all coefficients with non zero spectra
             #plt.figure("coeff_arrays pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
-            symmetries_coeff, _ = functions.give_symmetries_of_tensors(coeff_array_spectrum_4, 4, return_conjugated_symmetries=False, threshold=1e-10, rounding_decimals=10)
-            for i,s in enumerate(symmetries_coeff):
-                (a,b,c,d) = s[1] 
-                if np.any(np.abs(sqw_4_xyz_along_path[a,b,c,d,:])>1e-10):
-                    axs_coeff_4[number_config].plot(np.real(coeff_array_spectrum_4[a,b,c,d,:]), label=f"Re coeff 4 {a}{b}{c}{d}", linewidth = len(symmetries_coeff)+2 - i)
-                    # axs_coeff[number_config].plot(np.imag(coeff_array_spectrum_4[a,b,c,d,:]), label=f"Im coeff 4 {a}{b}{c}{d}", linestyle="--", linewidth = len(symmetries_coeff)+2 - i)
-            axs_coeff_4[number_config].legend()
+            if config.use_explicit_calc_of_sqw:
+                symmetries_coeff, _ = functions.give_symmetries_of_tensors(coeff_array_spectrum_4, 4, return_conjugated_symmetries=False, threshold=1e-10, rounding_decimals=10)
+                for i,s in enumerate(symmetries_coeff):
+                    (a,b,c,d) = s[1] 
+                    if np.any(np.abs(sqw_4_xyz_along_path[a,b,c,d,:])>1e-10):
+                        axs_coeff_4[number_config].plot(np.real(coeff_array_spectrum_4[a,b,c,d,:]), label=f"Re coeff 4 {a}{b}{c}{d}", linewidth = len(symmetries_coeff)+2 - i)
+                        # axs_coeff[number_config].plot(np.imag(coeff_array_spectrum_4[a,b,c,d,:]), label=f"Im coeff 4 {a}{b}{c}{d}", linestyle="--", linewidth = len(symmetries_coeff)+2 - i)
+                axs_coeff_4[number_config].legend()
 
-            symmetries_coeff_2, _ = functions.give_symmetries_of_tensors(coeff_array_spectrum_2, 2, return_conjugated_symmetries=False, threshold=1e-10, rounding_decimals=10)
-            for i,s in enumerate(symmetries_coeff_2):
-                (a,b) = s[1] 
-                if np.any(np.abs(sqw_2_xyz_along_path[a,b,:])>1e-10):
-                    axs_coeff_2[number_config].plot(np.real(coeff_array_spectrum_2[a,b,:]), label=f"Re coeff 2 {a}{b}", linewidth = len(symmetries_coeff_2)+2 - i)
-                    # axs_coeff[number_config].plot(np.imag(coeff_array_spectrum_2[a,b,c,d,:]), label=f"Im coeff 2 {a}{b}{c}{d}", linestyle="--", linewidth = len(symmetries_coeff_2)+2 - i)
-            axs_coeff_2[number_config].legend()
+                symmetries_coeff_2, _ = functions.give_symmetries_of_tensors(coeff_array_spectrum_2, 2, return_conjugated_symmetries=False, threshold=1e-10, rounding_decimals=10)
+                for i,s in enumerate(symmetries_coeff_2):
+                    (a,b) = s[1] 
+                    if np.any(np.abs(sqw_2_xyz_along_path[a,b,:])>1e-10):
+                        axs_coeff_2[number_config].plot(np.real(coeff_array_spectrum_2[a,b,:]), label=f"Re coeff 2 {a}{b}", linewidth = len(symmetries_coeff_2)+2 - i)
+                        # axs_coeff[number_config].plot(np.imag(coeff_array_spectrum_2[a,b,c,d,:]), label=f"Im coeff 2 {a}{b}{c}{d}", linestyle="--", linewidth = len(symmetries_coeff_2)+2 - i)
+                axs_coeff_2[number_config].legend()
 
             #plt.figure("RIXS Spectrum 4 pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
             grid = np.real(spectrum_4)
@@ -2341,12 +2492,506 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
             
             
             
-            config.debug_timer.print_difference(f"done calculating RIXS spectrum", debug_time_duration)
+            
     
-    plt.show()
+    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_4)
+    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_2)
+    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_complete)
+    
+    config.debug_timer.print_difference(f"done calculating RIXS spectrum", debug_time_duration)
+
+def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
+                        config: Config,
+                        material: Material,
+                        q_values: np.ndarray,
+                        sqw_4_xyz: np.ndarray,
+                        sqw_2_xyz: np.ndarray,
+                        w_in = -10,  
+                        debug_time_duration=True,
+                        debug_RIXS_operator=False,
+                        load_saved_grids = False,
+                        experimental_compute_non_squared_use_commutative = False,
+                        filename="results2025-11-14_11-52-22.npz",
+                        alpha = np.array([20,45,70,95,120])*2*np.pi/360, #angle of incidence
+                        two_theta = np.array([150])*2*np.pi/360, #scattering angle
+                        phi = np.array([0]),
+                        lattice_constant = 4.17e-10, #lattice constant in m
+                        hbar = 6.582e-16, #hbar in eV*s
+                        c= 2.992792e8, # c in m/s
+                        offset_energy = 855 # offset energy in eV of the prefactor dataset (defined in plot_script.py in quanty_win directory)
+                        ):
+    """plan is to compute the experimental setup RIXS for all values of alpha, theta and phi, (in radians) incoming energy (eV) wished, lattice constant (m)"""
+    
+    # OUMN spin-operator index
+    # sr sigma prefactor index
+    # p polarisation config index
+    # a alpha index
+    # b two theta index
+    # c phi index
+    
+    import pandas as pd
+    config.debug_timer.print_difference("start calculating RIXS operator")
+    
+    def factor_BZ_size_to_k_in(E):
+        return E*lattice_constant/(hbar*c*np.pi)
+
+    
+    # sqw_4_xyz_along_path,_,_ = functions.path_through_k_grid(config,grid= sqw_4_xyz, q_grid=q_values, )
+    # q_values_along_path,_,_ = functions.path_through_k_grid(config,grid= q_values, q_grid=q_values, relative_grid_points=[np.array([0,0,0]),np.array([1,0,0])])
+
+    def give_index_of_closest_value(array, value):
+        """
+        Find the index of the closest value in a numpy array to a given value.
+        """
+        idx = (np.abs(array - value)).argmin()
+        return idx
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    fig_spectrum_4, axs_spectrum_4 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_spectrum_4 = axs_spectrum_4.flatten()  # make indexing easier: axs[0..3]
+    fig_spectrum_4.suptitle("RIXS spectrum of two magnon contributions")
+
+    fig_spectrum_2, axs_spectrum_2 = plt.subplots(2, 2, figsize=(12, 8))
+    fig_spectrum_2.suptitle("RIXS spectrum of one magnon contributions")
+    axs_spectrum_2 = axs_spectrum_2.flatten()  # make indexing easier: axs[0..3]
+    
+    fig_spectrum_complete, axs_spectrum_complete = plt.subplots(2, 2, figsize=(12, 8))
+    fig_spectrum_complete.suptitle("Complete RIXS spectrum")
+    axs_spectrum_complete = axs_spectrum_complete.flatten()  # make indexing easier: axs[0..3]
+    
+    fig_coeff_4, axs_coeff_4 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_coeff_4 = axs_coeff_4.flatten()  # make indexing easier: axs[0..3]
+
+    fig_coeff_2, axs_coeff_2 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_coeff_2 = axs_coeff_2.flatten()  # make indexing easier: axs[0..3]
+
+
+    RIXS_config = [
+        (polarisation_in_sigma, polarisation_out_sigma)
+        for polarisation_in_sigma in [False,True]
+        for polarisation_out_sigma in [False, True]
+    ]
+    
+     # ------------------------------Define spin operators as symbolic variables--------------------------------------------------------------
+    Sx, Sy, Sz = sp.symbols('Sx Sy Sz', commutative=experimental_compute_non_squared_use_commutative)
+    S_op_list = [Sx, Sy, Sz]
+    if config.amount_spatial_S_operator == 4:
+        S_op_list.append(sp.S(1)) #unit operator
+    # Splus, Smin = symbols('S_pl S_min', commutative=experimental_compute_non_squared_use_commutative)
+    # Smin = sp.conjugate(Splus)  # Define S- as the conjugate of S+
+    # Define total spin squared
+    S_sq = sp.symbols('S_sq')
+
+    # Define orbital labels
+    a1g, eg, t1u, t2g = sp.symbols('a1g eg t1u t2g')
+    prefactor_list = [a1g, eg, t1u, t2g]
+
+    
+    # ------------------------------Construct the RIXS matrix----------------------------------------------------------------------------
+    RIXSMatrix = sp.Matrix([
+            [
+                a1g + 2 * (Sx**2 - (1/3)*S_sq) * eg,
+                Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
+                -Sy * t1u + (Sz * Sx + Sx * Sz) * t2g
+            ],
+            [
+                -Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
+                a1g + 2 * (Sy**2 - (1/3)*S_sq) * eg,
+                Sx * t1u + (Sy * Sz + Sz * Sy) * t2g
+            ],
+            [
+                Sy * t1u + (Sz * Sx + Sx * Sz) * t2g,
+                -Sx * t1u + (Sy * Sz + Sz * Sy) * t2g,
+                a1g + 2 * (Sz**2 - (1/3)*S_sq) * eg
+            ]
+        ])
+    #
+    RIXSMatrix=RIXSMatrix.subs({S_sq: Sx*Sx + Sy*Sy + Sz*Sz})  # Substitute S_sq with its expression
+    # RIXSMatrix=RIXSMatrix.subs({Sx: (Splus+Smin)/2, Sy: (Splus-Smin)/(2*I)})  # Substitute Sx, Sy, Sz S+ and S-
+    
+    if not load_saved_grids:
+        # polarisation_in_sigma, polarisation_out_sigma = config_rixs
+
+        
+        def give_eff_scattering_operator_polarisation_dependent(epsilon_in = sp.Matrix([1, 0, 0]),
+                            epsilon_out = sp.Matrix([1, 0, 0])):
+
+            result = (np.conjugate(epsilon_out).T @ RIXSMatrix @ (epsilon_in))
+            result = sp.expand(result)
+            if debug_RIXS_operator:
+                print("RIXS operator not squared")
+                pprint(result)
+            # if not experimental_compute_non_squared_use_commutative:
+            #     result = sp.conjugate(result)*result
+            result= sp.expand(result)
+            eff_RIXS_operator = result
+
+            return eff_RIXS_operator
+
+        # Now substitute the prefactors by their correct values
+        input_filename = "prefactors_results.dat"
+        loaded_data_orig = pd.read_csv(input_filename, sep="\t")
+        
+        #compress data for faster computation
+        loaded_data = {}
+        for key in loaded_data_orig.keys():
+            loaded_data[key] = np.array(loaded_data_orig[key])[500:1000:10]  #take every 10th value
+
+        #getting the prefactors a1g, eg, t1u, t2g for the given w_in-----------------------------------------------------------------------
+        # w_in_index = give_index_of_closest_value(loaded_data["Energy"], w_in)
+
+        w_in = np.array(loaded_data["Energy"])+offset_energy
+        prefactor_dict_all_w = {
+            'a1g': np.array(loaded_data['Re a1g']) + 1j * np.array(loaded_data["Im a1g"]),
+            'eg': np.array(loaded_data['Re eg']) + 1j * np.array(loaded_data["Im eg"]),
+            't1u': np.array(loaded_data['Re t1u']) + 1j * np.array(loaded_data["Im t1u"]),
+            't2g': np.array(loaded_data['Re t2g']) + 1j * np.array(loaded_data["Im t2g"])
+        }
+        
+        #set a1g to zero
+
+        prefactor_dict_all_w['a1g'] = np.zeros_like(w_in)
+
+
+        # prefactor_dict_of_w = {
+        #             #'a1g': prefactor_dict_all_w['a1g'][w_in_index],
+        #             #TODO: think about the a1g value
+        #             'a1g': 0,
+        #             'eg': prefactor_dict_all_w['eg'][w_in_index],
+        #             't1u': prefactor_dict_all_w['t1u'][w_in_index],
+        #             't2g': prefactor_dict_all_w['t2g'][w_in_index]
+        #         }
+        # RIXSMatrix = sp.simplify(RIXSMatrix.subs(prefactor_dict_of_w))
+
+        # q_analytical = sp.symbols('q', real=True)
+        # x_point = np.max(q_values_along_path)
+        # beta = sp.acos(q_analytical * factor_x_point_to_max_angle / x_point)
+
+        config.debug_timer.print_difference("start calculating eff. RIXS operator for given angles", debug_time_duration)
+        angular_shape = alpha.shape + two_theta.shape +phi.shape
+        alpha = np.broadcast_to(alpha[:,np.newaxis,np.newaxis], angular_shape)
+        two_theta = np.broadcast_to(two_theta[np.newaxis,:,np.newaxis], angular_shape)
+        phi = np.broadcast_to(phi[np.newaxis,np.newaxis,:], angular_shape)
+        
+        beta = np.pi/2 - alpha
+        beta_prime = np.pi/2-(two_theta-alpha)
+
+        #temp
+        # phi = phi[0]
+        # alpha = alpha[0]
+        # two_theta = two_theta[0]
+        # beta = beta[0]
+        epsilon_in = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
+        epsilon_out = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
+        for p, (polarisation_in_sigma, polarisation_out_sigma) in enumerate(RIXS_config):
+            #pi-polarised input
+            if polarisation_in_sigma:
+                epsilon_in[p] = np.array([np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float)
+            else:
+                epsilon_in[p] = np.array([
+                    np.cos(beta) * np.sin(phi),
+                    np.cos(beta) * np.cos(phi),
+                    np.sin(beta)
+                ], dtype=float)
+
+            # sigma-polarised output
+            if polarisation_out_sigma:
+                epsilon_out[p] = np.array([np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float)
+            else:
+                epsilon_out[p] = np.array([
+                    -np.cos(beta_prime) * np.sin(phi),
+                    -np.cos(beta_prime) * np.cos(phi),
+                    np.sin(beta_prime)
+                ], dtype=float)
+        # sqw_xyz = np.load("sqw_xyz.npy", allow_pickle=True).item()
+        
+        #just for plotting and debugging
+        k_in = np.array([np.cos(alpha)*np.sin(phi),
+                            np.cos(alpha)*np.cos(phi),
+                            -np.sin(alpha)
+                            ])
+        k_out = np.array([np.cos(two_theta-alpha)*np.sin(phi),
+                            np.cos(two_theta-alpha)*np.cos(phi),
+                            np.sin(two_theta-alpha)
+                            ])
+        q = np.array([np.sin(phi)*((np.cos(alpha)-np.cos(two_theta-alpha))),
+                        np.cos(phi)*((np.cos(alpha)-np.cos(two_theta-alpha))),
+                        -np.sin(alpha)-np.sin(two_theta-alpha)
+                        ])
+        config.debug_timer.print_difference("calculated q and polarisation vectors from angles", debug_time_duration)
+        def draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out):
+            """Helper function to visualise the scattering geometry."""
+            from mpl_toolkits.mplot3d import Axes3D
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+
+            origin = np.array([0, 0, 0])
+
+            ax.quiver(*(-k_in), *k_in, color='r', length=la.norm(k_in[:,0,0,0]), normalize=False, label='k_in')
+            ax.quiver(*origin, *k_out, color='g', length=la.norm(k_out[:,0,0,0]), normalize=False, label='k_out')
+            ax.quiver(*origin, *q, color='b', length=la.norm(q[:,0,0,0]), normalize=False, label='q')
+            ax.quiver(*(-k_in), *(epsilon_in), color='c', length=la.norm(epsilon_in[:,0,0,0]), normalize=False, label='epsilon_in')
+            ax.quiver(*(k_out), *(epsilon_out), color='m', length=la.norm(epsilon_out[:,0,0,0]), normalize=False, label='epsilon_out')
+
+            ax.set_xlim([-2, 2])
+            ax.set_ylim([-2, 2])
+            ax.set_zlim([-2, 2])
+
+            ax.set_xlabel('X axis')
+            ax.set_ylabel('Y axis')
+            ax.set_zlabel('Z axis')
+
+            ax.legend()
+            plt.show()
+        
+        rixs_coeff_arr_numerical_4 = np.zeros((3,3,config.amount_spatial_S_operator, config.amount_spatial_S_operator, len(prefactor_list)), dtype=config.dtype_complex)
+        for i in range(3):
+            for j in range(3):
+                Rij = RIXSMatrix[i,j]
+                coeff_dict_of_S_operators = sympy_manipulations.nc_coeff_dict(Rij)
+                for a in range(config.amount_spatial_S_operator):
+                    for b in range(config.amount_spatial_S_operator):
+                        coeff_4=coeff_dict_of_S_operators.get(S_op_list[a]*S_op_list[b])
+                        coeff_4 = coeff_4.as_coefficients_dict() if coeff_4 is not None else None
+                        for sigma, key in enumerate(prefactor_list):
+                            rixs_coeff_arr_numerical_4[i,j,a,b,sigma] = coeff_4[key] if coeff_4 is not None else 0 #if the coefficient is not in the dict
+        config.debug_timer.print_difference("rewrite RIXS matrix into coefficient array", debug_time_duration)
+        
+        #add the different possible alignments of the spin direction
+        if len(material.alignments)!=0:
+            alignment_rotation_of_complete_material = np.zeros((len(material.alignments),3,3), dtype=config.dtype_complex)
+            for R, alignment in enumerate(material.alignments):
+                alignment_rotation_of_complete_material[R] = rotation.rotation_matrix_from_vectors(alignment, np.array([0,0,1])) # this gives the rotation of the actual spin direction to the z direction: when assuming spin along z, we need to rotate the RIXS operator with this matrix
+        else:
+            alignment_rotation_of_complete_material = np.array([np.eye(3)], dtype=config.dtype_complex)
+        #rotate the rixs coeff_array rot^T * RIXS * rot for all alignments
+        rixs_coeff_arr_numerical_4 = np.einsum('RBA,BCous,RCD->RADous', alignment_rotation_of_complete_material, rixs_coeff_arr_numerical_4, alignment_rotation_of_complete_material, optimize='optimal')
+        coeff_arr_numerical_4_p_angles = np.einsum('piabc,Rijous,pjabc->Rouspabc', epsilon_in,rixs_coeff_arr_numerical_4,epsilon_out, optimize='optimal')
+        
+     
+        q_values = functions.give_grid_vectors_d(material.lattice_vectors,[8,8,8])
+        
+        def load_material_data(material: Material):
+            data = np.load(f"outputs/sqw_intensities/results_coeff2025-11-21_14-27-47.npz", allow_pickle=True)
+            material.energies = data["energies"]
+            material.T = data["T"]
+            material.phase_factor = data["phase_factor"]
+            material.sqw_2_ad_a_sym_class = data["sqw_2_ad_a_sym_class"]
+            material.conv_sqw_2_ad_a_sym_classes = data["conv_sqw_2_ad_a_sym_classes"]
+            material.coeff_sym_classes_tioju_4 = data["coeff_sym_classes_tioju_4"]
+            material.coeff_sym_class_tioju_2 = data["coeff_sym_class_tioju_2"]
+            material.coeff_tioju_xyz_2 = data["coeff_tioju_xyz_2"]
+            material.coeff_tioju_xyz_4 = data["coeff_tioju_xyz_4"]
+            material.coeff_prime_to_lab_2 = data["coeff_prime_to_lab_2"]
+            material.coeff_prime_to_lab_4 = data["coeff_prime_to_lab_4"]
+            material.coeff_xyz_rixs_2 = data["coeff_xyz_rixs_2"]
+            material.coeff_xyz_rixs = data["coeff_xyz_rixs_4"]
+        
+        load_material_data(material)
+        
+        #relate q to the points in k space
+        BZ_size_to_k_in = factor_BZ_size_to_k_in(E=w_in)
+        relative_grid_points=np.einsum('iabc,v->vabci', q, BZ_size_to_k_in)
+        shape_v_angles = relative_grid_points.shape[:-1]
+        relative_grid_points = relative_grid_points.reshape((np.prod(shape_v_angles),3))
+        q_grid_points = np.einsum('Nd,di->Ni', relative_grid_points, material.get_reciprocal_lattice_vectors())
+        
+        q_values_interp = functions.path_through_grid_interpolated(grid= q_values.transpose(-1,0,1,2), relative_grid_points=relative_grid_points, steps=1)
+        q_values_interp = q_values_interp.reshape((*q_values_interp.shape[:-1],*shape_v_angles))
+        
+        #extract sqw2 and sqw4 along the path
+        sqw_2_along_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class, relative_grid_points=relative_grid_points, steps=1)
+        sqw_2_along_path = sqw_2_along_path.reshape((*sqw_2_along_path.shape[:-1],*shape_v_angles))
+        sqw_4_along_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes, relative_grid_points=relative_grid_points, steps=1)
+        sqw_4_along_path = sqw_4_along_path.reshape((*sqw_4_along_path.shape[:-1],*shape_v_angles))
+        
+        config.debug_timer.print_difference("calculated interpolated q values and sqw along path", debug_time_duration)
+        
+        # OUMN spin-operator index
+        # sr sigma prefactor index
+        # p polarisation config index
+        # a alpha index
+        # b two theta index
+        # c phi index
+        coeff_array_spectrum_4 = np.einsum('ROUspabc,RMNrpabc->ROUMNsrpabc', np.conj(coeff_arr_numerical_4_p_angles), coeff_arr_numerical_4_p_angles, optimize='optimal')
+
+        material.coeff_xyz_rixs = coeff_array_spectrum_4
+        
+        #calculating all combinations of the sigma prefactors
+        sigma_prefactors = np.zeros((len(prefactor_list), len(prefactor_list), len(w_in),), dtype=config.dtype_complex)
+        for s, key_s in enumerate(prefactor_dict_all_w.keys()):
+            for r, key_r in enumerate(prefactor_dict_all_w.keys()):
+                sigma_prefactors[s,r] = np.conj(prefactor_dict_all_w[key_s]) * prefactor_dict_all_w[key_r]
+        
+        
+        #putting everything together to get the RIXS spectrum
+        if config.use_explicit_calc_of_sqw:
+            print("")
+            # spectrum_4 = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum_4,  sqw_4_xyz_along_path, optimize='optimal')
+        else:
+                
+            phase_factor_along_path = give_phase_factor(material, config, q_grid_points)[:,:material.N, :material.N]  #N,i,j
+            phase_factor_along_path = phase_factor_along_path.reshape((*shape_v_angles, phase_factor_along_path.shape[-2], phase_factor_along_path.shape[-1])) #vabcij
+            #xy symmetry class
+            
+            
+            
+            
+            spectrum_4_coeff = np.einsum("xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcxy"
+                                        ,material.coeff_sym_classes_tioju_4
+                                        ,phase_factor_along_path
+                                        ,material.coeff_tioju_xyz_4
+                                        ,material.coeff_xyz_rixs
+                                        ,sigma_prefactors,
+                                        optimize='optimal')
+            spectrum_2_coeff = np.einsum("xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx"
+                                        ,material.coeff_sym_class_tioju_2
+                                        ,phase_factor_along_path
+                                        ,material.coeff_tioju_xyz_2
+                                        ,material.coeff_xyz_rixs
+                                        ,sigma_prefactors,
+                                        optimize='optimal')
+            config.debug_timer.print_difference("calculated coeffcients for different symmetry classes", debug_time_duration)
+            
+
+            def plot_spectrum_offset(data: np.ndarray):
+                # scaling for vertical offsets
+                offset = 1.0
+                Nk = data.shape[0]
+                fig, ax = plt.subplots(figsize=(6,6))
+
+                # optional colormap
+                colors = plt.cm.viridis(np.linspace(0, 1, Nk))
+
+                for i in range(Nk):
+                    ax.plot(
+                        data[i] + i * offset,      # <-- important: offset each curve
+                        color=colors[i],
+                        linewidth=0.8
+                    )
+                plt.yticks(ticks=np.arange(0,len(w_in),1),labels=[f"{w:.1f}" for w in w_in])
+                plt.show()
+
+            spectrum_4 = np.einsum('Rvpabcxy, xywvabc->Rpvwabc', spectrum_4_coeff, sqw_4_along_path, optimize='optimal')
+            spectrum_2 = np.einsum('Rvpabcx, xwvabc->Rpvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
+            
+            spectrum_4_summed_R = np.einsum('Rpvwabc->pvwabc', spectrum_4, optimize='optimal')
+            
+            plt.figure("sqw_4 at peak transferred energy")
+            for alpha in range(spectrum_4_summed_R.shape[3]):
+                plt.plot(spectrum_4_summed_R[:,:,12,alpha,0,0], label=f"alpha index {alpha}")
+            functions.plot_tensor_at_certain_axis(spectrum_4, axis_to_plot_individ=1)
+            spectrum_4_test = np.einsum('Rvpabcxy->pvabc', spectrum_4_coeff,optimize='optimal')
+            spectrum_2_test = np.einsum('Rvpabcx, xwvabc->pvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
+            
+            #data analysis plots
+            
+            plt.figure("sqw_4 of transferred energy")
+            offset = np.max(spectrum_4_summed_R)
+            colors = plt.cm.viridis(np.linspace(0, 1, spectrum_4_summed_R.shape[3]))
+            for v in range(spectrum_4_summed_R.shape[1]):
+                for alpha in range(spectrum_4_summed_R.shape[3]):
+                    data = spectrum_4_summed_R[:,v,:,alpha,0,0].flatten()
+                    plt.plot(data+v*offset, label=f"alpha index {alpha}" if v == 0 else "", color=colors[alpha])
+            plt.legend()
+            
+            #extracting only symmetry class sums (for comparison)
+            sums = np.zeros(spectrum_4_coeff.shape[6:], dtype=config.dtype_complex)
+            for idx in np.ndindex(spectrum_4_coeff.shape[6:]):
+                sums[idx] = np.sum(spectrum_4_coeff[...,idx])
+                        
+            
+            plt.figure("q_grid_points")
+            for i in range(3):
+                plt.plot(q_grid_points[:,i], label=f"q component {i}")
+            plt.legend()
+            
+            
+            plt.figure("Prefactors vs w_in")
+            plt.plot(w_in, np.real(prefactor_dict_all_w['eg']), label='Re(eg)')
+            plt.plot(w_in, np.imag(prefactor_dict_all_w['eg']), label='Im(eg)')
+            plt.plot(w_in, np.real(prefactor_dict_all_w['a1g']), label='Re(a1g)')
+            plt.plot(w_in, np.imag(prefactor_dict_all_w['a1g']), label='Im(a1g)')
+            plt.plot(w_in, np.real(prefactor_dict_all_w['t1u']), label='Re(t1u)')
+            plt.plot(w_in, np.imag(prefactor_dict_all_w['t1u']), label='Im(t1u)')
+            plt.plot(w_in, np.real(prefactor_dict_all_w['t2g']), label='Re(t2g)')
+            plt.plot(w_in, np.imag(prefactor_dict_all_w['t2g']), label='Im(t2g)')
+            plt.xlabel("Energy (eV)")
+            plt.ylabel("Prefactor")
+            plt.legend()
+            
+            plt.figure("energy dependence summed all symmetry classes")
+            for p in range(4):
+                plt.plot(w_in, spectrum_4_test[p,:,0,0,0], label=f"Spectrum 4 Test {RIXS_config[p]}")
+            plt.legend()
+
+        # #plt.figure("RIXS Spectrum 4 pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
+        # grid = np.real(spectrum_4)
+        # mappable4 = axs_spectrum_4[number_config].pcolormesh(grid, norm=SymLogNorm(
+        #                             linthresh=1e-5,          # linear range around zero
+        #                             linscale=1.0,            # scale of the linear range
+        #                             vmin=np.min(grid),
+        #                             vmax=np.max(grid),
+        #                             base=10
+        #                         ))
+        # axs_spectrum_4[number_config].set_xlabel("k-points along path")
+        # axs_spectrum_4[number_config].set_ylabel("Energy Loss (w_in - w_out)")
+        # # plt.colorbar()
+
+        # #plt.figure("RIXS Spectrum 2 pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
+        # grid = np.real(spectrum_2)
+        # mappable2 = axs_spectrum_2[number_config].pcolormesh(grid, norm=SymLogNorm(
+        #                             linthresh=1e-5,          # linear range around zero
+        #                             linscale=1.0,            # scale of the linear range
+        #                             vmin=np.min(grid),
+        #                             vmax=np.max(grid),
+        #                             base=10
+        #                         ))
+        # axs_spectrum_2[number_config].set_xlabel("k-points along path")
+        # axs_spectrum_2[number_config].set_ylabel("Energy Loss (w_in - w_out)")
+        # # plt.colorbar()
+
+        # #plt.figure("RIXS Spectrum complete pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
+
+        # spectrum_2_padded = np.zeros_like(spectrum_4)
+        # spectrum_2_padded[:spectrum_2.shape[0], :] = spectrum_2
+        # grid = np.real(spectrum_2_padded + spectrum_4)
+        # mappable_complete = axs_spectrum_complete[number_config].pcolormesh(grid, norm=SymLogNorm(
+        #                             linthresh=1e-5,          # linear range around zero
+        #                             linscale=1.0,            # scale of the linear range
+        #                             vmin=np.min(grid),
+        #                             vmax=np.max(grid),
+        #                             base=10
+        #                         ))
+
+        # fig_spectrum_complete.colorbar(mappable_complete, ax=axs_spectrum_complete[number_config])
+        # fig_spectrum_2.colorbar(mappable2, ax=axs_spectrum_2[number_config])
+        # fig_spectrum_4.colorbar(mappable4, ax=axs_spectrum_4[number_config])
+        
+        # axs_spectrum_complete[number_config].set_xlabel("k-points along path")
+        # axs_spectrum_complete[number_config].set_ylabel("Energy Loss (w_in - w_out)")
+        
+            
+            
+            
+    
+    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_4)
+    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_2)
+    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_complete)
+    
+    config.debug_timer.print_difference(f"done calculating RIXS spectrum", debug_time_duration)
+
+
+def symmetry_checks(config: Config, material: Material):
+    sym, _ = functions.give_symmetries_of_tensors(material.coeff_tioju_xyz_2, number_axis_to_include = 4, return_conjugated_symmetries=False,compare_only_a_sample=False)
+    print("")
+
 
 def sqw_prime_to_sqw(config: Config, sqw_prime: np.ndarray, material: Material):           
     if not material.is_incommensurate():
+        if sqw_prime is None:
+            return None, None
         assert sqw_prime.shape[0] == config.amount_tau_values, f"sqw_prime first dimension (tau) size {sqw_prime.shape[0]} does not match config.amount_tau_values {config.amount_tau_values}"
         return sqw_prime[0], None  # no transformation needed
     
@@ -2486,9 +3131,7 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
         ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
         ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
     
-    for lv in material.lattice_vectors:
-        # Draw the lattice vectors
-        ax.quiver(0, 0, 0, lv[0], lv[1], lv[2], color='black', arrow_length_ratio=0.1, linewidth=2)
+    
     
     positions_occupied = []
     bonds_drawn = []
@@ -2501,9 +3144,10 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
 
     # handle degenerate range
     if np.isclose(Jmin, Jmax):
-        eps = 1e-6
-        Jmin -= eps
-        Jmax += eps
+        if Jmax > 0:
+            Jmin = -Jmax if Jmax != 0 else -1.0
+        else:
+            Jmax = -Jmin if Jmin != 0 else 1.0
 
     # use TwoSlopeNorm only when range straddles zero; otherwise use a plain Normalize
     if Jmin < 0 and Jmax > 0:
@@ -2544,7 +3188,7 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
                 v - y,
                 w - z,
                 arrow_length_ratio=0.05,
-                linewidth=1,
+                linewidth=2,
                 color=colors_mapped,
             )  # , color=['r', 'g', 'b'], arrow_length_ratio=0.1
         if atom0.S != 0 and DRAW_SPINS:
@@ -2567,6 +3211,10 @@ def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=Tr
     sm.set_array(J_values)
     cbar = fig.colorbar(sm, ax=ax, shrink=0.5, aspect=10)
     cbar.set_label('Tr[J]', rotation=270, labelpad=15)
+    
+    for lv in material.lattice_vectors:
+        # Draw the lattice vectors
+        ax.quiver(0, 0, 0, lv[0], lv[1], lv[2], color='black', arrow_length_ratio=0.1, linewidth=2)
     
     VALUES_TO_SAVE["figs_for_pdf"].append(fig)
     # plt.show()
