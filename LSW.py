@@ -128,6 +128,7 @@ def call_main():
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             Examples.NiO_supercell(config)
+            # Examples.NiO_2_atom_cell(config)
             
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
@@ -197,7 +198,7 @@ def main(config: Config, material: Material):
     assert material is not None, "Material has to be given "
                 
     #tryout RIXS (loaded grid)
-    if True:
+    if False:
         calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(config, material, q_values= None, sqw_4_xyz= None, sqw_2_xyz= None)
                     
 
@@ -237,6 +238,8 @@ def main(config: Config, material: Material):
                  energies=material.energies,
                  T=material.T,
                  phase_factor=material.phase_factor,
+                 q_values = material.q_values,
+                 w_values= material.w_values,
                  sqw_2_ad_a_sym_class=material.sqw_2_ad_a_sym_class,
                  conv_sqw_2_ad_a_sym_classes=material.conv_sqw_2_ad_a_sym_classes,
                  coeff_sym_classes_tioju_4=material.coeff_sym_classes_tioju_4,
@@ -249,7 +252,7 @@ def main(config: Config, material: Material):
                  coeff_xyz_rixs_4=material.coeff_xyz_rixs)
     config.debug_timer.print_difference("done with computing sqw_4 and sqw_2", config.debug_timing)
     
-    calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz, sqw_2_xyz= sqw_2_xyz)
+    # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz, sqw_2_xyz= sqw_2_xyz)
     
     symmetry_checks(config, material)
     
@@ -2155,6 +2158,25 @@ def normalise_to_total_sum_rule(sqw_2, sqw_4, material: Material, config: Config
     sqw_4_normalised = sqw_4 * scaling_factor**2
     return sqw_2_normalised, sqw_4_normalised
 
+def load_material_data(material: Material, filename="results_coeff2025-11-21_14-27-47"):
+            data = np.load(f"outputs/sqw_intensities/{filename}.npz", allow_pickle=True)
+            material.energies = data["energies"]
+            material.T = data["T"]
+            material.phase_factor = data["phase_factor"]
+            material.sqw_2_ad_a_sym_class = data["sqw_2_ad_a_sym_class"]
+            material.conv_sqw_2_ad_a_sym_classes = data["conv_sqw_2_ad_a_sym_classes"]
+            material.coeff_sym_classes_tioju_4 = data["coeff_sym_classes_tioju_4"]
+            material.coeff_sym_class_tioju_2 = data["coeff_sym_class_tioju_2"]
+            material.coeff_tioju_xyz_2 = data["coeff_tioju_xyz_2"]
+            material.coeff_tioju_xyz_4 = data["coeff_tioju_xyz_4"]
+            material.coeff_prime_to_lab_2 = data["coeff_prime_to_lab_2"]
+            material.coeff_prime_to_lab_4 = data["coeff_prime_to_lab_4"]
+            material.coeff_xyz_rixs_2 = data["coeff_xyz_rixs_2"]
+            material.coeff_xyz_rixs = data["coeff_xyz_rixs_4"]
+            material.q_values = data["q_values"]
+            material.w_values = data["w_values"]
+            
+            return material
 
 def calculate_complete_RIXS_spectrum_for_sqw_xyz(
                         config: Config,
@@ -2770,25 +2792,9 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
         coeff_arr_numerical_4_p_angles = np.einsum('piabc,Rijous,pjabc->Rouspabc', epsilon_in,rixs_coeff_arr_numerical_4,epsilon_out, optimize='optimal')
         
      
-        q_values = functions.give_grid_vectors_d(material.lattice_vectors,[8,8,8])
-        
-        def load_material_data(material: Material):
-            data = np.load(f"outputs/sqw_intensities/results_coeff2025-11-21_14-27-47.npz", allow_pickle=True)
-            material.energies = data["energies"]
-            material.T = data["T"]
-            material.phase_factor = data["phase_factor"]
-            material.sqw_2_ad_a_sym_class = data["sqw_2_ad_a_sym_class"]
-            material.conv_sqw_2_ad_a_sym_classes = data["conv_sqw_2_ad_a_sym_classes"]
-            material.coeff_sym_classes_tioju_4 = data["coeff_sym_classes_tioju_4"]
-            material.coeff_sym_class_tioju_2 = data["coeff_sym_class_tioju_2"]
-            material.coeff_tioju_xyz_2 = data["coeff_tioju_xyz_2"]
-            material.coeff_tioju_xyz_4 = data["coeff_tioju_xyz_4"]
-            material.coeff_prime_to_lab_2 = data["coeff_prime_to_lab_2"]
-            material.coeff_prime_to_lab_4 = data["coeff_prime_to_lab_4"]
-            material.coeff_xyz_rixs_2 = data["coeff_xyz_rixs_2"]
-            material.coeff_xyz_rixs = data["coeff_xyz_rixs_4"]
-        
-        load_material_data(material)
+        # q_values = functions.give_grid_vectors_d(material.lattice_vectors,[8,8,8])
+        material = load_material_data(material)
+        q_values = material.q_values
         
         #relate q to the points in k space
         BZ_size_to_k_in = factor_BZ_size_to_k_in(E=w_in)
@@ -2897,10 +2903,22 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             plt.legend()
             
             #extracting only symmetry class sums (for comparison)
-            sums = np.zeros(spectrum_4_coeff.shape[6:], dtype=config.dtype_complex)
-            for idx in np.ndindex(spectrum_4_coeff.shape[6:]):
-                sums[idx] = np.sum(spectrum_4_coeff[...,idx])
-                        
+            spectrum_4_coeff_summed_sym_class = np.einsum('Rvpabcxy->vpabc', spectrum_4_coeff,optimize='optimal')
+            
+            plt.figure("sqw_4 of transferred energy normalised all sym class set to 1")
+            plt.title("sqw_4 of transferred energy normalised all sym class set to 1")
+            offset = 1
+            colors = plt.cm.viridis(np.linspace(0, 1, spectrum_4_coeff_summed_sym_class.shape[2]))
+
+            # w_in = np.array([w_in]*spectrum_4_coeff_summed_sym_class.shape[1]).flatten()
+            for alpha in range(spectrum_4_coeff_summed_sym_class.shape[2]):
+                for p in range(spectrum_4_coeff_summed_sym_class.shape[1]):
+                    data = spectrum_4_coeff_summed_sym_class[:,p,alpha,0,0].flatten()
+                    data = data / np.max(data)
+                    plt.plot(w_in,data+v*offset, label=f"alpha index {alpha}, p index {p}", color=colors[alpha])
+            plt.xlabel("incident energy")
+            plt.ylabel("normalised intensity")
+            plt.legend()
             
             plt.figure("q_grid_points")
             for i in range(3):

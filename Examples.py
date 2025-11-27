@@ -90,6 +90,55 @@ def NiO_supercell(config: Config, J=1, a=1):
     
     return DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=J, a=a, S1=1, S2=-1, spin_dir=np.array([0,0,1]), alignements=alignements)
 
+def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,1])):
+    alignements = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
+    
+    lv = [np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])]
+    
+    M = np.array(lv) #transformation from euclidean to lattice vector basis (A1 A2 A3) = (a1 a2 a3)T (a being the euclidean vectors)
+    la.inv(M.T)
+    X,Y,Z = np.array([1,-1,1])/2,  np.array([1,1,-1])/2, np.array([-1,1,1])/2 #the absolute X,Y,Z vectors in lattice units
+    normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
+    
+    tau = np.array([0, 0, 0])  # commensurate
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell")
+
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        Atom(position=X, type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        
+        # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+    ]
+    J_values = [J]
+    bonds = []
+    combinations, distances = material.return_combinations_up_to_distance(atoms, 2*a)
+    for i,j in enumerate(J_values):
+        for combs in combinations[i]:
+            atom1, uc1, atom2, uc2 = combs
+            assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
+            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j))
+
+    # for c in combinations[0]:
+    # a1,u1,a2,u2 = c
+    # print(lv.T@(a1.position+u1))
+    # print(lv.T@(a2.position+u2))
+    # print(a1.position+u1)
+    # print(a2.position+u2)
+    # print("")
+    
+    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2*X, 1/2*(X+Y), 1/2*(X+Y+Z), np.array([0,0,0])]
+    Kx,Ky,Kz = np.array([1,0,1])/2,  np.array([1,1,0])/2, np.array([0,1,1])/2
+    # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2* np.array([1,0,1]), 1/2* np.array([0,1,1]), 1/2* np.array([0,0,0])]
+    material.relative_grid_points_path = [ np.array([0,0,0]), Kx, (Kx+Ky), (Kx+Ky+Kz), np.array([0,0,0])]
+    
+    # all_atoms.append(atoms[0])
+    return material
+
 def NiO(config:Config ,J=1,a=1, alignement=0):
     
     #assert config.dimension == 3, "NiO configuration is only defined for 3D"

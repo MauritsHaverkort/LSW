@@ -1168,6 +1168,18 @@ def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="
 
     return fig
 
+
+
+def plot_3D_scatter_color_coded(grid):
+    assert len(grid.shape) == 3, "Input grid must be 3D"
+    # Create a 3D offset plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x, y, z = np.indices(grid.shape)
+    plot=ax.scatter(x.flatten(), y.flatten(), z.flatten(), c=grid.flatten())
+    fig.colorbar(plot)  
+    plt.show()
+
 def plot_3D_scatter(Z, title="3D Scatter Plot", xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", save_path=None):
     # Assuming eigvals_grid is already defined as a 4D array
     Z = np.real(Z)  # Ensure Z is real for plotting
@@ -1276,7 +1288,7 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
             fig_grid.suptitle(f"intensities sqw ad_a(NxN grid)")
         for a in range(M):
             for b in range(M):
-                ax = axs_grid[a, b]
+                ax = axs_grid[a, b] if M!=1 else axs_grid
                 
                 intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
                     config,
@@ -1965,7 +1977,7 @@ def save_figures_as_images_to_pdf(
             plt.tight_layout(rect=[0, 0, 1, 0.95])
             pdf.savefig(fig)
             plt.close(fig)
-        if config.use_explicit_calc_of_sqw:
+        if config.use_explicit_calc_of_sqw and config.calc_conv_intensities:
             info_str = "sqw 4 symmetries \n"
             for sym in material.sqw_4_symmetries:
                 info_str += f"{sym}\n"

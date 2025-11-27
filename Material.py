@@ -58,6 +58,8 @@ class Material:
         
         self.coeff_xyz_rixs_2:np.ndarray = None
         self.coeff_xyz_rixs:np.ndarray = None
+        
+        self.sqw_4_symmetries = None #for explicit calculation of all steps this stores the sqw_4 symmetries (so not all are plotted)
         #self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(self.config.amount_spatial_S_operator)]
        
         
