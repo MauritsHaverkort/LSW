@@ -124,11 +124,11 @@ def call_main_with_material_config():
             
             #AFM supercell
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.NiO_supercell(config)
-            # Examples.NiO_2_atom_cell(config)
+            Examples.NiO_2_atom_cell(config)
             
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
@@ -1760,7 +1760,7 @@ def calculate_sqw_spectra(
             config.debug_timer.print_difference("done calculating the intensities of sqw (repeat all without energy part)", config.debug_timing)
 
             #adding just the convolution of the xx component with itself for direct comparison --> doesnt work with the supercell
-            results.append(functions.convolute_grids_fft(sqw_2_xyz[0,0,0,0],sqw_2_xyz[0,0,0,0], dimension=material.dimension))
+            results.append(functions.convolute_grids_fft(sqw_2_xyz[0,3,0,3],sqw_2_xyz[0,3,0,3], dimension=material.dimension))
             names_plots.append(f"sqw_2_xyz_symmetrised_xx_convoluted_with_itself")
         ########################################################################################################################
         ########################################################################################################################

@@ -103,7 +103,8 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     
     tau = np.array([0, 0, 0])  # commensurate
-    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell")
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell",
+                        extension=2)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -119,11 +120,11 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     #this is not reliably working since I dont account for double counting correctly
     bonds = []
     combinations, distances = material.return_combinations_up_to_distance(atoms, 2*a)
-    for i,j in enumerate(J_values):
+    for i,j_value in enumerate(J_values):
         for combs in combinations[i]:
             atom1, uc1, atom2, uc2 = combs
             assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
-            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j))
+            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j_value))
     # bonds = [
     #     Bond(
     #         material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
@@ -156,7 +157,11 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2*X, 1/2*(X+Y), 1/2*(X+Y+Z), np.array([0,0,0])]
     Kx,Ky,Kz = np.array([1,0,1])/2,  np.array([1,1,0])/2, np.array([0,1,1])/2
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2* np.array([1,0,1]), 1/2* np.array([0,1,1]), 1/2* np.array([0,0,0])]
-    material.relative_grid_points_path = [np.array([0,0,0]), Kx, (Kx+Ky), (Kx+Ky+Kz), np.array([0,0,0])]
+    if material.extension ==2:
+        material.relative_grid_points_path = [np.array([0,0,0]), 1/2*Kx, 1/2*(Kx+Ky), 1/2*(Kx+Ky+Kz), np.array([0,0,0])]
+    else:
+        material.relative_grid_points_path = [np.array([0,0,0]), Kx, (Kx+Ky), (Kx+Ky+Kz), np.array([0,0,0])]
+    
     
     # all_atoms.append(atoms[0])
     return material
