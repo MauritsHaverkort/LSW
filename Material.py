@@ -89,26 +89,32 @@ class Material:
         """return all combinations of unique atom pairs and unit cells for every distance up to max_distance"""
         max_extension = int(np.ceil(max_distance / np.min(np.linalg.norm(self.lattice_vectors, axis=1))))
         extension_d = (max_extension,)*self.dimension+(0,)*(3 - self.dimension)
-        unit_cell_indices = [np.array([i, j, k]) for i in range(0, extension_d[0] + 1)
-                             for j in range(0, extension_d[1] + 1)
-                             for k in range(0, extension_d[2] + 1)]
+        unit_cell_indices = [np.array([i, j, k]) for i in range(-(extension_d[0] + 1), extension_d[0] + 1)
+                             for j in range(-(extension_d[1] + 1), extension_d[1] + 1)
+                             for k in range(-(extension_d[2] + 1), extension_d[2] + 1)]
         atoms_extended = [(a, uc_idx, uc_idx + a.position) for uc_idx in unit_cell_indices for a in np.array(atoms).flatten()]
 
         combinations = []
         distances = []
+        distance_vectors = []
         for atom1 in atoms:
-            atom1_uc, atom1_pos = np.array([0,0,0]), atom1.position
-            for (atom2, atom2_uc, atom2_pos) in atoms_extended:
-                
+            atom1_uc, atom1_abs_pos = np.array([0,0,0]), atom1.position
+            for (atom2, atom2_uc, atom2_abs_pos) in atoms_extended:
+                if atom2.type < atom1.type:
+                    continue  # avoid double counting: looking in all directions but strict order of atoms
                 if atom1 != atom2 or np.any(atom1_uc != atom2_uc):  # ensure no pairing between same positions
-                    distance = np.linalg.norm((atom1_pos - atom2_pos)@self.lattice_vectors)
-                    if distance <= max_distance:
+                    distance_vector = (atom1_abs_pos - atom2_abs_pos)@self.lattice_vectors
+                    distance = np.linalg.norm(distance_vector)
+                    if distance <= max_distance and -distance_vector not in distance_vectors:
+                        #to avoid double counting 
+                        
                         #TODO: might need better way if lattice vectors are very small or big
                         index_d = np.where(np.isclose(distances, distance, atol=1e-2))[0]
                         if index_d.size > 0:
                             index_d = index_d[0]
                             if not np.any([atom2==c[0] and np.all(c[1]==atom2_uc) and atom1 == c[2] and np.all(c[3]==atom1_uc)  for c in combinations[index_d]]):  # avoid duplicate pairs
                                 combinations[index_d].append([atom1,atom1_uc, atom2, atom2_uc])
+                        #new distance class
                         else:
                             distances.append(distance)
                             combinations.append([[atom1,atom1_uc, atom2, atom2_uc]])
@@ -291,5 +297,5 @@ class Material:
     
     if __name__ == "__main__":
         import LSW
-        LSW.call_main()
+        LSW.call_main_with_material_config()
     

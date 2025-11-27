@@ -50,4 +50,4 @@ class Debug_timing:
 
 if __name__ == "__main__":
     import LSW
-    LSW.call_main()
+    LSW.call_main_with_material_config()

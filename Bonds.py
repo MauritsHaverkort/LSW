@@ -54,4 +54,4 @@ class Bond(object):
 if __name__ == "__main__":
     # Example usage
     import LSW
-    LSW.call_main()
+    LSW.call_main_with_material_config()

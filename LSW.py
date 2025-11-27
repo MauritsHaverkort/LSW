@@ -68,7 +68,7 @@ def test_normalisation():
         
     
 
-def call_main():
+def call_main_with_material_config():
     # test_normalisation()
     
     config_SpinW = Configurations.config_experimental("SpinW TT")
@@ -124,10 +124,10 @@ def call_main():
             
             #AFM supercell
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
-            Examples.NiO_supercell(config)
+            # Examples.NiO_supercell(config)
             # Examples.NiO_2_atom_cell(config)
             
             #AFM sc
@@ -1332,7 +1332,6 @@ def calculate_sqw_spectra(
             #config.warnings.add("!!! very experimental trying to use symmetry to calc my conv of a ad directly")
             if config.debug_Sa_ad:
                 sqw_prime_of_a_ad_k=np.einsum('t...lc,...cd,t...dl->tcd...l', T_herm_conj, k_dependent_prefactor, T, optimize='optimal')
-            config.warnings.add("use sqw as intnsity per k-point")
             sqw_prime_of_a_ad_without_k_pref=np.einsum('t...lc,t...dl->tcd...l', T_herm_conj, T, optimize='optimal')
 
         else:
@@ -1345,6 +1344,8 @@ def calculate_sqw_spectra(
             sqw_prime_of_a_ad_without_k_pref = deal_with_divergencies(residues=sqw_prime_of_a_ad_without_k_pref, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=config.use_averaging_TdT)
             sqw_prime_of_a_ad_k = deal_with_divergencies(residues=sqw_prime_of_a_ad_k, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
         
+        #normalise to intensity per k-point (so that sum over all intensities is independent of the amount of grid points)
+        config.warnings.add("use sqw as intnsity per k-point")           
         sqw_prime_of_a_ad_without_k_pref = 1/(config.number_k_points * config.amount_w_values) * sqw_prime_of_a_ad_without_k_pref
         
         #plotting intenisties of different branches for debugging
@@ -1783,7 +1784,7 @@ def calculate_sqw_spectra(
                     #else: 
                         #config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
             term = sqw_2_xyz[*spatial_idx]
-            if np.any(abs(term) >= 1e-5) and np.mean(abs(term)) > 1e-5:
+            if np.any(abs(term) >= 1e-5/(config.number_k_points * config.amount_w_values)) and np.mean(abs(term)) > 1e-5/(config.number_k_points * config.amount_w_values):
                 results.append(term)
                 names_plots.append(f"S_{spatial_idx}_N=summed from paper 4")
             # term = sqw_intensities[alpha, beta]
@@ -3341,4 +3342,4 @@ def plotting_additional_values():
 
 if __name__ == "__main__":
     # not working yet --> somehow values saved as tuples
-    call_main()
+    call_main_with_material_config()

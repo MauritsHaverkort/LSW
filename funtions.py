@@ -2173,9 +2173,9 @@ def save_latex_matrices(array, filename="latex_matrices.txt", env="bmatrix", pre
         raise ValueError("Input array must be 2D or 3D.")
 
 if __name__ == "__main__":
-    from LSW import call_main
+    from LSW import call_main_with_material_config
 
-    call_main()
+    call_main_with_material_config()
 
 def integrate_nd(f, grid_points, dimension):
     """
