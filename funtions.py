@@ -74,6 +74,42 @@ def is_positive_definite(H, tol=1e-12, verbose=True):
 def get_total_size(array: np.ndarray) -> int:
     return array.size * array.itemsize
 
+def inspect_npz_file_size(filename):
+    import zipfile
+    
+    print(f"File: {filename}")
+    print(f"Total compressed file size: {os.path.getsize(filename)/1024**2:.3f} MB\n")
+
+    # Load npz normally
+    data = np.load(filename, allow_pickle=True)
+
+    # Read zip archive for compressed sizes
+    with zipfile.ZipFile(filename, "r") as z:
+        zipinfo = {info.filename: info for info in z.infolist()}
+
+    print(f"{'Key':30} {'Uncompressed (MB)':>18} {'Compressed (MB)':>18} {'Shape / Type'}")
+    print("-" * 90)
+
+    total_uncompressed = 0
+    total_compressed = 0
+
+    for key in data.files:
+        arr = data[key]
+
+        uncompressed = arr.nbytes
+        compressed = zipinfo[key + ".npy"].compress_size  # npz stores entries as individual .npy files
+
+        total_uncompressed += uncompressed
+        total_compressed += compressed
+
+        print(f"{key:30} {uncompressed/1024**2:18.3f} {compressed/1024**2:18.3f}  {arr.shape} {arr.dtype}")
+
+    print("-" * 90)
+    print(f"{'TOTAL':30} {total_uncompressed/1024**2:18.3f} {total_compressed/1024**2:18.3f}\n")
+
+    return total_uncompressed, total_compressed
+
+
 def analyze_matrix(matrix):
     # Convert to NumPy array for convenience
     arr = np.array(matrix, dtype=object)  # object dtype allows for mixed types (e.g., None)
@@ -1410,12 +1446,37 @@ def path_through_grid_from_relative_points(relative_points, q_grid:np.ndarray):
 #     values_on_path = interp(path_coords)
     
 #     return values_on_path
+def interpolated_path_from_relative_points(relative_grid_points:np.ndarray, steps, nx=None, ny=None, nz=None):
+    """
+    Takes relative_grid_points of shape (N, 3) and steps and returns interpolated float indices of the target grid with dimension (nx, ny, nz) of shape (N*steps, 3).
+    if nx, ny, nz are not given, they are assumed to be 1 --> returns relative position in the target grid."""
+    
+    # ---- Build the interpolated path ----
+    steps_lin = np.linspace(0, 1, steps)
+    if steps == 1:
+        all_rel = relative_grid_points
+    else:
+        all_rel = np.concatenate([
+            np.einsum("i,j->ij", steps_lin, relative_grid_points[i]-relative_grid_points[i-1]) + relative_grid_points[i-1]
+        for i in range(1, len(relative_grid_points))
+    ])
+    if nx is None or ny is None or nz is None:
+        return all_rel
+    else:
+        path_coords = np.column_stack([
+            all_rel[:, 0] * (nx - 1),
+            all_rel[:, 1] * (ny - 1),
+            all_rel[:, 2] * (nz - 1),
+        ])
+    return path_coords
 
-def path_through_grid_interpolated(grid, relative_grid_points, steps):
+def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps):
     from scipy.interpolate import RegularGridInterpolator
     from scipy.ndimage import map_coordinates
     """takes a grid of shape (..., X, Y, Z) and relative_grid_points of shape (N, 3) and steps and returns an interpolated path through the grids (...,N)."""
-
+    
+    
+     
     # grid.shape = (A, B, ..., X, Y, Z)
     grids_shape = grid.shape[:-3]
     nx, ny, nz = grid.shape[-3:]
@@ -1424,21 +1485,10 @@ def path_through_grid_interpolated(grid, relative_grid_points, steps):
     x = np.arange(nx)
     y = np.arange(ny)
     z = np.arange(nz)
+    
+    path_coords = interpolated_path_from_relative_points(relative_grid_points, steps, nx, ny, nz)
 
-    # ---- Build the interpolated path (same as your code) ----
-    steps_lin = np.linspace(0, 1, steps)
-    if steps == 1:
-        all_rel = relative_grid_points
-    else:
-        all_rel = np.concatenate([
-            np.einsum("i,j->ij", steps_lin, relative_grid_points[i])
-        for i in range(1, len(relative_grid_points))
-    ])
-    path_coords = np.column_stack([
-        all_rel[:, 0] * (nx - 1),
-        all_rel[:, 1] * (ny - 1),
-        all_rel[:, 2] * (nz - 1),
-    ])
+    
 
     # ---- Prepare grid for vectorized interpolation ----
     # grid_flat: (batch, nx, ny, nz)
@@ -1453,7 +1503,14 @@ def path_through_grid_interpolated(grid, relative_grid_points, steps):
     vals = np.empty((batch, path_coords.shape[0])) 
     for b in range(batch):
         #use map_coordinates to have wrapping around the grid
-        vals[b] = map_coordinates(grid_flat[b], path_coords.T, order=1, mode='wrap')
+        
+        #need to do real and imaginary part separately since map_coordinates does not support complex numbers
+        real_interp = map_coordinates(np.real(grid_flat[b]), path_coords.T,
+                              order=1, mode='wrap')
+        imag_interp = map_coordinates(np.imag(grid_flat[b]), path_coords.T,
+                                    order=1, mode='wrap')
+        vals[b] = real_interp + 1j * imag_interp
+        # vals[b] = map_coordinates(grid_flat[b], path_coords.T, order=1, mode='wrap')
 
     # Interpolate -> (num_steps_total, batch)
     #vals = interp(path_coords)

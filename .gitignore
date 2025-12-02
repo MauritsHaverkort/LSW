@@ -14,6 +14,7 @@ storage.py
 
 # Ignore all .dat files
 *.dat
+*.npz
 
 grid.npz
 total_integral_intensities.txt

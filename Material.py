@@ -56,7 +56,7 @@ class Material:
         self.coeff_prime_to_lab_2:np.ndarray = None
         self.coeff_prime_to_lab_4:np.ndarray = None
         
-        self.coeff_xyz_rixs_2:np.ndarray = None
+        # self.coeff_xyz_rixs_2:np.ndarray = None
         self.coeff_xyz_rixs:np.ndarray = None
         
         self.sqw_4_symmetries = None #for explicit calculation of all steps this stores the sqw_4 symmetries (so not all are plotted)
