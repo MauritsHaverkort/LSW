@@ -1,14 +1,16 @@
 from typing import List
+from matplotlib import pyplot as plt
 import numpy as np
 import numpy.linalg as la
 from Atoms import Atom  
 from Bonds import Bond
 import rotation  
 import Configurations as Config
-from funtions import give_reciprocal_lv
+import funtions as functions
 
 class Material:
-    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None, extension:int =1, alignments:List[np.ndarray]=[]):
+    def __init__(self, dimension: int, config:Config,tau:np.ndarray = np.array([0,0,0]), normal_vector_to_rotation_plane:np.ndarray = np.array([0,1,0]) ,atoms:List[List[Atom]] = None, bonds: List = None, lattice_vectors: np.ndarray = None, name:str = "not given", relative_grid_points_path:List[np.ndarray] = None, extension:int =1, alignments:List[np.ndarray]=[],
+                 crystallographic_lv: np.ndarray = []):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
         
@@ -21,6 +23,9 @@ class Material:
         self.lattice_vectors = np.array(lattice_vectors) if lattice_vectors is not None else np.array([])
         self.N = len(atoms) if atoms is not None else 0
         self.dimension = dimension  # Dimension of the material
+        self.crystallographic_lv = crystallographic_lv if crystallographic_lv != [] else self.lattice_vectors
+        self.from_cryst_to_lv_basis =  np.array(lattice_vectors) @ la.inv(np.array(self.crystallographic_lv))
+        
         if relative_grid_points_path is not None:
             self.relative_grid_points_path = relative_grid_points_path
         else:
@@ -48,13 +53,17 @@ class Material:
         self.conv_sqw_2_ad_a_sym_classes:np.ndarray = None
         
         self.coeff_sym_classes_tioju_4:np.ndarray = None
-        self.coeff_sym_class_tioju_2:np.ndarray = None
+        self.coeff_sym_classes_tioju_2:np.ndarray = None
         
         self.coeff_tioju_xyz_2:np.ndarray = None
         self.coeff_tioju_xyz_4:np.ndarray = None
         
         self.coeff_prime_to_lab_2:np.ndarray = None
         self.coeff_prime_to_lab_4:np.ndarray = None
+        
+        self.rixs_spectrum_4:np.ndarray = None
+        self.rixs_spectrum_2:np.ndarray = None
+        self.rixs_spectrum:np.ndarray = None
         
         # self.coeff_xyz_rixs_2:np.ndarray = None
         self.coeff_xyz_rixs:np.ndarray = None
@@ -73,11 +82,47 @@ class Material:
         self.mat_R2 = np.outer(self.normal_vector_to_rotation_plane, self.normal_vector_to_rotation_plane)
         self.mat_R1 = (np.eye(3) - 1j * mat_nx - self.mat_R2) / 2
     
+    def get_corner_points_of_BZ(self):
+        return functions.give_grid_vectors_d(self.get_reciprocal_lattice_vectors(), steps=[2,2,2], include_endpoint=True)
+
+    def transform_from_cryst_basis_to_lv_basis(self, points:np.ndarray, reciprocal:bool=False, backtranform:bool=False, transform_coefficients:bool=True):
+        """Convert real-points / k-points from lattice vector basis to crystallographic basis."""
+        if transform_coefficients:
+            assert points.shape[-1] == 3, "Points must have shape (..., 3)"
+        else:
+            assert points.shape == (3,3), "basis vectors must have shape (3,3)"
+        if reciprocal:
+            # (B1 B2 B3).T = tranpose(T)^-1  (b1 b2 b3).T
+            M = la.inv(self.from_cryst_to_lv_basis.T)
+        else:
+            # (A1 A2 A3).T = T (a1 a2 a3).T
+            M = self.from_cryst_to_lv_basis
+        if backtranform:
+            M = la.inv(M)
+        if transform_coefficients:
+            # (C1 C2 C3) =  (c1 c2 c3) T^-1
+            # M = la.inv(M.T) # transposing here since T is on the right side (to reuse the einsum below)
+            return np.einsum('...v,vi->...i', points, la.inv(M), optimize='optimal')
+        # v for vector, i for index
+        return np.einsum('iv,v...->...i', M, points, optimize='optimal')
+
+    def plot_BZ(self):
+        fig = plt.figure("BZ")
+        ax = fig.add_subplot(111, projection='3d')
+        points = self.get_corner_points_of_BZ()
+        for idx in np.ndindex(points.shape[:-1]):
+            ax.scatter(*points[idx])
+        ax.set_xlabel('KX')
+        ax.set_ylabel('KY')
+        ax.set_zlabel('KZ')
+        
+        return fig
+    
     def get_extended_relative_grid_points_path(self):
         return [self.extension*np.array(point) for point in self.relative_grid_points_path]
 
     def get_reciprocal_lattice_vectors(self):
-        return give_reciprocal_lv(self.lattice_vectors)
+        return functions.give_reciprocal_lv(self.lattice_vectors)
 
     def is_incommensurate(self):
         """Check if the material is incommensurate based on its tau values."""
@@ -184,7 +229,7 @@ class Material:
 
         else:
             raise ValueError("Invalid order_of_operator. Must be 2 or 4.")
-    def return_spatial_indices(self, order_of_operator=2):
+    def return_Spin_operator_indices(self, order_of_operator=2):
         """Returns the spatial indices for the given order of operator."""
         if order_of_operator == 2:
             return [[alpha, beta] for alpha in range(self.config.amount_spatial_S_operator) for beta in range(self.config.amount_spatial_S_operator)]

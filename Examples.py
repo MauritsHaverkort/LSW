@@ -92,8 +92,11 @@ def NiO_supercell(config: Config, J=1, a=1):
 
 def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,1])):
     alignements = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
+    # alignements = [np.array([1, 1, -2])]
     
     lv = [np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])]
+    crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]   
+    
     
     config.Gamma = 0.2
     
@@ -104,7 +107,7 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     
     tau = np.array([0, 0, 0])  # commensurate
     material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell",
-                        extension=2)
+                        extension=2, alignments=alignements , crystallographic_lv=crystallographic_lv)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -776,8 +779,9 @@ def DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a,
         J2 = J
     lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
-
-    material = Material(config=config,lattice_vectors=lv, extension=2,tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=dimension, name=f"D2 AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}", alignments=alignements)
+    type_AFM = "AFM" if AFM else "FM"
+    material = Material(config=config,lattice_vectors=lv, extension=2,tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=dimension
+                        , name=f"D={dimension} AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}", alignments=alignements)
 
     sign_spin_dir = -1 if AFM else 1
     

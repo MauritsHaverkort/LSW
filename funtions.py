@@ -931,7 +931,7 @@ def plot_3d_grid_slider(grid,
         w_values: values for Y-axis
     """
     from matplotlib.widgets import Slider
-    assert grid.ndim == 3, "Grid must be 3D (Z, Y, X)"
+    assert grid.ndim == 3, "Grid must be 3D (X, Y, Z)"
     dim = grid.shape
 
     if np.iscomplexobj(grid):
@@ -1204,7 +1204,27 @@ def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="
 
     return fig
 
+def plot_points_3D(points, title="3D Points Plot", xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", save_path=None):
+    # Assuming points is an array of shape (N, 3)
+    assert len(points.shape) == 2, "points must be of form (N, 3) or (3, N)"
+    if points.shape[0] == 3 and points.shape[1] != 3:
+        points = points.T  # Transpose if needed
+    points = np.array(points)
+    assert points.shape[1] == 3, "Points array must have shape (N, 3)"
 
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(points[:, 0], points[:, 1], points[:, 2], marker='o')
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_zlabel(zlabel)
+    plt.title(title)
+
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight')
+
+    plt.show()
 
 def plot_3D_scatter_color_coded(grid):
     assert len(grid.shape) == 3, "Input grid must be 3D"
@@ -1336,7 +1356,7 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
                     no_w_values=True,
                 )
                 #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
-                ax.plot(intensities_k_along_path, label=f"I_i{a}_j{b}", linewidth=2)
+                ax.plot(np.real(intensities_k_along_path), label=f"I_i{a}_j{b}", linewidth=2)
                 ax.set_title(f"i={a}, j={b}")
                 ax.set_xticks(xticks_pos)
                 ax.set_xticklabels(xticks_labels)
@@ -1470,37 +1490,53 @@ def interpolated_path_from_relative_points(relative_grid_points:np.ndarray, step
         ])
     return path_coords
 
-def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps):
+def make_grid_periodic(grid):
+    """Takes a grid of shape (..., X, Y, Z) and makes it periodic by adding the first slice to the end of each dimension."""
+    slices = [slice(None)] * grid.ndim
+    slices[-3] = slice(0, 1) #slice with length 1 [0:1] --> in the x-dimension only the one element
+    grid_x = np.concatenate((grid, grid[tuple(slices)]), axis=-3)
+    slices = [slice(None)] * grid_x.ndim
+    slices[-2] = slice(0, 1)
+    grid_xy =  np.concatenate((grid_x, grid_x[tuple(slices)]), axis=-2)
+    slices = [slice(None)] * grid_xy.ndim
+    slices[-1] = slice(0, 1)
+    grid_xyz =  np.concatenate((grid_xy, grid_xy[tuple(slices)]), axis=-1)
+    return grid_xyz
+
+def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps, make_periodic=True):
     from scipy.interpolate import RegularGridInterpolator
     from scipy.ndimage import map_coordinates
     """takes a grid of shape (..., X, Y, Z) and relative_grid_points of shape (N, 3) and steps and returns an interpolated path through the grids (...,N)."""
-    
-    
-     
+
+    if make_periodic:
+        grid = make_grid_periodic(grid)
+
     # grid.shape = (A, B, ..., X, Y, Z)
     grids_shape = grid.shape[:-3]
     nx, ny, nz = grid.shape[-3:]
 
-    # Axes
-    x = np.arange(nx)
-    y = np.arange(ny)
-    z = np.arange(nz)
+    # # Axes
+    # x = np.arange(nx)
+    # y = np.arange(ny)
+    # z = np.arange(nz)
     
+    #these are the indices but floating numbers for interpolation
     path_coords = interpolated_path_from_relative_points(relative_grid_points, steps, nx, ny, nz)
-
     
-
+    #for debugging
+    # lv = np.array([grid[:,1,0,0], grid[:,0,1,0], grid[:,0,0,1]])
+    # path_coords@lv
     # ---- Prepare grid for vectorized interpolation ----
     # grid_flat: (batch, nx, ny, nz)
     batch = np.prod(grids_shape)
     grid_flat = grid.reshape(batch, nx, ny, nz)
-
+    
     # Move batch dim to last: (nx, ny, nz, batch)
-    grid_for_interp = np.moveaxis(grid_flat, 0, -1)
+    # grid_for_interp = np.moveaxis(grid_flat, 0, -1)
 
     # Create vectorized interpolator
     # interp = RegularGridInterpolator((x, y, z), grid_for_interp, method="linear", )
-    vals = np.empty((batch, path_coords.shape[0])) 
+    vals = np.empty((batch, path_coords.shape[0]), dtype=np.complex128) 
     for b in range(batch):
         #use map_coordinates to have wrapping around the grid
         
@@ -2132,7 +2168,47 @@ def find_files_with_keywords(directory:str, keywords: List[str]) -> List[str]:
                 matching_files.append(os.path.join(root, file))
     return matching_files
 
-def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None):
+def plot_plane_from_normal(ax, point, normal, size=1.0, alpha=0.4, color='lightblue', resolution=20):
+    """Plot a plane defined by a point and normal vector."""
+    normal = np.asarray(normal)
+    normal = normal / np.linalg.norm(normal)
+
+    # pick vector not parallel to normal
+    tmp = np.array([1,0,0]) if abs(normal[0]) < 0.9 else np.array([0,1,0])
+
+    # basis vectors of the plane
+    u = np.cross(normal, tmp); u /= np.linalg.norm(u)
+    v = np.cross(normal, u)
+
+    s = np.linspace(-size, size, resolution)
+    t = np.linspace(-size, size, resolution)
+    S, T = np.meshgrid(s, t)
+
+    X = point[0] + S*u[0] + T*v[0]
+    Y = point[1] + S*u[1] + T*v[1]
+    Z = point[2] + S*u[2] + T*v[2]  # corrected bug: use u and v consistently
+
+    ax.plot_surface(X, Y, Z, alpha=alpha, color=color)
+
+def plot_BZ_from_lv(ax, reciprocal_vectors, color='lightgreen', starting_depth=3, include_negative=True):
+    """Plot the Brillouin zone from reciprocal lattice vectors."""
+    # Create a meshgrid for the Brillouin zone
+    origin = np.zeros(3)
+    def plot_from_origin(origin, depth):
+        if depth == 0:
+            return
+        for vec in reciprocal_vectors:
+            if np.any(vec != origin):
+                linestyle = 'dashed' if depth < starting_depth else 'solid'
+                alpha = 1 if depth < starting_depth else 0.5
+                ax.quiver(*origin, *vec, color=color, linestyle=linestyle, alpha=alpha)
+                if include_negative:
+                    ax.quiver(*origin, *-vec, color=color, linestyle=linestyle, alpha=alpha)
+            plot_from_origin(origin + vec, depth - 1)
+            if include_negative:
+                plot_from_origin(origin - vec, depth - 1)
+    plot_from_origin(origin, depth=starting_depth)
+def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None):
             """
             Plots any number of vectors in a 3D space.
 
@@ -2144,8 +2220,8 @@ def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_
                 save_path (str): Path to save the plot (optional).
             """
             vectors = [np.array(v).astype(np.complex128).flatten() for v in vectors]  # Ensure all vectors are numpy arrays
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+            fig = fig or plt.figure()
+            ax = ax or fig.add_subplot(111, projection='3d')
             ax.set_title(title)
 
             origin = np.zeros(3)  # Origin point for all vectors
@@ -2168,6 +2244,8 @@ def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_
             if save_path:
                 plt.savefig(save_path)
             #plt.show()
+            
+            return fig, ax
 
 #TODO: normalise "better"
 def normalise_grid(grid):
@@ -2175,6 +2253,44 @@ def normalise_grid(grid):
     if total_sum != 0:
         grid = grid / total_sum
     return grid
+
+def flatten_axes(arr: np.ndarray, axes_to_flatten):
+    """
+    Flatten the specified axes of a NumPy array into a single axis.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        Input array.
+    axes_to_flatten : tuple of int
+        Axes to merge into one. Can be in any order and may be negative.
+
+    Returns
+    -------
+    out : np.ndarray
+        Array where selected axes are replaced by a single axis.
+        Shape (..., flattened_size, ...) depending on axis positions.
+    """
+
+    # Normalize axes (handle negative axes)
+    axes = tuple(sorted(ax % arr.ndim for ax in axes_to_flatten))
+
+    # Compute the flattened size
+    flat_size = np.prod([arr.shape[ax] for ax in axes])
+
+    # Build list of new axes order: 
+    #   1. all axes *not* being flattened (in original order)
+    #   2. the axes to flatten (in original order)
+    remaining_axes = tuple(ax for ax in range(arr.ndim) if ax not in axes)
+    new_order = remaining_axes + axes
+
+    # Move flattened axes to the end
+    arr_reordered = arr.transpose(new_order)
+
+    # New shape = remaining dims + (flat_size,)
+    new_shape = arr_reordered.shape[:len(remaining_axes)] + (flat_size,)
+
+    return arr_reordered.reshape(new_shape)
 
 def print_difference_to_timestamp(last_timestamp, debug_info, do_print):
     new_timestamp = int(time.time() * 1000)-last_timestamp
@@ -2266,7 +2382,9 @@ def integrate_nd(f, grid_points, dimension):
     # integrate from last axis down so axis indices stay valid
     for ax in reversed(range(dimension)):
         grid_slice = (slice(None),) * (ax+1) + (0,)*(2-ax) + (ax,)
-        res = np.trapezoid(res, grid_points[grid_slice], axis=ax)
+        slice_only_ax = (0,)*(ax) + (slice(None),) + (0,)*(2-ax) + (ax,)
+        sign_correction = 1 if grid_points[slice_only_ax][-1] > grid_points[slice_only_ax][0] else -1
+        res = sign_correction * np.trapezoid(res, grid_points[grid_slice], axis=ax) # the grid points might be decreasing instead increasing in some axis --> the sign correction corrects that by explicit checking
     return res
 
 def give_refined_grid_around_point(grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
@@ -2318,7 +2436,7 @@ def decreasing_step_spacing(start: np.ndarray, end: np.ndarray, num_points: int,
         series = np.concatenate((series, np.flip(series_other_side)), axis=0)
     return series
 
-def give_grid_vectors_d(vectors:np.ndarray, steps:List[int], amount_BZ=1):
+def give_grid_vectors_d(vectors:np.ndarray, steps:List[int], amount_BZ=1, include_endpoint=False):
     """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with the corresponding number of steps."""
     if amount_BZ != 1:
         vectors = [v * amount_BZ for v in vectors]
@@ -2335,7 +2453,9 @@ def give_grid_vectors_d(vectors:np.ndarray, steps:List[int], amount_BZ=1):
     # vectors_left=len(vectors)
     spacing = []
     for s in steps_list:
-        spacing.append(np.linspace(0, 1-1/s, s)) #the last point should not be the same as the first point but "one before that"
+        
+        spacing.append(np.linspace(0, 1, s, endpoint= include_endpoint)) #the last point should not be the same as the first if end_periodic is False
+        # spacing.append(np.linspace(0, 1-1/s, s)) 
         # spacing.append(np.linspace(0, 1, s))
     #spacing = np.array(spacing)
     # Use broadcasting and einsum to generate the grid efficiently

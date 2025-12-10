@@ -11,7 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from matplotlib import cm
 from typing import List, Callable  # Import List for type hints
-from matplotlib.colors import LogNorm, SymLogNorm
+from matplotlib.colors import LogNorm, SymLogNorm, Normalize
 from sympy import pprint
 
 from Material import Material
@@ -50,8 +50,14 @@ DEBUGGING_INFO = {"Attention unreasonably high state -> cut off": True}
 #--------------------------------------------------In Use Functions--------------------------------------------------#
 
 def test_normalisation():
+        
     config = Configurations.config_experimental("SpinW TT")
     k_values = np.arange(6,30,2)
+    # material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
+    material = Examples.NiO_2_atom_cell(config)
+    filename = f"total_integral_intensities.txt"
+    with open(filename, "a", encoding="utf-8") as f:
+        f.write(f"{config.timestamp}: material: {material.name}\n")
     for K in k_values:
         VALUES_TO_SAVE["figs_for_pdf"] = []
         VALUES_TO_SAVE["Hamiltonian_not_diagonalised"] = []
@@ -59,7 +65,6 @@ def test_normalisation():
         VALUES_TO_SAVE["Bog_trafo_of_k"] = []
         config.amount_k_values = [K, K, K]
         config.number_k_points = None
-        material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
         main(config, material)
         
         # functions.save_figures_as_images_to_pdf(config, VALUES_TO_SAVE["figs_for_pdf"], filename=f"outputs/{material.name}_{config.name}_{config.timestamp}.pdf", material=material)
@@ -108,9 +113,9 @@ def call_main_with_material_config():
         # for i in range(5):
         #     config_materials.append(copy.deepcopy(config))
         standard_materials = [
-        Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 1, 1])),
-        Examples.NiO_supercell(config),
-        Examples.D1_spin_spiral_inversion_sym_breaking_general_degree(config, rotated_to_y=False),
+        # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 1, 1])),
+        # Examples.NiO_supercell(config),
+        # Examples.D1_spin_spiral_inversion_sym_breaking_general_degree(config, rotated_to_y=False),
         ]
         
         testing_materials = [
@@ -126,9 +131,9 @@ def call_main_with_material_config():
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            # Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.NiO_supercell(config)
-            Examples.NiO_2_atom_cell(config)
+            # Examples.NiO_2_atom_cell(config)
             
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
@@ -198,8 +203,8 @@ def main(config: Config, material: Material):
     assert material is not None, "Material has to be given "
                 
     #tryout RIXS (loaded grid)
-    if True:
-        calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(config, material, q_values= None)
+    if False:
+        calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(config, material, q_values_grid= None)
                     
 
     draw_atoms_new_bond_system(material=material, DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=True)
@@ -243,16 +248,17 @@ def main(config: Config, material: Material):
                  sqw_2_ad_a_sym_class=material.sqw_2_ad_a_sym_class,
                  conv_sqw_2_ad_a_sym_classes=material.conv_sqw_2_ad_a_sym_classes,
                  coeff_sym_classes_tioju_4=material.coeff_sym_classes_tioju_4,
-                 coeff_sym_class_tioju_2=material.coeff_sym_class_tioju_2,
+                 coeff_sym_class_tioju_2=material.coeff_sym_classes_tioju_2,
                  coeff_tioju_xyz_2=material.coeff_tioju_xyz_2,
                  coeff_tioju_xyz_4=material.coeff_tioju_xyz_4,
                  coeff_prime_to_lab_2=material.coeff_prime_to_lab_2,
                  coeff_prime_to_lab_4=material.coeff_prime_to_lab_4,
-                 coeff_xyz_rixs_2=material.coeff_xyz_rixs_2,
                  coeff_xyz_rixs_4=material.coeff_xyz_rixs)
     config.debug_timer.print_difference("done with computing sqw_4 and sqw_2", config.debug_timing)
     
     # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz, sqw_2_xyz= sqw_2_xyz)
+    if config.compute_RIXS_spectrum:
+        calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(config, material, q_values_grid= None)
     
     symmetry_checks(config, material)
     
@@ -919,7 +925,7 @@ def sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad, order_of_a_operator=4, order_of_x
         sqw_xyz_coeff_of_ad_a = np.zeros((*sqw_xyz_symbolic.shape,*shape_a_ad), dtype=np.complex128) # shape of the ad_a operators is always [i,order_i,j,order_j] --> first element is tau then 2 to 5 are the once used; old --> [1: order_of_operator +1 ]: first index is tau (not needed here, then all ad_a indices are included that will always match order_if_operators)
         
         # substitute creation/annihilation operators
-        for indices_spatial in material.return_spatial_indices(order_of_xyz_operator): 
+        for indices_spatial in material.return_Spin_operator_indices(order_of_xyz_operator): 
             #this is the coefficient of the ad_a operator in the sqw_xyz_symbolic
             term_xyz = sqw_xyz_symbolic[*indices_spatial].expand()
             term_xyz_dict = sympy_manipulations.nc_coeff_dict(term_xyz)
@@ -1332,7 +1338,7 @@ def calculate_sqw_spectra(
             #config.warnings.add("!!! very experimental trying to use symmetry to calc my conv of a ad directly")
             if config.debug_Sa_ad:
                 sqw_prime_of_a_ad_k=np.einsum('t...lc,...cd,t...dl->tcd...l', T_herm_conj, k_dependent_prefactor, T, optimize='optimal')
-            sqw_prime_of_a_ad_without_k_pref=np.einsum('t...lc,t...dl->tcd...l', T_herm_conj, T, optimize='optimal')
+            sqw_prime_of_a_ad_without_phase_factor=np.einsum('t...lc,t...dl->tcd...l', T_herm_conj, T, optimize='optimal')
 
         else:
             config.warnings.add("using my calculation of T^+ T")
@@ -1341,13 +1347,19 @@ def calculate_sqw_spectra(
         
         #deal with divergencies
         if config.cut_diverging_spectral_weights:
-            sqw_prime_of_a_ad_without_k_pref = deal_with_divergencies(residues=sqw_prime_of_a_ad_without_k_pref, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=config.use_averaging_TdT)
-            sqw_prime_of_a_ad_k = deal_with_divergencies(residues=sqw_prime_of_a_ad_k, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
+            sqw_prime_of_a_ad_without_phase_factor = deal_with_divergencies(residues=sqw_prime_of_a_ad_without_phase_factor, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=config.use_averaging_TdT)
+            if config.debug_Sa_ad:
+                sqw_prime_of_a_ad_k = deal_with_divergencies(residues=sqw_prime_of_a_ad_k, config=config, material=material, q_values=q_values_grid, use_averaging_TdT=False)
         
         #normalise to intensity per k-point (so that sum over all intensities is independent of the amount of grid points)
-        config.warnings.add("use sqw as intnsity per k-point")           
-        sqw_prime_of_a_ad_without_k_pref = 1/(config.number_k_points * config.amount_w_values) * sqw_prime_of_a_ad_without_k_pref
+        if config.use_intensity_normalisation:
+            norm = 1/(config.number_k_points * config.amount_w_values)
+            config.warnings.add("use sqw as intnsity per k-point")
+        else:
+            norm = 1
         
+        sqw_prime_of_a_ad_without_phase_factor = norm * sqw_prime_of_a_ad_without_phase_factor
+
         #plotting intenisties of different branches for debugging
         if config.debug_Sa_ad:
             sym_energies , _ = functions.give_symmetries_of_tensors(material.energies.transpose(0,4,1,2,3),number_axis_to_include=2, return_conjugated_symmetries=False)
@@ -1361,7 +1373,7 @@ def calculate_sqw_spectra(
         if config.debug_Sa_ad:
             sqw_prime_of_a_ad = np.einsum('tcd...l,tw...l->tcdw...l',sqw_prime_of_a_ad_k, energy_dependent_part, optimize='optimal')
 
-        sqw_prime_of_a_ad_without_k_pref_with_w = np.einsum('tcd...l,tw...l->tcdw...l',sqw_prime_of_a_ad_without_k_pref, energy_dependent_part, optimize='optimal')
+        sqw_prime_of_a_ad_without_k_pref_with_w = np.einsum('tcd...l,tw...l->tcdw...l',sqw_prime_of_a_ad_without_phase_factor, energy_dependent_part, optimize='optimal')
         
         
         #summing over all eigenvectors, (taking the trace in paper 4)
@@ -1411,10 +1423,9 @@ def calculate_sqw_spectra(
 
 
             #functions.test_symmetries_sqw_4(*functions.give_symmetries_of_tensors(sqw_prime_2_ad_a[0],number_axis_to_include=4, return_conjugated_symmetries=False, give_mean_abs_value=False),material)
-            shape_tioju = sqw_prime_2_ad_a.shape[0:5]
             for i,sym in enumerate(symmety_list_ad_a_2):
                 material.sqw_2_ad_a_sym_class[i] = sqw_prime_2_ad_a[tuple(sym[0])]
-            material.coeff_sym_class_tioju_2 = functions.turn_symmetry_list_into_array(symmety_list_ad_a_2, shape_indices= sqw_prime_2_ad_a.shape[0:5])
+            material.coeff_sym_classes_tioju_2 = functions.turn_symmetry_list_into_array(symmety_list_ad_a_2, shape_indices= sqw_prime_2_ad_a.shape[0:5])
 
             def give_phase_factor_on_extended_grid(extension = 1, q_values=None):
                 extension_factor_tuple = (extension,)*material.dimension+(1,)*(3-material.dimension)
@@ -1435,16 +1446,18 @@ def calculate_sqw_spectra(
                 sqw_prime_grid_extended = np.einsum('tiojuw...,...ij->tiojuw...',sqw_prime_grid_extended, phase_factor[:,:,:,:material.N,:material.N], optimize='optimal')
                 return sqw_prime_grid_extended, q_values
             
-            
-            
+            #calculate the phase factor on the extended grid
+            phase_factor, q_values_extended = give_phase_factor_on_extended_grid(extension=material.extension)
+            material.phase_factor = phase_factor
+                        
             if config.calc_conv_intensities:
                 
-                len_sym_classes = len(material.coeff_sym_class_tioju_2)
+                len_sym_classes = len(material.coeff_sym_classes_tioju_2)
                 shape_w_k = material.sqw_2_ad_a_sym_class.shape[1:]
                 convoluted_grids_symmetry_classes = []
-                for s1 in range(material.coeff_sym_class_tioju_2.shape[0]):
+                for s1 in range(material.coeff_sym_classes_tioju_2.shape[0]):
                     convoluted_grids_symmetry_classes.append([])
-                    for s2 in range(material.coeff_sym_class_tioju_2.shape[0]):
+                    for s2 in range(material.coeff_sym_classes_tioju_2.shape[0]):
                         convoluted_grids_symmetry_classes[-1].append(functions.convolute_grids_fft(
                             material.sqw_2_ad_a_sym_class[s1], material.sqw_2_ad_a_sym_class[s2], dimension=material.dimension))
 
@@ -1498,8 +1511,6 @@ def calculate_sqw_spectra(
                 #adding the k-dependent prefactor again AFTER the convolutions
                 if compute_without_k_pref:
                     if config.experimental_plots_on_extended_grid:
-                        phase_factor, q_values_extended = give_phase_factor_on_extended_grid(extension=material.extension)
-                        material.phase_factor = phase_factor
                         if config.use_explicit_calc_of_sqw:
                             extension_factor_tuple = (material.extension,)*material.dimension+(1,)*(3-material.dimension)
                             temp_sqw_conv = np.tile(material.conv_sqw_2_ad_a_sym_classes, (1,1,1,)+extension_factor_tuple)
@@ -1544,6 +1555,9 @@ def calculate_sqw_spectra(
 
                 
                 sqw_prime_4_of_xyz_4 = sqw_prime_from_a_ad_to_xyz(sqw_prime_a_ad=sqw_prime_4_ad_a, material=material, config=config)
+                if config.use_explicit_calc_of_sqw and config.debug_Sa_ad:
+                    assert np.all(np.einsum("tioju...,abcdioju->tabcd...", sqw_prime_4_ad_a, material.coeff_tioju_xyz_4, optimize='optimal') == sqw_prime_4_of_xyz_4)
+                # check if the coefficients work
                 if config.use_explicit_calc_of_sqw and False:
                     extension_factor_tuple = (material.extension,)*material.dimension+(1,)*(3-material.dimension)
                     temp_sqw_conv = np.tile(material.conv_sqw_2_ad_a_sym_classes, (1,1,1,)+extension_factor_tuple) #rswK
@@ -1723,7 +1737,30 @@ def calculate_sqw_spectra(
             sqw_symmetrised = sqw #no symmetrisation needed, just use the original sqw
         return sqw_symmetrised
     sqw_2_xyz = symmetrise_sqw(sqw_2_xyz, material)
+    
+    
+    ########################################################################################################################
+    ########################################################################################################################
+    ################################                          Done with main steps                    ######################
+    ########################################################################################################################
+    ########################################################################################################################
+    
+    #check that the coefficients in material give the same result as the explicit calculation
+    #TODO: the incommensurate case is not yet checked here (t is summed over)
+    if config.use_explicit_calc_of_sqw and config.debug_Sa_ad:
+        spectrum_2_xyz_coeff_std_path = np.einsum("xtioju,...ij,OUMNioju->OUMN...x"
+                                        ,material.coeff_sym_classes_tioju_2
+                                        ,phase_factor[...,:material.N,:material.N]
+                                        ,material.coeff_tioju_xyz_2
+                                        ,optimize='optimal')
+        extension_factor_tuple = (material.extension,)*material.dimension+(1,)*(3-material.dimension)
+        # 
+        sqw_2_xyz_comp = np.einsum("OUMN...x,xw...->OUMNw...",spectrum_2_xyz_coeff_std_path, np.tile(material.sqw_2_ad_a_sym_class, (1,1,)+extension_factor_tuple)).astype(config.dtype_complex)
 
+        assert np.max(np.abs(sqw_2_xyz - sqw_2_xyz_comp)) < 1e-4 *np.max(sqw_2_xyz), "experimental sqw_2 from a_ad to xyz not matching with explicit calculation"
+    
+        
+    
     # all the intermediate plots (xyz etc. are only plotted if explicitly calculated)
     if config.use_explicit_calc_of_sqw:
         #------------------------------normalisation to total sum rule--------------------------------------------------------------
@@ -1733,7 +1770,7 @@ def calculate_sqw_spectra(
 
         #print normalisation
         print_normalisation(config=config, sqw_2=sqw_2_xyz, sqw_4=sqw_4_xyz)
-        
+    
         #construct only the intensities (for testing)
         #--------------------------------------------------------------------------------------------------------------------------------
         if config.debug_Sa_ad:
@@ -1771,22 +1808,16 @@ def calculate_sqw_spectra(
         #decide what should be plotted
         #-----------------------------------------------------------------
 
-        for sqw_components_idx, spatial_idx in enumerate(material.return_spatial_indices(4)):#enumerate([[0,0]]):
+        for sqw_components_idx, spatial_idx in enumerate(material.return_Spin_operator_indices(4)):#enumerate([[0,0]]):
         #for sqw_components_idx, (n1,n2) in enumerate([[0,0]]):
-            #for i in range(1):
-            if False: #if I want the individual terms 
-                for i in range(material.N, 2*material.N):
-                    #terms_to_calculate.append(last_term_to_calculate + sqw_components_idx + 1+i)
-                    term = sqw_2_xyz[alpha, beta,:, :, :, :, i]
-                    if np.any(term >= 10e-5):
-                        results.append(term)
-                        names_plots.append(f"S_{alpha}_{beta}_N={i} from paper 4")
-                    #else: 
-                        #config.warnings.add(f"Warning: S_{alpha}_{beta}_N={i} has no significant values, so not plotted")
+            
             term = sqw_2_xyz[*spatial_idx]
             if np.any(abs(term) >= 1e-5/(config.number_k_points * config.amount_w_values)) and np.mean(abs(term)) > 1e-5/(config.number_k_points * config.amount_w_values):
                 results.append(term)
                 names_plots.append(f"S_{spatial_idx}_N=summed from paper 4")
+                results.append(sqw_2_xyz_comp[*spatial_idx])
+                names_plots.append(f"S_{spatial_idx}_N (not explicit)")
+                
             # term = sqw_intensities[alpha, beta]
             # if np.any(term >= 1e-5) and np.mean(abs(term)) > 1e-5:
             #     results_debug.append(term)
@@ -1814,7 +1845,7 @@ def calculate_sqw_spectra(
                 config.debug_timer.print_difference("after searching for symmetries in sqw 4", config.debug_timing)
                 
             else:
-                indices_to_plot = material.return_spatial_indices(4)      
+                indices_to_plot = material.return_Spin_operator_indices(4)      
             #no reduction here right now --> done in the material
             relative_grid_points_reduced = [x * 1 for x in material.relative_grid_points_path]
             for idx in indices_to_plot:
@@ -2129,41 +2160,837 @@ def calculate_sqw_spectra(
     
     return sqw_2_xyz, sqw_4_xyz, q_values_extended
 
-def plot_intermediate_results(material: Material, config: Config, VALUES_TO_SAVE):
-    #idea is to take everything that is saved in material and construct the intermediate plots from there
+
+def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
+                        config: Config,
+                        material: Material,
+                        q_values_grid: np.ndarray,
+                        debug_time_duration=True,
+                        debug_RIXS_operator=False,
+                        load_saved_grids = False,
+                        experimental_compute_non_squared_use_commutative = False,
+                        filename="NiO2atomsK24_28_11",
+                        alpha_exp = np.array([20,45,70,95,120])*2*np.pi/360, #angle of incidence
+                        two_theta = np.array([150])*2*np.pi/360, #scattering angle
+                        phi = np.array([0]),
+                        lattice_constant = 4.17e-10, #lattice constant in m
+                        hbar = 6.582e-16, #hbar in eV*s
+                        c= 2.992792e8, # c in m/s
+                        offset_energy = 855 # offset energy in eV of the prefactor dataset (defined in plot_script.py in quanty_win directory)
+                        ):
+    """plan is to compute the experimental setup RIXS for all values of alpha, theta and phi, (in radians) incoming energy (eV) wished, lattice constant (m)"""
     
-    relative_grid_points = np.array( material.relative_grid_points_path)
+    alpha = np.linspace(0,1,100)*np.pi # smooth incident angle from 0 to 180 degrees
+    # alpha = alpha_exp
     
-    q_grid_points = np.einsum('Nd,di->Ni', relative_grid_points, material.get_reciprocal_lattice_vectors())
+    # OUMN spin-operator index
+    # s r sigma prefactor index
+    # p polarisation config index
+    # R alignment index
+    # ABCD spatial indices
+    # ij atom indices
+    # ou order indices
+    # xyz symmetry class indices
+    # v / w incident energy / energy loss indices
+    # t incommensurate index
+    # a alpha index
+    # b two theta index
+    # c phi index
+    
+    import pandas as pd
+    config.debug_timer.print_difference("start calculating RIXS operator")
+    
+    def factor_BZ_size_to_k_in(E):
+        return E*lattice_constant/(hbar*c*np.pi)
+
+    
+    # sqw_4_xyz_along_path,_,_ = functions.path_through_k_grid(config,grid= sqw_4_xyz, q_grid=q_values, )
+    # q_values_along_path,_,_ = functions.path_through_k_grid(config,grid= q_values, q_grid=q_values, relative_grid_points=[np.array([0,0,0]),np.array([1,0,0])])
+
+    def give_index_of_closest_value(array, value):
+        """
+        Find the index of the closest value in a numpy array to a given value.
+        """
+        idx = (np.abs(array - value)).argmin()
+        return idx
+    
+    # if I want to use prefcalculated data
+    # filename = "results_coeffNiO_K_16"
+    # material = load_material_data(material, filename=filename)
+    # config.warnings.add(f"Using saved material data from {filename} for RIXS calculation")
+    q_values_grid = material.q_values
+    
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    fig_spectrum_4, axs_spectrum_4 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_spectrum_4 = axs_spectrum_4.flatten()  # make indexing easier: axs[0..3]
+    fig_spectrum_4.suptitle("RIXS spectrum of two magnon contributions")
+
+    fig_spectrum_2, axs_spectrum_2 = plt.subplots(2, 2, figsize=(12, 8))
+    fig_spectrum_2.suptitle("RIXS spectrum of one magnon contributions")
+    axs_spectrum_2 = axs_spectrum_2.flatten()  # make indexing easier: axs[0..3]
+    
+    fig_spectrum_complete, axs_spectrum_complete = plt.subplots(2, 2, figsize=(12, 8))
+    fig_spectrum_complete.suptitle("Complete RIXS spectrum")
+    axs_spectrum_complete = axs_spectrum_complete.flatten()  # make indexing easier: axs[0..3]
+    
+    fig_coeff_4, axs_coeff_4 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_coeff_4 = axs_coeff_4.flatten()  # make indexing easier: axs[0..3]
+
+    fig_coeff_2, axs_coeff_2 = plt.subplots(2, 2, figsize=(12, 8))
+    axs_coeff_2 = axs_coeff_2.flatten()  # make indexing easier: axs[0..3]
+
+
+    RIXS_config = [
+        (polarisation_in_sigma, polarisation_out_sigma)
+        for polarisation_in_sigma in [False,True]
+        for polarisation_out_sigma in [False, True]
+    ]
+    
+     # ------------------------------Define spin operators as symbolic variables--------------------------------------------------------------
+    Sx, Sy, Sz = sp.symbols('Sx Sy Sz', commutative=experimental_compute_non_squared_use_commutative)
+    S_op_list = [Sx, Sy, Sz]
+    if config.amount_spatial_S_operator == 4:
+        S_op_list.append(sp.S(1)) #unit operator
+    # Splus, Smin = symbols('S_pl S_min', commutative=experimental_compute_non_squared_use_commutative)
+    # Smin = sp.conjugate(Splus)  # Define S- as the conjugate of S+
+    # Define total spin squared
+    S_sq = sp.symbols('S_sq')
+
+    # Define orbital labels
+    a1g, eg, t1u, t2g = sp.symbols('a1g eg t1u t2g')
+    prefactor_list = [a1g, eg, t1u, t2g]
+
+    
+    # ------------------------------Construct the RIXS matrix----------------------------------------------------------------------------
+    RIXSMatrix = sp.Matrix([
+            [
+                a1g + 2 * (Sx**2 - (1/3)*S_sq) * eg,
+                Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
+                -Sy * t1u + (Sz * Sx + Sx * Sz) * t2g
+            ],
+            [
+                -Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
+                a1g + 2 * (Sy**2 - (1/3)*S_sq) * eg,
+                Sx * t1u + (Sy * Sz + Sz * Sy) * t2g
+            ],
+            [
+                Sy * t1u + (Sz * Sx + Sx * Sz) * t2g,
+                -Sx * t1u + (Sy * Sz + Sz * Sy) * t2g,
+                a1g + 2 * (Sz**2 - (1/3)*S_sq) * eg
+            ]
+        ])
+    #
+    RIXSMatrix=RIXSMatrix.subs({S_sq: Sx*Sx + Sy*Sy + Sz*Sz})  # Substitute S_sq with its expression
+    # RIXSMatrix=RIXSMatrix.subs({Sx: (Splus+Smin)/2, Sy: (Splus-Smin)/(2*I)})  # Substitute Sx, Sy, Sz S+ and S-
+    
+    if not load_saved_grids:
+        # polarisation_in_sigma, polarisation_out_sigma = config_rixs
+
         
-    phase_factor_along_path = give_phase_factor(material, config, q_grid_points)[:,:material.N, :material.N]  #N,i,j
-    phase_factor_along_path = phase_factor_along_path.reshape((*shape_v_angles, phase_factor_along_path.shape[-2], phase_factor_along_path.shape[-1])) #vabcij
-    #xy symmetry class
+        def give_eff_scattering_operator_polarisation_dependent(epsilon_in = sp.Matrix([1, 0, 0]),
+                            epsilon_out = sp.Matrix([1, 0, 0])):
+
+            result = (np.conjugate(epsilon_out).T @ RIXSMatrix @ (epsilon_in))
+            result = sp.expand(result)
+            if debug_RIXS_operator:
+                print("RIXS operator not squared")
+                pprint(result)
+            # if not experimental_compute_non_squared_use_commutative:
+            #     result = sp.conjugate(result)*result
+            result= sp.expand(result)
+            eff_RIXS_operator = result
+
+            return eff_RIXS_operator
+
+        # Now substitute the prefactors by their correct values
+        input_filename = "prefactors_results.dat"
+        loaded_data_orig = pd.read_csv(input_filename, sep="\t")
+        
+        #compress data for faster computation
+        loaded_data = {}
+        for key in loaded_data_orig.keys():
+            loaded_data[key] = np.array(loaded_data_orig[key])[1500:1800:10] #500:1000:30 
+
+        #getting the prefactors a1g, eg, t1u, t2g for the given w_in-----------------------------------------------------------------------
+        # w_in_index = give_index_of_closest_value(loaded_data["Energy"], w_in)
+
+        w_in = np.array(loaded_data["Energy"])+offset_energy
+        prefactor_dict_all_w = {
+            'a1g': np.array(loaded_data['Re a1g']) + 1j * np.array(loaded_data["Im a1g"]),
+            'eg': np.array(loaded_data['Re eg']) + 1j * np.array(loaded_data["Im eg"]),
+            't1u': np.array(loaded_data['Re t1u']) + 1j * np.array(loaded_data["Im t1u"]),
+            't2g': np.array(loaded_data['Re t2g']) + 1j * np.array(loaded_data["Im t2g"])
+        }
+        
+        #set a1g to zero
+        # config.warnings.add("Setting a1g prefactor to zero for RIXS calculation")
+        # prefactor_dict_all_w['a1g'] = np.zeros_like(w_in)
+
+
+        # prefactor_dict_of_w = {
+        #             #'a1g': prefactor_dict_all_w['a1g'][w_in_index],
+        #             'a1g': 0,
+        #             'eg': prefactor_dict_all_w['eg'][w_in_index],
+        #             't1u': prefactor_dict_all_w['t1u'][w_in_index],
+        #             't2g': prefactor_dict_all_w['t2g'][w_in_index]
+        #         }
+        # RIXSMatrix = sp.simplify(RIXSMatrix.subs(prefactor_dict_of_w))
+
+        # q_analytical = sp.symbols('q', real=True)
+        # x_point = np.max(q_values_along_path)
+        # beta = sp.acos(q_analytical * factor_x_point_to_max_angle / x_point)
+
+        config.debug_timer.print_difference("start calculating eff. RIXS operator for given angles", debug_time_duration)
+        
+        #----------------------------experimental setup: angle rotations and polarisation vectors--------------------------------------------------------
+        
+        angular_shape = alpha.shape + two_theta.shape +phi.shape
+        alpha = np.broadcast_to(alpha[:,np.newaxis,np.newaxis], angular_shape)
+        two_theta = np.broadcast_to(two_theta[np.newaxis,:,np.newaxis], angular_shape)
+        phi = np.broadcast_to(phi[np.newaxis,np.newaxis,:], angular_shape)
+        
+        beta = np.pi/2 - alpha
+        beta_prime = np.pi/2-(two_theta-alpha)
+
+       
+        epsilon_in = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
+        epsilon_out = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
+        for p, (polarisation_in_sigma, polarisation_out_sigma) in enumerate(RIXS_config):
+            #pi-polarised input
+            if polarisation_in_sigma:
+                epsilon_in[p] = np.array([np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float)
+            else:
+                epsilon_in[p] = np.array([
+                    np.cos(beta) * np.sin(phi),
+                    np.cos(beta) * np.cos(phi),
+                    np.sin(beta)
+                ], dtype=float)
+
+            # sigma-polarised output
+            if polarisation_out_sigma:
+                epsilon_out[p] = np.array([np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float)
+            else:
+                epsilon_out[p] = np.array([
+                    -np.cos(beta_prime) * np.sin(phi),
+                    -np.cos(beta_prime) * np.cos(phi),
+                    np.sin(beta_prime)
+                ], dtype=float)
+        # sqw_xyz = np.load("sqw_xyz.npy", allow_pickle=True).item()
+        
+        #just for plotting and debugging
+        k_in = np.array([np.cos(alpha)*np.sin(phi),
+                            np.cos(alpha)*np.cos(phi),
+                            -np.sin(alpha)
+                            ])
+        k_out = np.array([np.cos(two_theta-alpha)*np.sin(phi),
+                            np.cos(two_theta-alpha)*np.cos(phi),
+                            np.sin(two_theta-alpha)
+                            ])
+        q = np.array([np.sin(phi)*((np.cos(alpha)-np.cos(two_theta-alpha))),
+                        np.cos(phi)*((np.cos(alpha)-np.cos(two_theta-alpha))),
+                        -np.sin(alpha)-np.sin(two_theta-alpha)
+                        ])
+        
+        config.debug_timer.print_difference("calculated q and polarisation vectors from angles", debug_time_duration)
+
+
+        #----------------------------writing eff RIXS oeprator as coeff matrix--------------------------------------------------------
+        
+        #spatial dimensions; spin operator; sigma prefactor
+        rixs_coeff_arr_numerical_4 = np.zeros((3,3,config.amount_spatial_S_operator, config.amount_spatial_S_operator, len(prefactor_list)), dtype=config.dtype_complex)
+        for i in range(3):
+            for j in range(3):
+                Rij = RIXSMatrix[i,j]
+                coeff_dict_of_S_operators = sympy_manipulations.nc_coeff_dict(Rij)
+                for a in range(config.amount_spatial_S_operator):
+                    for b in range(config.amount_spatial_S_operator):
+                        #prevent double counting of 1Sx and Sx1 terms when unit operator is included (case second operator is unit operator but first is not)
+                        if config.amount_spatial_S_operator==4 and (a!=3 and b==3):
+                            continue
+                        coeff_4=coeff_dict_of_S_operators.get(S_op_list[a]*S_op_list[b])
+                        coeff_4 = coeff_4.as_coefficients_dict() if coeff_4 is not None else None
+                        for sigma, key in enumerate(prefactor_list):
+                            rixs_coeff_arr_numerical_4[i,j,a,b,sigma] = coeff_4[key] if coeff_4 is not None else 0 #if the coefficient is not in the dict
+        config.debug_timer.print_difference("rewrite RIXS matrix into coefficient array", debug_time_duration)
+        
+        #add the different possible alignments of the spin direction
+        if len(material.alignments)!=0:
+            alignment_rotation_of_complete_material = np.zeros((len(material.alignments),3,3), dtype=config.dtype_complex)
+            for R, alignment in enumerate(material.alignments):
+                alignment_rotation_of_complete_material[R] = rotation.rotation_matrix_from_vectors(np.array([0,0,1]), alignment) # this gives the rotation of the actual spin direction to the z direction: when assuming spin along z, we need to rotate the RIXS operator with this matrix
+        else:
+            alignment_rotation_of_complete_material = np.array([np.eye(3)], dtype=config.dtype_complex)
+        #rotate the rixs coeff_array rot^T * RIXS * rot for all alignments
+        rixs_coeff_arr_numerical_4_comp = np.einsum('RBA,BCOUs,RCD->RADOUs', alignment_rotation_of_complete_material, rixs_coeff_arr_numerical_4, alignment_rotation_of_complete_material, optimize='optimal')
+        
+        #rotate the spin operators instead of the spatial part (taking transposed version since rotating from z alignment to actual alignment) --> this is equivalent to the routine in Atoms (R')
+        alignment_rotation_of_complete_material_operator = np.array([np.eye(config.amount_spatial_S_operator, dtype=config.dtype_complex) for _ in range(alignment_rotation_of_complete_material.shape[0])])
+        alignment_rotation_of_complete_material_operator[:,0:3,0:3] = alignment_rotation_of_complete_material
+        rixs_coeff_arr_numerical_4 = np.einsum('RMO,ABMNs,RNU->RABOUs', alignment_rotation_of_complete_material_operator, rixs_coeff_arr_numerical_4, alignment_rotation_of_complete_material_operator, optimize='optimal')
+        
+        coeff_arr_numerical_4_p_angles = np.einsum('pAabc,RABOUs,pBabc->ROUspabc', epsilon_in,rixs_coeff_arr_numerical_4,epsilon_out, optimize='optimal')
+        
+        #---------------------------debug the rixs coeff array---------------------------
+# for idx in np.ndindex(coeff_arr_numerical_4_p_angles.shape):
+#     if coeff_arr_numerical_4_p_angles[idx] != 0:
+#         print(f"alignment {idx[0]}, spin operator indices {idx[1]},{idx[2]},sigma prefactor {prefactor_list[idx[3]]},RIXS config {RIXS_config[idx[4]]}, angles {idx[5]},{idx[6]}: coeff {coeff_arr_numerical_4_p_angles[idx]}")
+# for idx in np.ndindex(rixs_coeff_arr_numerical_4.shape):
+#     if rixs_coeff_arr_numerical_4[idx] != 0:
+#         print(f"alignment {idx[0]}, spatial indices {idx[1]},{idx[2]},spin operator indices {idx[3]},{idx[4]}, sigma prefactor {prefactor_list[idx[5]]}, coeff: {rixs_coeff_arr_numerical_4[idx]}")
+
+        #saving the transformation matrix from symmetry classes to angles alignment and sigma prefactors
+        # OUMN spin-operator index
+        # sr sigma prefactor index
+        # p polarisation config index
+        # a alpha index
+        # b two theta index
+        # c phi index
+        coeff_array_spectrum_4 = np.einsum('ROUspabc,RMNrpabc->ROUMNsrpabc', np.conj(coeff_arr_numerical_4_p_angles), coeff_arr_numerical_4_p_angles, optimize='optimal')
+
+        material.coeff_xyz_rixs = coeff_array_spectrum_4
+        
+        #relate q to the points in k space
+        BZ_size_to_k_in = factor_BZ_size_to_k_in(E=w_in)
+        relative_grid_points_cryst_basis=np.einsum('iabc,v->vabci', q, BZ_size_to_k_in)
+        shape_v_angles = relative_grid_points_cryst_basis.shape[:-1]
+        relative_grid_points_cryst_basis = relative_grid_points_cryst_basis.reshape((np.prod(shape_v_angles),3))
+
+        # transform the relative_grid_points in the lv basis --> relative grid points has to be transformed to the lv basis
+        relative_grid_points_lv_basis = material.transform_from_cryst_basis_to_lv_basis(relative_grid_points_cryst_basis, backtranform=False, reciprocal=True)
+        
+        #v for vector, i for index
+        q_grid_points = np.einsum('Nv,vi->Ni', relative_grid_points_lv_basis, material.get_reciprocal_lattice_vectors())
+        q_grid_points_comp = np.einsum('Nv,vi->Ni', relative_grid_points_cryst_basis, functions.give_reciprocal_lv(material.crystallographic_lv))
+        #T lv_vectors = cryst_vectors
+        assert np.allclose(material.transform_from_cryst_basis_to_lv_basis(np.array(material.get_reciprocal_lattice_vectors()), backtranform=True, reciprocal=True, transform_coefficients=False), np.array(functions.give_reciprocal_lv(material.crystallographic_lv))), "Error in calculation of reciprocal lattice vectors"
+        #coeff_lv T^-1 = coeff_cryst
+        assert np.allclose(q_grid_points, q_grid_points_comp), "Error in transformation of q points to reciprocal lattice vectors"
+
+        #q_values are in the lv basis, so we need to interpolate in that basis
+        q_grid_points_crystal_momentum = functions.path_through_grid_interpolated(grid= material.get_corner_points_of_BZ().transpose(-1,0,1,2), relative_grid_points=relative_grid_points_lv_basis, steps=1, make_periodic=False)
+        
+        
+        
+        q_grid_points_crystal_momentum_comp = material.transform_from_cryst_basis_to_lv_basis(
+            functions.path_through_grid_interpolated(grid= material.transform_from_cryst_basis_to_lv_basis(q_values_grid, backtranform=False, reciprocal=True).transpose(-1,0,1,2), relative_grid_points=relative_grid_points_lv_basis, steps=1, make_periodic=False).T
+            , backtranform=True, reciprocal=True).T
+        
+
+        #extract sqw2 and sqw4 along the path
+        sqw_2_along_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class, relative_grid_points=relative_grid_points_lv_basis, steps=1)
+        sqw_2_along_path = sqw_2_along_path.reshape((*sqw_2_along_path.shape[:-1],*shape_v_angles))
+        if config.calc_conv_intensities:
+            sqw_4_along_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes, relative_grid_points=relative_grid_points_lv_basis, steps=1)
+            sqw_4_along_path = sqw_4_along_path.reshape((*sqw_4_along_path.shape[:-1],*shape_v_angles))
+            
+        config.debug_timer.print_difference("calculated interpolated q values and sqw along path", debug_time_duration)
+        
+        
+        #reshaping back to vabc
+        q_grid_points_crystal_momentum = q_grid_points_crystal_momentum.reshape((*q_grid_points_crystal_momentum.shape[:-1],*shape_v_angles))
+        # relative_grid_points_lv_basis = relative_grid_points_lv_basis.reshape((*shape_v_angles,3))
+        # relative_grid_points_cryst_basis = relative_grid_points_cryst_basis.reshape((*shape_v_angles,3))
+        
+        #calculating all combinations of the sigma prefactors
+        sigma_prefactors = np.zeros((len(prefactor_list), len(prefactor_list), len(w_in),), dtype=config.dtype_complex)
+        for s, key_s in enumerate(prefactor_dict_all_w.keys()):
+            for r, key_r in enumerate(prefactor_dict_all_w.keys()):
+                sigma_prefactors[s,r] = np.conj(prefactor_dict_all_w[key_s]) * prefactor_dict_all_w[key_r]
+        
+        # ----------------------------debug the sigma prefactors ----------------------------
+        plt.figure("sigma prefactors")
+        fig, ax = plt.subplots(4,4,figsize=(4,4))
+        for s in range(len(prefactor_list)):
+            for r in range(len(prefactor_list)):
+                ax[s,r].plot(w_in,np.real(sigma_prefactors[s,r]),  label=f"real conj({prefactor_list[s]})*{prefactor_list[r]}")
+                ax[s,r].plot(w_in,np.imag(sigma_prefactors[s,r]),  label=f"imag conj({prefactor_list[s]})*{prefactor_list[r]}")
+                ax[s,r].set_xlabel("Real")
+                ax[s,r].set_ylabel("Imaginary")
+                ax[s,r].legend()
+        # plt.show()
+
+        #putting everything together to get the RIXS spectrum
+        if config.use_explicit_calc_of_sqw:
+            print("")
+            # spectrum_4 = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum_4,  sqw_4_xyz_along_path, optimize='optimal')
+        else:
+                
+            phase_factor_along_path = give_phase_factor(material, config, q_grid_points)[:,:material.N, :material.N]  #N,i,j
+            phase_factor_along_path = phase_factor_along_path.reshape((*shape_v_angles, phase_factor_along_path.shape[-2], phase_factor_along_path.shape[-1])) #vabcij
+            #xy symmetry class
             
             
             
+            if config.calc_conv_intensities:
+                spectrum_4_coeff = np.einsum("xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcxy"
+                                        ,material.coeff_sym_classes_tioju_4
+                                        ,phase_factor_along_path
+                                        ,material.coeff_tioju_xyz_4
+                                        ,material.coeff_xyz_rixs
+                                        ,sigma_prefactors,
+                                        optimize='optimal')
+            spectrum_2_coeff = np.einsum("xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx"
+                                        ,material.coeff_sym_classes_tioju_2
+                                        ,phase_factor_along_path
+                                        ,material.coeff_tioju_xyz_2
+                                        ,material.coeff_xyz_rixs
+                                        ,sigma_prefactors,
+                                        optimize='optimal')
+            config.debug_timer.print_difference("calculated coeffcients for different symmetry classes", debug_time_duration)
             
-    spectrum_4_coeff = np.einsum("xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcxy"
-                                ,material.coeff_sym_classes_tioju_4
-                                ,phase_factor_along_path
-                                ,material.coeff_tioju_xyz_4
-                                ,material.coeff_xyz_rixs
-                                ,sigma_prefactors,
-                                optimize='optimal')
-    spectrum_2_coeff = np.einsum("xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx"
-                                ,material.coeff_sym_class_tioju_2
-                                ,phase_factor_along_path
-                                ,material.coeff_tioju_xyz_2
-                                ,material.coeff_xyz_rixs
-                                ,sigma_prefactors,
-                                optimize='optimal')
-    
-    spectrum_4 = np.einsum('Rvpabcxy, xywvabc->Rpvwabc', spectrum_4_coeff, sqw_4_along_path, optimize='optimal')
-    spectrum_2 = np.einsum('Rvpabcx, xwvabc->Rpvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
+
+            def plot_spectrum_offset(data: np.ndarray):
+                # scaling for vertical offsets
+                offset = 1.0
+                Nk = data.shape[0]
+                fig, ax = plt.subplots(figsize=(6,6))
+
+                # optional colormap
+                colors = plt.cm.viridis(np.linspace(0, 1, Nk))
+
+                for i in range(Nk):
+                    ax.plot(
+                        data[i] + i * offset,      
+                        color=colors[i],
+                        linewidth=0.8
+                    )
+                plt.yticks(ticks=np.arange(0,len(w_in),1),labels=[f"{w:.1f}" for w in w_in])
+                plt.show()
+            if config.calc_conv_intensities:
+                material.rixs_spectrum_4 = np.einsum('Rvpabcxy, xywvabc->Rpvwabc', spectrum_4_coeff, sqw_4_along_path, optimize='optimal')
             
-    
-    
-    
+            material.rixs_spectrum_2 = np.einsum('Rvpabcx, xwvabc->Rpvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
+            material.rixs_spectrum = material.rixs_spectrum_4.copy() if config.calc_conv_intensities else material.rixs_spectrum_2.copy()
+            if config.calc_conv_intensities:
+                material.rixs_spectrum[:,:,:,:material.rixs_spectrum_2.shape[3]] += material.rixs_spectrum_2 # transferred energy axis for spectrum 2 is half the length
+            
+            ########################################################################################################################
+            ########################################################################################################################
+            ################################                          data analysis plots                     ######################
+            ########################################################################################################################
+            ########################################################################################################################
+            def draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out):
+                """Helper function to visualise the scattering geometry."""
+                from mpl_toolkits.mplot3d import Axes3D
+
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+
+                origin = np.array([0, 0, 0])
+
+                ax.quiver(*(-k_in), *k_in, color='r', length=la.norm(k_in[:,0,0,0]), normalize=False, label='k_in')
+                ax.quiver(*origin, *k_out, color='g', length=la.norm(k_out[:,0,0,0]), normalize=False, label='k_out')
+                ax.quiver(*origin, *q, color='b', length=la.norm(q[:,0,0,0]), normalize=False, label='q')
+                ax.quiver(*(-k_in), *(epsilon_in), color='c', length=la.norm(epsilon_in[:,0,0,0]), normalize=False, label='epsilon_in')
+                ax.quiver(*(k_out), *(epsilon_out), color='m', length=la.norm(epsilon_out[:,0,0,0]), normalize=False, label='epsilon_out')
+
+                ax.set_xlim([-2, 2])
+                ax.set_ylim([-2, 2])
+                ax.set_zlim([-2, 2])
+
+                ax.set_xlabel('X axis')
+                ax.set_ylabel('Y axis')
+                ax.set_zlabel('Z axis')
+
+                ax.legend()
+                plt.show()
+        
+            def draw_BZ_in_exp_setup():
+                fig, ax = functions.plot_vectors_3d(material.get_reciprocal_lattice_vectors(),labels=[""]*3)
+                ax.set_title("k-points and BZ in experimental setup")
+                colors = plt.cm.viridis(np.linspace(0, 1, len(points.shape[2:].flatten())))
+
+                functions.plot_vectors_3d(functions.give_reciprocal_lv(material.crystallographic_lv), ax=ax, fig=fig, colors=['orange']*3,labels=[""]*3)
+                points = np.real(q_grid_points)
+                points = points.T.reshape(points.shape[-1],*shape_v_angles)
+                for idx_tot_mom_point in np.ndindex(points.shape[2:]):
+                    ax.scatter(points[0,:,*idx_tot_mom_point].flatten(), points[1,:,*idx_tot_mom_point].flatten(), points[2,:,*idx_tot_mom_point].flatten(), marker='x',label = f"angle {idx_tot_mom_point}")
+                functions.plot_BZ_from_lv(ax, material.get_reciprocal_lattice_vectors(), include_negative=True)
+                
+                points = np.real(q_grid_points_crystal_momentum)
+                points = points.reshape(points.shape[0],*shape_v_angles)
+                for color_idx, idx in enumerate(np.ndindex(points.shape[2:])):
+                    ax.scatter(points[0,:,*idx].flatten(), points[1,:,*idx].flatten(), points[2,:,*idx].flatten(), marker='o',label = f"angle {idx}", color=colors[color_idx])
+                ax.legend()
+                max_len = 6
+                ax.set_xlim([-max_len, max_len])
+                ax.set_ylim([-max_len, max_len])
+                ax.set_zlim([-max_len, max_len])
+                ax.view_init(elev=0, azim=0)
+                
+                return fig
+                # functions.plot_plane_from_normal(ax, point=np.array([0,0,0]), normal=np.array([0,0,1]), size=2*np.pi/lattice_constant, alpha=0.2, color='orange')
+
+            def draw_only_k_points():
+                fig = plt.figure("relative grid points in lv basis of the q_grid (should mathch with the relative grid points folded to 1st BZ)")
+                ax = fig.add_subplot(111, projection='3d')
+                points = np.real(q_grid_points_crystal_momentum)
+                points = points.reshape(points.shape[0],*shape_v_angles)
+                for idx in np.ndindex(points.shape[2:]):
+                    ax.scatter(points[0,:,*idx].flatten(), points[1,:,*idx].flatten(), points[2,:,*idx].flatten(), marker='o',label = f"angle {idx}")
+                ax.set_xlabel('KX')
+                ax.set_ylabel('KY')
+                ax.set_zlabel('KZ')
+                ax.legend()
+
+                
+                fig = plt.figure("relative_grid_points")
+                ax = fig.add_subplot(111, projection='3d')
+                points = np.real(relative_grid_points_cryst_basis.T.reshape(relative_grid_points_cryst_basis.shape[-1],*shape_v_angles))
+                for idx in np.ndindex(points.shape[2:]):
+                    ax.scatter(points[0,:,*idx].flatten(), points[1,:,*idx].flatten(), points[2,:,*idx].flatten(), marker='o',label = f"angle {idx}")
+                ax.set_xlabel('KX')
+                ax.set_ylabel('KY')
+                ax.set_zlabel('KZ')
+                ax.legend()
+                
+                
+                fig = plt.figure("relative_grid_points folded to 1st BZ")
+                ax = fig.add_subplot(111, projection='3d')
+                points = np.real(relative_grid_points_cryst_basis.T.reshape(relative_grid_points_cryst_basis.shape[-1],*shape_v_angles))
+                for idx in np.ndindex(points.shape[2:]):
+                    #folded to 1st BZ
+                    ax.scatter(points[0,:,*idx].flatten()%1, points[1,:,*idx].flatten()%1, points[2,:,*idx].flatten()%1, marker='o',label = f"angle {idx}")
+                ax.set_xlabel('KX')
+                ax.set_ylabel('KY')
+                ax.set_zlabel('KZ')
+                ax.legend()
+
+            def draw_k_points_compared_to_energies_and_spectra():
+                energies_k_values = functions.path_through_grid_interpolated(grid= material.energies.transpose(0,-1,1,2,3),
+                                                                                    relative_grid_points=relative_grid_points_lv_basis,
+                                                                                    steps=1)
+                energies_k_values = energies_k_values.reshape((*energies_k_values.shape[:-1], *shape_v_angles))
+                
+                plt.figure("k points compared to energies")
+                for branch_index in range(energies_k_values.shape[1]):
+                    plt.plot(energies_k_values[0,branch_index,0,:,0,0], label=f"band {branch_index}")
+                for a in alpha_exp:
+                    plt.axvline(x=(a-np.min(alpha))/(np.max(alpha)-np.min(alpha))*(len(alpha)-1), color='gray', linestyle='--', alpha=0.5)
+                plt.xticks(ticks=np.linspace(0, len(alpha)-1, 5), labels=[f"{angle*360/(2*np.pi):.1f}" for angle in np.linspace(np.min(alpha), np.max(alpha), 5)])
+                plt.xlabel("alpha angle")
+                plt.ylabel("energy")
+                plt.legend()
+                
+                return fig
+                
+            def plot_symmetry_class_contributions(idx_Rpabc = (0,3,0,0,0)):
+            
+                spectrum_4_summed_R = np.einsum('Rpvwabc->pvwabc', material.rixs_spectrum_4, optimize='optimal')
+
+                
+                plt.figure("contribution of symmetry classes")
+                plt.title("spectrum_4 coefficients for symmetry classes")
+                
+                for x in range(spectrum_4_coeff.shape[6]):
+                    for y in range(spectrum_4_coeff.shape[7]):
+                        slice_ = (idx_Rpabc[0],slice(None),slice(None),idx_Rpabc[2],idx_Rpabc[3],idx_Rpabc[4]) 
+                        if np.any(np.abs(spectrum_4_coeff[*slice_,x,y])>0.001 * np.max(np.abs(spectrum_4_coeff[*slice_,:,:]))):
+                            plt.plot(spectrum_4_coeff[*slice_,x,y].T.flatten(), label=f"symm class {x}{y}")
+                ticks=np.arange(0,len(w_in)*4,10)
+                plt.xticks(ticks=ticks,labels=w_in[ticks%len(w_in)])
+                plt.legend()
+            #---------------------------------------------------------------------------------------------------------------------------------
+            #-------------------------------------- total contribution of the different sigma prefactors--------------------------------------
+            #---------------------------------------------------------------------------------------------------------------------------------
+            
+            def plot_total_sigma_prefactor_contributions(idx_Rpabc, include_all_polarisations=False, sum_alignments=False, plot_all_angles=False, plot_2_4_all:int = 1):
+                match plot_2_4_all:
+                    case 0:
+                        spectrum_coeff_sigma = np.einsum("xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->srRvpabcx"
+                                                    ,material.coeff_sym_classes_tioju_2
+                                                    ,phase_factor_along_path
+                                                    ,material.coeff_tioju_xyz_2
+                                                    ,material.coeff_xyz_rixs
+                                                    ,sigma_prefactors,
+                                                    optimize='optimal')
+                        spectrum_sigma = np.einsum('srRvpabcx, xwvabc->srRpvwabc', spectrum_coeff_sigma, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
+                    case 1:
+                        spectrum_coeff_sigma = np.einsum("xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->srRvpabcxy"
+                                                    ,material.coeff_sym_classes_tioju_4
+                                                    ,phase_factor_along_path
+                                                    ,material.coeff_tioju_xyz_4
+                                                    ,material.coeff_xyz_rixs
+                                                    ,sigma_prefactors,
+                                                    optimize='optimal')
+                        spectrum_sigma = np.einsum('srRvpabcxy, xywvabc->srRpvwabc', spectrum_coeff_sigma, sqw_4_along_path, optimize='optimal')
+                    case _:
+                        raise ValueError("plot_2_4_all must be 0 (one magnon), 1 (two magnon)")
+                fig, ax = plt.subplots(4,4,figsize=(8,8))
+                fig.suptitle(f"Total contribution of different sigma prefactor combinations to {plot_2_4_all+1} magnon RIXS spectrum idx_Rpabc = {idx_Rpabc}")
+                for s in range(len(prefactor_list)):
+                    for r in range(len(prefactor_list)):
+                        grid = spectrum_sigma[s,r,idx_Rpabc[0],idx_Rpabc[1],:,:,idx_Rpabc[2],idx_Rpabc[3],idx_Rpabc[4]]
+                        offset = np.max(np.abs(np.real(grid)))
+                        # colors = plt.cm.viridis(np.linspace(0, 1, spectrum_4_summed_R.shape[3]))
+                        for v in range(shape_v_angles[0]):
+                            data = grid[v,:]
+                            ax[s,r].plot(np.real(data+v*offset))
+                            # ax[s,r].set_yticks(ticks = np.arange(0, spectrum_4_summed_R.shape[1]*offset, offset), labels=[f"{w:.1f}" for w in w_in])
+                            # ax[s,r].legend()
+                            
+                n_cols = ax.shape[1]
+                n_rows = ax.shape[0]
+                # column labels
+                for col in range(n_cols):
+                    ax[0, col].set_title(prefactor_list[col], fontsize=12)
+                    ax[-1, col].set_xlabel("energy loss", fontsize=12)
+
+                # row labels
+                for row in range(n_rows):
+                    ax[row, 0].set_ylabel(f"{prefactor_list[row]}\nincident energy", fontsize=12, rotation=90)
+                
+                return fig
+
+                
+                
+               # relation symmetry class to xyz ----------------------------------------
+            
+            def print_sym_class_xyz_relation():
+                sym_classes_to_xyz_4 = np.einsum("xytioju,OUMNioju->OUMNxy"
+                                            ,material.coeff_sym_classes_tioju_4
+                                            ,material.coeff_tioju_xyz_4
+                                            ,optimize='optimal')
+                sym_classes_to_xyz_2 = np.einsum("xytioju,OUMNioju->OUMNxy"
+                                            ,material.coeff_sym_classes_tioju_2
+                                            ,material.coeff_tioju_xyz_2
+                                            ,optimize='optimal')
+                print("--------------------------------------------------two magnon--------------------------------------------------")
+                
+                for idx_op in np.ndindex(sym_classes_to_xyz_4.shape[:-2]):
+                    if np.any(np.abs(sym_classes_to_xyz_4[idx_op])>1e-5):
+                        print(S_op_list[idx_op[0]], S_op_list[idx_op[1]],S_op_list[idx_op[2]], S_op_list[idx_op[3]], ":")
+                        for idx_sym_class in np.ndindex(sym_classes_to_xyz_4.shape[-2:]):
+                            coeff_value = sym_classes_to_xyz_4[(*idx_op, *idx_sym_class)]
+                            if np.abs(coeff_value) > 1e-2 * np.max(np.abs(sym_classes_to_xyz_4[*idx_op])) and np.abs(coeff_value) > 1e-5:
+                                print(f"{idx_sym_class}: {coeff_value}")
+                print("--------------------------------------------------one magnon--------------------------------------------------")
+                for idx_op in np.ndindex(sym_classes_to_xyz_2.shape[:-1]):
+                    if np.any(np.abs(sym_classes_to_xyz_2[idx_op])>1e-5):
+                        print(S_op_list[idx_op[0]], S_op_list[idx_op[1]],S_op_list[idx_op[2]], S_op_list[idx_op[3]], ":")
+                        for idx_sym_class in np.ndindex(sym_classes_to_xyz_2.shape[-1:]):
+                            coeff_value = sym_classes_to_xyz_2[(*idx_op, *idx_sym_class)]
+                            if np.abs(coeff_value) > 1e-2 * np.max(np.abs(sym_classes_to_xyz_2[*idx_op])) and np.abs(coeff_value) > 1e-5:
+                                print(f"{idx_sym_class}: {coeff_value}")
+
+            # get the sqw along some path
+            def draw_intensities_energies_along_path(relative_grid_points, steps_between_points = 1):
+                assert np.imag(relative_grid_points).max() < 1e-2 * np.real(relative_grid_points).max(), "relative grid points contains significant imaginary parts"
+                relative_grid_points = np.real(relative_grid_points)
+                
+                sqw_2_along_standard_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class,
+                                                                                    relative_grid_points=np.array(relative_grid_points),
+                                                                                    steps=steps_between_points)
+                if config.calc_conv_intensities:
+                    sqw_4_along_standard_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes,
+                                                                                        relative_grid_points=np.array(relative_grid_points),
+                                                                                        steps=steps_between_points)
+                
+                # relative_grid_points_interpolated = functions.interpolated_path_from_relative_points([2*p for p in material.relative_grid_points_path], steps)
+                # q_grid_points_standard_path = np.einsum('Nd,di->Ni', relative_grid_points_interpolated, material.get_reciprocal_lattice_vectors())
+
+                # creates the minimal grid (the eight corner points of the BZ) from the lattice vectors and then interpolates through that grid --> should be equivalent to use the material.get_reciprocal_lattice_vectors() with the corresponding steps and then take a path through the lattice
+                q_grid_points_standard_path = functions.path_through_grid_interpolated(grid= material.get_corner_points_of_BZ().transpose(-1,0,1,2),
+                                                                                    relative_grid_points=np.array(relative_grid_points),
+                                                                                    steps=steps_between_points, make_periodic=False).T
+                
+                phase_factor_along_standard_path = give_phase_factor(material, config, q_grid_points_standard_path)[:,:material.N, :material.N]  #N,i,j
+                
+                #-----------------------------------reconstruct the xyz  spectra for debugging-------------------------------------
+                spectrum_2_xyz_coeff_std_path = np.einsum("xtioju,kij,OUMNioju->OUMNkx"
+                                            ,material.coeff_sym_classes_tioju_2
+                                            ,phase_factor_along_standard_path
+                                            ,material.coeff_tioju_xyz_2
+                                            ,optimize='optimal')
+                if config.calc_conv_intensities:
+                    spectrum_4_xyz_coeff_std_path = np.einsum("xytioju,kij,OUMNioju->OUMNkxy"
+                                            ,material.coeff_sym_classes_tioju_4
+                                            ,phase_factor_along_standard_path
+                                            ,material.coeff_tioju_xyz_4
+                                            ,optimize='optimal')
+                
+                # spectrum_2_xyz_coeff_std_path_without_phase = np.einsum("xtioju,OUMNioju->OUMNx"
+                #                             ,material.coeff_sym_class_tioju_2
+                #                             ,material.coeff_tioju_xyz_2
+                #                             ,optimize='optimal')
+                spectrum_2_xyz_standard_path = np.einsum('OUMNkx, xwk->OUMNwk', spectrum_2_xyz_coeff_std_path, sqw_2_along_standard_path, optimize='optimal').astype(config.dtype_complex)
+                if config.calc_conv_intensities:
+                    spectrum_4_xyz_standard_path = np.einsum('OUMNkxy, xywk->OUMNwk', spectrum_4_xyz_coeff_std_path, sqw_4_along_standard_path, optimize='optimal').astype(config.dtype_complex)
+                energies_along_path = functions.path_through_grid_interpolated(grid= material.energies.transpose(0,-1,1,2,3),
+                                                                                    relative_grid_points=np.array(relative_grid_points),
+                                                                                    steps=steps_between_points)
+                fig_energies = plt.figure("energies")
+                for i in range(energies_along_path.shape[1]):
+                    plt.plot(energies_along_path[0,i])
+                
+                fig_spectrum_2 = []
+                fig_spectrum_4 = []  
+                coeff_sym_class_xyz_2 = np.einsum("xtioju,OUMNioju->xOUMN"
+                                            ,material.coeff_sym_classes_tioju_2
+                                            ,material.coeff_tioju_xyz_2
+                                            ,optimize='optimal')
+                coeff_sym_class_xyz_4 = np.einsum("xytioju,OUMNioju->xyOUMN"
+                                            ,material.coeff_sym_classes_tioju_4
+                                            ,material.coeff_tioju_xyz_4
+                                            ,optimize='optimal')
+                #one magnon plots
+                
+                for op_idx in np.ndindex(coeff_sym_class_xyz_2.shape[1:]):
+                    if np.real(spectrum_2_xyz_standard_path[*op_idx]).max() > 1e-2 * np.real(spectrum_2_xyz_standard_path).max():
+                        fig_spectrum_2.append(plt.figure(f"spectrum one magnon xyz standard path {op_idx}"))
+
+                        grid_to_plot = np.real(spectrum_2_xyz_standard_path[*op_idx])
+                        plt.pcolormesh(grid_to_plot,
+                                    norm=SymLogNorm(
+                                        linthresh=1e-8,          # linear range around zero
+                                        linscale=1.0,            # scale of the linear range
+                                        vmin=np.min(grid_to_plot),
+                                        vmax=np.max(grid_to_plot),
+                                        base=10
+                                    ))
+                        plt.colorbar()
+                        plt.title(f"spectrum one magnon xyz standard path {op_idx}")
+                #two magnon plots
+                for op_idx in np.ndindex(coeff_sym_class_xyz_4.shape[2:]):
+                    if np.real(spectrum_4_xyz_standard_path[*op_idx]).max() > 1e-2 * np.real(spectrum_4_xyz_standard_path).max():
+                        fig_spectrum_4.append(plt.figure(f"spectrum two magnon xyz standard path {op_idx}"))
+                        grid_to_plot = np.real(spectrum_4_xyz_standard_path[*op_idx])
+                        plt.pcolormesh(grid_to_plot,
+                                    norm=SymLogNorm(
+                                        linthresh=1e-8,          # linear range around zero
+                                        linscale=1.0,            # scale of the linear range
+                                        vmin=np.min(grid_to_plot),
+                                        vmax=np.max(grid_to_plot),
+                                        base=10
+                                    ))
+                        plt.colorbar()
+                        plt.title(f"spectrum two magnon xyz standard path {op_idx}")
+                        # if config.plot_only_once_per_symmetry_class:
+                        #     break
+                
+
+                return [fig_energies]+ fig_spectrum_2 + fig_spectrum_4 
+
+            def plot_at_peak_transferred_energy():
+                plt.figure("sqw_4 at peak transferred energy")
+                for alpha in range(spectrum_4_summed_R.shape[3]):
+                    spectrum_slice = spectrum_4_summed_R[0,:,:,alpha,0,0]
+                    idx_max = np.where(spectrum_slice == np.max(spectrum_slice))
+                    plt.plot(spectrum_4_summed_R[0,:,idx_max[1],alpha,0,0], label=f"alpha index {alpha}")
+                plt.legend()
+                plt.xlabel("energy loss")
+                plt.ylabel("intensity")
+
+                functions.plot_tensor_at_certain_axis(material.rixs_spectrum_4, axis_to_plot_individ=1)
+                spectrum_4_test = np.einsum('Rvpabcxy->pvabc', spectrum_4_coeff,optimize='optimal')
+                spectrum_2_test = np.einsum('Rvpabcx, xwvabc->pvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
+                
+           
+            def plot_spectrum_of_transferred_incident_energy(spectrum, title="spectrum of transferred and incident energy"):
+                assert spectrum.ndim == 6, "spectrum should have 6 dimensions p,v,w,a,b,c"
+                fig0 = plt.figure(title)
+                offset = np.max(np.real(spectrum))
+                colors = plt.cm.viridis(np.linspace(0, 1, spectrum.shape[3]))
+                for v in range(spectrum.shape[1]):
+                    for alpha_idx in range(spectrum.shape[3]):
+                        data = spectrum[:,v,:,alpha_idx,0,0].flatten()
+                        plt.plot(data+v*offset, label=f"alpha index {alpha_idx}" if v == 0 else "", color=colors[alpha_idx])
+                # (spectrum.shape[1]-0.01)*offset --> to make sure I have exactly spectrum.shape[1] ticks
+                plt.yticks(ticks = np.arange(0, (spectrum.shape[1]-0.01)*offset, offset), labels=[f"{w:.1f}" for w in w_in])
+                plt.legend()
+                plt.xlabel("energy loss")
+                plt.ylabel("incident energy")
+                
+                fig1 = plt.figure(f"{title} normalised")
+                offset = 1
+                colors = plt.cm.viridis(np.linspace(0, 1, spectrum.shape[3]))
+                for v in range(spectrum.shape[1]):
+                    norm = np.max(spectrum[:,v,:, :,0,0])
+                    for alpha in range(spectrum.shape[3]):
+                        data = spectrum[:,v,:,alpha,0,0].flatten()
+                        plt.plot(data/norm+v*offset, label=f"alpha index {alpha}" if v == 0 else "", color=colors[alpha])
+                plt.legend()
+                plt.xlabel("energy loss")
+                plt.ylabel("incident energy")
+                
+                return fig0, fig1
+            
+            #extracting only symmetry class sums (for comparison)
+            def draw_spectra_all_sym_class_set_to_1():
+                spectrum_4_coeff_summed_sym_class = np.einsum('Rvpabcxy->vpabc', spectrum_4_coeff,optimize='optimal')
+                
+                plt.figure("sqw_4 of transferred energy normalised all sym class set to 1")
+                plt.title("sqw_4 of transferred energy normalised all sym class set to 1")
+                offset = 1
+                colors = plt.cm.viridis(np.linspace(0, 1, spectrum_4_coeff_summed_sym_class.shape[2]))
+
+                # w_in = np.array([w_in]*spectrum_4_coeff_summed_sym_class.shape[1]).flatten()
+                for alpha_idx in range(spectrum_4_coeff_summed_sym_class.shape[2]):
+                    for p in range(spectrum_4_coeff_summed_sym_class.shape[1]):
+                        data = spectrum_4_coeff_summed_sym_class[:,p,alpha_idx,0,0].flatten()
+                        data = data / np.max(data)
+                        plt.plot(w_in,data+v*offset, label=f"alpha index {alpha_idx}, p index {p}", color=colors[alpha_idx])
+                plt.xlabel("incident energy")
+                plt.ylabel("normalised intensity")
+                plt.legend()
+                
+                plt.figure("q_grid_points")
+                for i in range(3):
+                    plt.plot(q_grid_points[:,i], label=f"q component {i}")
+                plt.legend()
+            
+            def draw_prefactors_vs_w_in():
+                plt.figure("Prefactors vs w_in")
+                plt.plot(w_in, np.real(prefactor_dict_all_w['eg']), label='Re(eg)')
+                plt.plot(w_in, np.imag(prefactor_dict_all_w['eg']), label='Im(eg)')
+                plt.plot(w_in, np.real(prefactor_dict_all_w['a1g']), label='Re(a1g)')
+                plt.plot(w_in, np.imag(prefactor_dict_all_w['a1g']), label='Im(a1g)')
+                plt.plot(w_in, np.real(prefactor_dict_all_w['t1u']), label='Re(t1u)')
+                plt.plot(w_in, np.imag(prefactor_dict_all_w['t1u']), label='Im(t1u)')
+                plt.plot(w_in, np.real(prefactor_dict_all_w['t2g']), label='Re(t2g)')
+                plt.plot(w_in, np.imag(prefactor_dict_all_w['t2g']), label='Im(t2g)')
+                plt.xlabel("Energy (eV)")
+                plt.ylabel("Prefactor")
+                plt.legend()
+                
+                plt.figure("energy dependence summed all symmetry classes")
+                for p in range(4):
+                    plt.plot(w_in, spectrum_4_test[p,:,0,0,0], label=f"Spectrum 4 Test {RIXS_config[p]}")
+                plt.legend()
+            
+            ########################################################################################################################
+            ########################################################################################################################
+            ################################                          calling plot functions                     ######################
+            ########################################################################################################################
+            ########################################################################################################################
+            idx_Rpabc = (0,3,0,0,0)  #which RIXS spectrum to plot
+            
+            #standard path (Gamma to X to M to R to Gamma)
+            standard_path = [2*p for p in material.relative_grid_points_path]
+            figs = [
+            draw_BZ_in_exp_setup()
+            ,draw_intensities_energies_along_path(standard_path, steps_between_points=100)
+            ,draw_intensities_energies_along_path(q_grid_points_crystal_momentum.T, steps_between_points=1)
+            ,plot_total_sigma_prefactor_contributions(idx_Rpabc, include_all_polarisations=False, sum_alignments=False, plot_all_angles=False, plot_2_4_all = 0)
+            ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_2.sum(axis=0), title="spectrum one magnon of transferred and incident energy")  #sum over alignments
+            ]
+            if config.calc_conv_intensities:
+                figs += [
+                    plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_4.sum(axis=0), title="spectrum two magnon of transferred and incident energy")  #sum over alignments
+                    ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum.sum(axis=0), title="spectrum complete of transferred energy")  #sum over alignments
+                ]
+            
+            
+            
+            for fig in figs:
+                if isinstance(fig, tuple) or isinstance(fig, list):
+                    VALUES_TO_SAVE["figs_for_pdf"].extend(fig)
+                else:
+                    VALUES_TO_SAVE["figs_for_pdf"].append(fig)
+
+    config.debug_timer.print_difference(f"done calculating RIXS spectrum", debug_time_duration)
+           
 
 def print_normalisation(config, sqw_2, sqw_4):
     actual_sum_2 = np.sum(sqw_2)
@@ -2203,7 +3030,7 @@ def load_material_data(material: Material, filename="results_coeff2025-11-21_14-
             material.sqw_2_ad_a_sym_class = data["sqw_2_ad_a_sym_class"]
             material.conv_sqw_2_ad_a_sym_classes = data["conv_sqw_2_ad_a_sym_classes"]
             material.coeff_sym_classes_tioju_4 = data["coeff_sym_classes_tioju_4"]
-            material.coeff_sym_class_tioju_2 = data["coeff_sym_class_tioju_2"]
+            material.coeff_sym_classes_tioju_2 = data["coeff_sym_class_tioju_2"]
             material.coeff_tioju_xyz_2 = data["coeff_tioju_xyz_2"]
             material.coeff_tioju_xyz_4 = data["coeff_tioju_xyz_4"]
             material.coeff_prime_to_lab_2 = data["coeff_prime_to_lab_2"]
@@ -2455,7 +3282,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
                                             ,material.coeff_tioju_xyz_4
                                             , material.coeff_xyz_rixs, optimize='optimal')
                 spectrum_2_coeff = np.einsum("stioju,kij,abcdioju,abcdk->sk"
-                                            ,material.coeff_sym_class_tioju_2
+                                            ,material.coeff_sym_classes_tioju_2
                                             ,phase_factor_along_path
                                             ,material.coeff_tioju_xyz_2
                                             , material.coeff_xyz_rixs, optimize='optimal')
@@ -2483,6 +3310,8 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
 
                 spectrum_4 = np.einsum('rsk, rswk->wk', spectrum_4_coeff, conv_sqw_2_ad_a_sym_classes_along_path, optimize='optimal')
                 spectrum_2 = np.einsum('sk, swk->wk', spectrum_2_coeff, sqw_ad_a_sym_class_along_path, optimize='optimal').astype(config.dtype_complex)
+            
+            
             
             #plot all coefficients with non zero spectra
             #plt.figure("coeff_arrays pol_in_sigma:"+str(polarisation_in_sigma)+" pol_out_sigma:"+str(polarisation_out_sigma))
@@ -2553,562 +3382,6 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz(
             
             
     
-    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_4)
-    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_2)
-    VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_complete)
-    
-    config.debug_timer.print_difference(f"done calculating RIXS spectrum", debug_time_duration)
-
-def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
-                        config: Config,
-                        material: Material,
-                        q_values: np.ndarray,
-                        debug_time_duration=True,
-                        debug_RIXS_operator=False,
-                        load_saved_grids = False,
-                        experimental_compute_non_squared_use_commutative = False,
-                        filename="NiO2atomsK24_28_11",
-                        alpha = np.array([20,45,70,95,120])*2*np.pi/360, #angle of incidence
-                        two_theta = np.array([150])*2*np.pi/360, #scattering angle
-                        phi = np.array([0]),
-                        lattice_constant = 4.17e-10, #lattice constant in m
-                        hbar = 6.582e-16, #hbar in eV*s
-                        c= 2.992792e8, # c in m/s
-                        offset_energy = 855 # offset energy in eV of the prefactor dataset (defined in plot_script.py in quanty_win directory)
-                        ):
-    """plan is to compute the experimental setup RIXS for all values of alpha, theta and phi, (in radians) incoming energy (eV) wished, lattice constant (m)"""
-    
-    # OUMN spin-operator index
-    # s r sigma prefactor index
-    # p polarisation config index
-    # R alignment index
-    # ABCD spatial indices
-    # ij atom indices
-    # ou order indices
-    # xyz symmetry class indices
-    # v / w incident energy / energy loss indices
-    # t incommensurate index
-    # a alpha index
-    # b two theta index
-    # c phi index
-    
-    import pandas as pd
-    config.debug_timer.print_difference("start calculating RIXS operator")
-    
-    def factor_BZ_size_to_k_in(E):
-        return E*lattice_constant/(hbar*c*np.pi)
-
-    
-    # sqw_4_xyz_along_path,_,_ = functions.path_through_k_grid(config,grid= sqw_4_xyz, q_grid=q_values, )
-    # q_values_along_path,_,_ = functions.path_through_k_grid(config,grid= q_values, q_grid=q_values, relative_grid_points=[np.array([0,0,0]),np.array([1,0,0])])
-
-    def give_index_of_closest_value(array, value):
-        """
-        Find the index of the closest value in a numpy array to a given value.
-        """
-        idx = (np.abs(array - value)).argmin()
-        return idx
-    
-    # if I want to use prefcalculated data
-    # filename = "results_coeffNiO_K_16"
-    material = load_material_data(material, filename=filename)
-    q_values = material.q_values
-    config.warnings.add(f"Using saved material data from {filename} for RIXS calculation")
-
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    fig_spectrum_4, axs_spectrum_4 = plt.subplots(2, 2, figsize=(12, 8))
-    axs_spectrum_4 = axs_spectrum_4.flatten()  # make indexing easier: axs[0..3]
-    fig_spectrum_4.suptitle("RIXS spectrum of two magnon contributions")
-
-    fig_spectrum_2, axs_spectrum_2 = plt.subplots(2, 2, figsize=(12, 8))
-    fig_spectrum_2.suptitle("RIXS spectrum of one magnon contributions")
-    axs_spectrum_2 = axs_spectrum_2.flatten()  # make indexing easier: axs[0..3]
-    
-    fig_spectrum_complete, axs_spectrum_complete = plt.subplots(2, 2, figsize=(12, 8))
-    fig_spectrum_complete.suptitle("Complete RIXS spectrum")
-    axs_spectrum_complete = axs_spectrum_complete.flatten()  # make indexing easier: axs[0..3]
-    
-    fig_coeff_4, axs_coeff_4 = plt.subplots(2, 2, figsize=(12, 8))
-    axs_coeff_4 = axs_coeff_4.flatten()  # make indexing easier: axs[0..3]
-
-    fig_coeff_2, axs_coeff_2 = plt.subplots(2, 2, figsize=(12, 8))
-    axs_coeff_2 = axs_coeff_2.flatten()  # make indexing easier: axs[0..3]
-
-
-    RIXS_config = [
-        (polarisation_in_sigma, polarisation_out_sigma)
-        for polarisation_in_sigma in [False,True]
-        for polarisation_out_sigma in [False, True]
-    ]
-    
-     # ------------------------------Define spin operators as symbolic variables--------------------------------------------------------------
-    Sx, Sy, Sz = sp.symbols('Sx Sy Sz', commutative=experimental_compute_non_squared_use_commutative)
-    S_op_list = [Sx, Sy, Sz]
-    if config.amount_spatial_S_operator == 4:
-        S_op_list.append(sp.S(1)) #unit operator
-    # Splus, Smin = symbols('S_pl S_min', commutative=experimental_compute_non_squared_use_commutative)
-    # Smin = sp.conjugate(Splus)  # Define S- as the conjugate of S+
-    # Define total spin squared
-    S_sq = sp.symbols('S_sq')
-
-    # Define orbital labels
-    a1g, eg, t1u, t2g = sp.symbols('a1g eg t1u t2g')
-    prefactor_list = [a1g, eg, t1u, t2g]
-
-    
-    # ------------------------------Construct the RIXS matrix----------------------------------------------------------------------------
-    RIXSMatrix = sp.Matrix([
-            [
-                a1g + 2 * (Sx**2 - (1/3)*S_sq) * eg,
-                Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
-                -Sy * t1u + (Sz * Sx + Sx * Sz) * t2g
-            ],
-            [
-                -Sz * t1u + (Sx * Sy + Sy * Sx) * t2g,
-                a1g + 2 * (Sy**2 - (1/3)*S_sq) * eg,
-                Sx * t1u + (Sy * Sz + Sz * Sy) * t2g
-            ],
-            [
-                Sy * t1u + (Sz * Sx + Sx * Sz) * t2g,
-                -Sx * t1u + (Sy * Sz + Sz * Sy) * t2g,
-                a1g + 2 * (Sz**2 - (1/3)*S_sq) * eg
-            ]
-        ])
-    #
-    RIXSMatrix=RIXSMatrix.subs({S_sq: Sx*Sx + Sy*Sy + Sz*Sz})  # Substitute S_sq with its expression
-    # RIXSMatrix=RIXSMatrix.subs({Sx: (Splus+Smin)/2, Sy: (Splus-Smin)/(2*I)})  # Substitute Sx, Sy, Sz S+ and S-
-    
-    if not load_saved_grids:
-        # polarisation_in_sigma, polarisation_out_sigma = config_rixs
-
-        
-        def give_eff_scattering_operator_polarisation_dependent(epsilon_in = sp.Matrix([1, 0, 0]),
-                            epsilon_out = sp.Matrix([1, 0, 0])):
-
-            result = (np.conjugate(epsilon_out).T @ RIXSMatrix @ (epsilon_in))
-            result = sp.expand(result)
-            if debug_RIXS_operator:
-                print("RIXS operator not squared")
-                pprint(result)
-            # if not experimental_compute_non_squared_use_commutative:
-            #     result = sp.conjugate(result)*result
-            result= sp.expand(result)
-            eff_RIXS_operator = result
-
-            return eff_RIXS_operator
-
-        # Now substitute the prefactors by their correct values
-        input_filename = "prefactors_results.dat"
-        loaded_data_orig = pd.read_csv(input_filename, sep="\t")
-        
-        #compress data for faster computation
-        loaded_data = {}
-        for key in loaded_data_orig.keys():
-            loaded_data[key] = np.array(loaded_data_orig[key])[500::30] #500:1000:30 
-
-        #getting the prefactors a1g, eg, t1u, t2g for the given w_in-----------------------------------------------------------------------
-        # w_in_index = give_index_of_closest_value(loaded_data["Energy"], w_in)
-
-        w_in = np.array(loaded_data["Energy"])+offset_energy
-        prefactor_dict_all_w = {
-            'a1g': np.array(loaded_data['Re a1g']) + 1j * np.array(loaded_data["Im a1g"]),
-            'eg': np.array(loaded_data['Re eg']) + 1j * np.array(loaded_data["Im eg"]),
-            't1u': np.array(loaded_data['Re t1u']) + 1j * np.array(loaded_data["Im t1u"]),
-            't2g': np.array(loaded_data['Re t2g']) + 1j * np.array(loaded_data["Im t2g"])
-        }
-        
-        #set a1g to zero
-        # config.warnings.add("Setting a1g prefactor to zero for RIXS calculation")
-        # prefactor_dict_all_w['a1g'] = np.zeros_like(w_in)
-
-
-        # prefactor_dict_of_w = {
-        #             #'a1g': prefactor_dict_all_w['a1g'][w_in_index],
-        #             'a1g': 0,
-        #             'eg': prefactor_dict_all_w['eg'][w_in_index],
-        #             't1u': prefactor_dict_all_w['t1u'][w_in_index],
-        #             't2g': prefactor_dict_all_w['t2g'][w_in_index]
-        #         }
-        # RIXSMatrix = sp.simplify(RIXSMatrix.subs(prefactor_dict_of_w))
-
-        # q_analytical = sp.symbols('q', real=True)
-        # x_point = np.max(q_values_along_path)
-        # beta = sp.acos(q_analytical * factor_x_point_to_max_angle / x_point)
-
-        config.debug_timer.print_difference("start calculating eff. RIXS operator for given angles", debug_time_duration)
-        
-        #----------------------------experimental setup: angle rotations and polarisation vectors--------------------------------------------------------
-        
-        angular_shape = alpha.shape + two_theta.shape +phi.shape
-        alpha = np.broadcast_to(alpha[:,np.newaxis,np.newaxis], angular_shape)
-        two_theta = np.broadcast_to(two_theta[np.newaxis,:,np.newaxis], angular_shape)
-        phi = np.broadcast_to(phi[np.newaxis,np.newaxis,:], angular_shape)
-        
-        beta = np.pi/2 - alpha
-        beta_prime = np.pi/2-(two_theta-alpha)
-
-       
-        epsilon_in = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
-        epsilon_out = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
-        for p, (polarisation_in_sigma, polarisation_out_sigma) in enumerate(RIXS_config):
-            #pi-polarised input
-            if polarisation_in_sigma:
-                epsilon_in[p] = np.array([np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float)
-            else:
-                epsilon_in[p] = np.array([
-                    np.cos(beta) * np.sin(phi),
-                    np.cos(beta) * np.cos(phi),
-                    np.sin(beta)
-                ], dtype=float)
-
-            # sigma-polarised output
-            if polarisation_out_sigma:
-                epsilon_out[p] = np.array([np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float)
-            else:
-                epsilon_out[p] = np.array([
-                    -np.cos(beta_prime) * np.sin(phi),
-                    -np.cos(beta_prime) * np.cos(phi),
-                    np.sin(beta_prime)
-                ], dtype=float)
-        # sqw_xyz = np.load("sqw_xyz.npy", allow_pickle=True).item()
-        
-        #just for plotting and debugging
-        k_in = np.array([np.cos(alpha)*np.sin(phi),
-                            np.cos(alpha)*np.cos(phi),
-                            -np.sin(alpha)
-                            ])
-        k_out = np.array([np.cos(two_theta-alpha)*np.sin(phi),
-                            np.cos(two_theta-alpha)*np.cos(phi),
-                            np.sin(two_theta-alpha)
-                            ])
-        q = np.array([np.sin(phi)*((np.cos(alpha)-np.cos(two_theta-alpha))),
-                        np.cos(phi)*((np.cos(alpha)-np.cos(two_theta-alpha))),
-                        -np.sin(alpha)-np.sin(two_theta-alpha)
-                        ])
-        config.debug_timer.print_difference("calculated q and polarisation vectors from angles", debug_time_duration)
-        def draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out):
-            """Helper function to visualise the scattering geometry."""
-            from mpl_toolkits.mplot3d import Axes3D
-
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-
-            origin = np.array([0, 0, 0])
-
-            ax.quiver(*(-k_in), *k_in, color='r', length=la.norm(k_in[:,0,0,0]), normalize=False, label='k_in')
-            ax.quiver(*origin, *k_out, color='g', length=la.norm(k_out[:,0,0,0]), normalize=False, label='k_out')
-            ax.quiver(*origin, *q, color='b', length=la.norm(q[:,0,0,0]), normalize=False, label='q')
-            ax.quiver(*(-k_in), *(epsilon_in), color='c', length=la.norm(epsilon_in[:,0,0,0]), normalize=False, label='epsilon_in')
-            ax.quiver(*(k_out), *(epsilon_out), color='m', length=la.norm(epsilon_out[:,0,0,0]), normalize=False, label='epsilon_out')
-
-            ax.set_xlim([-2, 2])
-            ax.set_ylim([-2, 2])
-            ax.set_zlim([-2, 2])
-
-            ax.set_xlabel('X axis')
-            ax.set_ylabel('Y axis')
-            ax.set_zlabel('Z axis')
-
-            ax.legend()
-            plt.show()
-        
-        #----------------------------writing eff RIXS oeprator as coeff matrix--------------------------------------------------------
-        
-        #spatial dimensions; spin operator; sigma prefactor
-        rixs_coeff_arr_numerical_4 = np.zeros((3,3,config.amount_spatial_S_operator, config.amount_spatial_S_operator, len(prefactor_list)), dtype=config.dtype_complex)
-        for i in range(3):
-            for j in range(3):
-                Rij = RIXSMatrix[i,j]
-                coeff_dict_of_S_operators = sympy_manipulations.nc_coeff_dict(Rij)
-                for a in range(config.amount_spatial_S_operator):
-                    for b in range(config.amount_spatial_S_operator):
-                        #prevent double counting of 1Sx and Sx1 terms when unit operator is included (case second operator is unit operator but first is not)
-                        if config.amount_spatial_S_operator==4 and (a!=3 and b==3):
-                            continue
-                        coeff_4=coeff_dict_of_S_operators.get(S_op_list[a]*S_op_list[b])
-                        coeff_4 = coeff_4.as_coefficients_dict() if coeff_4 is not None else None
-                        for sigma, key in enumerate(prefactor_list):
-                            rixs_coeff_arr_numerical_4[i,j,a,b,sigma] = coeff_4[key] if coeff_4 is not None else 0 #if the coefficient is not in the dict
-        config.debug_timer.print_difference("rewrite RIXS matrix into coefficient array", debug_time_duration)
-        
-        #add the different possible alignments of the spin direction
-        if len(material.alignments)!=0:
-            alignment_rotation_of_complete_material = np.zeros((len(material.alignments),3,3), dtype=config.dtype_complex)
-            for R, alignment in enumerate(material.alignments):
-                alignment_rotation_of_complete_material[R] = rotation.rotation_matrix_from_vectors(alignment, np.array([0,0,1])) # this gives the rotation of the actual spin direction to the z direction: when assuming spin along z, we need to rotate the RIXS operator with this matrix
-        else:
-            alignment_rotation_of_complete_material = np.array([np.eye(3)], dtype=config.dtype_complex)
-        #rotate the rixs coeff_array rot^T * RIXS * rot for all alignments
-        rixs_coeff_arr_numerical_4 = np.einsum('RBA,BCOUs,RCD->RADOUs', alignment_rotation_of_complete_material, rixs_coeff_arr_numerical_4, alignment_rotation_of_complete_material, optimize='optimal')
-        coeff_arr_numerical_4_p_angles = np.einsum('piabc,RijOUs,pjabc->ROUspabc', epsilon_in,rixs_coeff_arr_numerical_4,epsilon_out, optimize='optimal')
-        
-        #---------------------------debug the rixs coeff array---------------------------
-# for idx in np.ndindex(coeff_arr_numerical_4_p_angles.shape):
-#     if coeff_arr_numerical_4_p_angles[idx] != 0:
-#         print(f"alignment {idx[0]}, spin operator indices {idx[1]},{idx[2]},sigma prefactor {prefactor_list[idx[3]]},RIXS config {RIXS_config[idx[4]]}, angles {idx[5]},{idx[6]}: coeff {coeff_arr_numerical_4_p_angles[idx]}")
-# for idx in np.ndindex(rixs_coeff_arr_numerical_4.shape):
-#     if rixs_coeff_arr_numerical_4[idx] != 0:
-#         print(f"alignment {idx[0]}, spatial indices {idx[1]},{idx[2]},spin operator indices {idx[3]},{idx[4]}, sigma prefactor {prefactor_list[idx[5]]}, coeff: {rixs_coeff_arr_numerical_4[idx]}")
-
-        #saving the transformation matrix from symmetry classes to angles alignment and sigma prefactors
-        # OUMN spin-operator index
-        # sr sigma prefactor index
-        # p polarisation config index
-        # a alpha index
-        # b two theta index
-        # c phi index
-        coeff_array_spectrum_4 = np.einsum('ROUspabc,RMNrpabc->ROUMNsrpabc', np.conj(coeff_arr_numerical_4_p_angles), coeff_arr_numerical_4_p_angles, optimize='optimal')
-
-        material.coeff_xyz_rixs = coeff_array_spectrum_4
-        
-        #relate q to the points in k space
-        BZ_size_to_k_in = factor_BZ_size_to_k_in(E=w_in)
-        relative_grid_points=np.einsum('iabc,v->vabci', q, BZ_size_to_k_in)
-        shape_v_angles = relative_grid_points.shape[:-1]
-        relative_grid_points = relative_grid_points.reshape((np.prod(shape_v_angles),3))
-        q_grid_points = np.einsum('Nd,di->Ni', relative_grid_points, material.get_reciprocal_lattice_vectors())
-        
-        q_values_interp = functions.path_through_grid_interpolated(grid= q_values.transpose(-1,0,1,2), relative_grid_points=relative_grid_points, steps=1)
-        q_values_interp = q_values_interp.reshape((*q_values_interp.shape[:-1],*shape_v_angles))
-        
-        #extract sqw2 and sqw4 along the path
-        sqw_2_along_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class, relative_grid_points=relative_grid_points, steps=1)
-        sqw_2_along_path = sqw_2_along_path.reshape((*sqw_2_along_path.shape[:-1],*shape_v_angles))
-        sqw_4_along_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes, relative_grid_points=relative_grid_points, steps=1)
-        sqw_4_along_path = sqw_4_along_path.reshape((*sqw_4_along_path.shape[:-1],*shape_v_angles))
-        
-        config.debug_timer.print_difference("calculated interpolated q values and sqw along path", debug_time_duration)
-        
-        
-        
-        #calculating all combinations of the sigma prefactors
-        sigma_prefactors = np.zeros((len(prefactor_list), len(prefactor_list), len(w_in),), dtype=config.dtype_complex)
-        for s, key_s in enumerate(prefactor_dict_all_w.keys()):
-            for r, key_r in enumerate(prefactor_dict_all_w.keys()):
-                sigma_prefactors[s,r] = np.conj(prefactor_dict_all_w[key_s]) * prefactor_dict_all_w[key_r]
-        
-        # ----------------------------debug the sigma prefactors ----------------------------
-        plt.figure("sigma prefactors")
-        fig, ax = plt.subplots(4,4,figsize=(4,4))
-        for s in range(len(prefactor_list)):
-            for r in range(len(prefactor_list)):
-                ax[s,r].plot(w_in,np.real(sigma_prefactors[s,r]),  label=f"real conj({prefactor_list[s]})*{prefactor_list[r]}")
-                ax[s,r].plot(w_in,np.imag(sigma_prefactors[s,r]),  label=f"imag conj({prefactor_list[s]})*{prefactor_list[r]}")
-                ax[s,r].set_xlabel("Real")
-                ax[s,r].set_ylabel("Imaginary")
-                ax[s,r].legend()
-        # plt.show()
-
-        #putting everything together to get the RIXS spectrum
-        if config.use_explicit_calc_of_sqw:
-            print("")
-            # spectrum_4 = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum_4,  sqw_4_xyz_along_path, optimize='optimal')
-        else:
-                
-            phase_factor_along_path = give_phase_factor(material, config, q_grid_points)[:,:material.N, :material.N]  #N,i,j
-            phase_factor_along_path = phase_factor_along_path.reshape((*shape_v_angles, phase_factor_along_path.shape[-2], phase_factor_along_path.shape[-1])) #vabcij
-            #xy symmetry class
-            
-            
-            
-            
-            spectrum_4_coeff = np.einsum("xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcxy"
-                                        ,material.coeff_sym_classes_tioju_4
-                                        ,phase_factor_along_path
-                                        ,material.coeff_tioju_xyz_4
-                                        ,material.coeff_xyz_rixs
-                                        ,sigma_prefactors,
-                                        optimize='optimal')
-            spectrum_2_coeff = np.einsum("xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx"
-                                        ,material.coeff_sym_class_tioju_2
-                                        ,phase_factor_along_path
-                                        ,material.coeff_tioju_xyz_2
-                                        ,material.coeff_xyz_rixs
-                                        ,sigma_prefactors,
-                                        optimize='optimal')
-            config.debug_timer.print_difference("calculated coeffcients for different symmetry classes", debug_time_duration)
-            
-
-            def plot_spectrum_offset(data: np.ndarray):
-                # scaling for vertical offsets
-                offset = 1.0
-                Nk = data.shape[0]
-                fig, ax = plt.subplots(figsize=(6,6))
-
-                # optional colormap
-                colors = plt.cm.viridis(np.linspace(0, 1, Nk))
-
-                for i in range(Nk):
-                    ax.plot(
-                        data[i] + i * offset,      
-                        color=colors[i],
-                        linewidth=0.8
-                    )
-                plt.yticks(ticks=np.arange(0,len(w_in),1),labels=[f"{w:.1f}" for w in w_in])
-                plt.show()
-
-            spectrum_4 = np.einsum('Rvpabcxy, xywvabc->Rpvwabc', spectrum_4_coeff, sqw_4_along_path, optimize='optimal')
-            spectrum_2 = np.einsum('Rvpabcx, xwvabc->Rpvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
-            
-            # -----------------------------------------data analysis plots---------------------------------------------------------
-            spectrum_4_summed_R = np.einsum('Rpvwabc->pvwabc', spectrum_4, optimize='optimal')
-            
-            #-----------------------------------reconstruct the xyz  spectra for debugging-------------------------------------
-plt.figure("contribution of symmetry classes")
-plt.title("spectrum_4 coefficients for symmetry classes")
-idx_Rpabc = (0,3,0,0,0)  #choose R and p,a,b,c indices to plot
-offset = np.max(np.abs(spectrum_4_coeff))*1.2
-for p in range(spectrum_4_coeff.shape[2]):
-    for x in range(spectrum_4_coeff.shape[6]):
-        for y in range(spectrum_4_coeff.shape[7]):
-            slice_ = (idx_Rpabc[0],slice(None),p,idx_Rpabc[2],idx_Rpabc[3],idx_Rpabc[4]) 
-            if np.any(np.abs(spectrum_4_coeff[*slice_,x,y])>0.001 * np.max(np.abs(spectrum_4_coeff[*slice_,:,:]))):
-                plt.plot(w_in, spectrum_4_coeff[*slice_,x,y]+offset*p, label=f"symm class {x}{y}, polarisation {RIXS_config[p]}")
-plt.legend()
-            
-            # relation symmetry class to xyz 
-sym_classes_to_xyz = np.einsum("xytioju,OUMNioju->OUMNxy"
-                            ,material.coeff_sym_classes_tioju_4
-                            ,material.coeff_tioju_xyz_4
-                            ,optimize='optimal')
-for idx_op in np.ndindex(sym_classes_to_xyz.shape[:-2]):
-    if np.any(np.abs(sym_classes_to_xyz[idx_op])>1e-5):
-        print(S_op_list[idx_op[0]], S_op_list[idx_op[1]],S_op_list[idx_op[2]], S_op_list[idx_op[3]], ":")
-        for idx_sym_class in np.ndindex(sym_classes_to_xyz.shape[-2:]):
-            coeff_value = sym_classes_to_xyz[(*idx_op, *idx_sym_class)]
-            if np.abs(coeff_value) > 1e-2 * np.max(np.abs(sym_classes_to_xyz[*idx_op])) and np.abs(coeff_value) > 1e-5:
-                print(f"{idx_sym_class}: {coeff_value}")
-
-            # get the sqw along the standard path (Gamma to X to M to R to Gamma)
-            STEPS = 100
-            #TODO: fix the manual 2*p here --> should depend on extension
-            sqw_2_along_standard_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class,
-                                                                                 relative_grid_points=np.array([2*p for p in material.relative_grid_points_path]),
-                                                                                 steps=STEPS)
-            sqw_4_along_standard_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes,
-                                                                                    relative_grid_points=np.array([2*p for p in material.relative_grid_points_path]),
-                                                                                    steps=STEPS)
-            q_grid_points_standard_path = functions.path_through_grid_interpolated(grid= q_values.transpose(-1,0,1,2),
-                                                                                 relative_grid_points=np.array([2*p for p in material.relative_grid_points_path]),
-                                                                                 steps=STEPS)
-            # relative_grid_points_interpolated = functions.interpolated_path_from_relative_points([2*p for p in material.relative_grid_points_path], STEPS)
-            # q_grid_points_standard_path = np.einsum('Nd,di->Ni', relative_grid_points_interpolated, material.get_reciprocal_lattice_vectors())
-
-            # TODO: this will only work as long as the path doesnt leave the first BZ!!!
-            q_grid_points_standard_path = functions.path_through_grid_interpolated(grid= q_values.transpose(-1,0,1,2),
-                                                                                 relative_grid_points=np.array([2*p for p in material.relative_grid_points_path]),
-                                                                                 steps=STEPS).T
-            
-            phase_factor_along_standard_path = give_phase_factor(material, config, q_grid_points_standard_path)[:,:material.N, :material.N]  #N,i,j
-            
-            spectrum_2_xyz_coeff_std_path = np.einsum("xtioju,kij,OUMNioju->OUMNkx"
-                                        ,material.coeff_sym_class_tioju_2
-                                        ,phase_factor_along_standard_path
-                                        ,material.coeff_tioju_xyz_2
-                                        ,optimize='optimal')
-            spectrum_4_xyz_coeff_std_path = np.einsum("xytioju,kij,OUMNioju->OUMNkxy"
-                                        ,material.coeff_sym_classes_tioju_4
-                                        ,phase_factor_along_standard_path
-                                        ,material.coeff_tioju_xyz_4
-                                        ,optimize='optimal')
-            
-            # spectrum_2_xyz_coeff_std_path_without_phase = np.einsum("xtioju,OUMNioju->OUMNx"
-            #                             ,material.coeff_sym_class_tioju_2
-            #                             ,material.coeff_tioju_xyz_2
-            #                             ,optimize='optimal')
-            spectrum_2_xyz_standard_path = np.einsum('OUMNkx, xwk->OUMNwk', spectrum_2_xyz_coeff_std_path, sqw_2_along_standard_path, optimize='optimal').astype(config.dtype_complex)
-            spectrum_4_xyz_standard_path = np.einsum('OUMNkxy, xywk->OUMNwk', spectrum_4_xyz_coeff_std_path, sqw_4_along_standard_path, optimize='optimal').astype(config.dtype_complex)
-
-            plt.figure()
-            grid_to_plot = np.real(spectrum_2_xyz_standard_path[3,0,0,3])
-            plt.pcolormesh(grid_to_plot,
-                           norm=SymLogNorm(
-                            linthresh=1e-8,          # linear range around zero
-                            linscale=1.0,            # scale of the linear range
-                            vmin=np.min(grid_to_plot),
-                            vmax=np.max(grid_to_plot),
-                            base=10
-                        ))
-            plt.colorbar()
-            
-            
-            plt.figure("sqw_4 at peak transferred energy")
-            for alpha in range(spectrum_4_summed_R.shape[3]):
-                plt.plot(spectrum_4_summed_R[0,:,25,alpha,0,0], label=f"alpha index {alpha}")
-            plt.legend()
-            plt.xlabel("energy loss")
-            plt.ylabel("intensity")
-
-            functions.plot_tensor_at_certain_axis(spectrum_4, axis_to_plot_individ=1)
-            spectrum_4_test = np.einsum('Rvpabcxy->pvabc', spectrum_4_coeff,optimize='optimal')
-            spectrum_2_test = np.einsum('Rvpabcx, xwvabc->pvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
-            
-           
-            
-            plt.figure("sqw_4 of transferred energy")
-            offset = np.max(spectrum_4_summed_R)
-            colors = plt.cm.viridis(np.linspace(0, 1, spectrum_4_summed_R.shape[3]))
-            for v in range(spectrum_4_summed_R.shape[1]):
-                for alpha_idx in range(spectrum_4_summed_R.shape[3]):
-                    data = spectrum_4_summed_R[:,v,:,alpha_idx,0,0].flatten()
-                    plt.plot(data+v*offset, label=f"alpha index {alpha_idx}" if v == 0 else "", color=colors[alpha_idx])
-            plt.legend()
-            plt.xlabel("energy loss")
-            plt.ylabel("incident energy")
-            
-            plt.figure("sqw_4 of transferred energy normalised")
-            offset = 1
-            colors = plt.cm.viridis(np.linspace(0, 1, spectrum_4_summed_R.shape[3]))
-            for v in range(spectrum_4_summed_R.shape[1]):
-                for alpha in range(spectrum_4_summed_R.shape[3]):
-                    data = spectrum_4_summed_R[:,v,:,alpha,0,0].flatten()
-                    plt.plot(data/np.max(data)+v*offset, label=f"alpha index {alpha}" if v == 0 else "", color=colors[alpha])
-            plt.legend()
-            plt.xlabel("energy loss")
-            plt.ylabel("incident energy")
-            
-            #extracting only symmetry class sums (for comparison)
-            spectrum_4_coeff_summed_sym_class = np.einsum('Rvpabcxy->vpabc', spectrum_4_coeff,optimize='optimal')
-            
-            plt.figure("sqw_4 of transferred energy normalised all sym class set to 1")
-            plt.title("sqw_4 of transferred energy normalised all sym class set to 1")
-            offset = 1
-            colors = plt.cm.viridis(np.linspace(0, 1, spectrum_4_coeff_summed_sym_class.shape[2]))
-
-            # w_in = np.array([w_in]*spectrum_4_coeff_summed_sym_class.shape[1]).flatten()
-            for alpha_idx in range(spectrum_4_coeff_summed_sym_class.shape[2]):
-                for p in range(spectrum_4_coeff_summed_sym_class.shape[1]):
-                    data = spectrum_4_coeff_summed_sym_class[:,p,alpha_idx,0,0].flatten()
-                    data = data / np.max(data)
-                    plt.plot(w_in,data+v*offset, label=f"alpha index {alpha_idx}, p index {p}", color=colors[alpha_idx])
-            plt.xlabel("incident energy")
-            plt.ylabel("normalised intensity")
-            plt.legend()
-            
-            plt.figure("q_grid_points")
-            for i in range(3):
-                plt.plot(q_grid_points[:,i], label=f"q component {i}")
-            plt.legend()
-            
-            
-            plt.figure("Prefactors vs w_in")
-            plt.plot(w_in, np.real(prefactor_dict_all_w['eg']), label='Re(eg)')
-            plt.plot(w_in, np.imag(prefactor_dict_all_w['eg']), label='Im(eg)')
-            plt.plot(w_in, np.real(prefactor_dict_all_w['a1g']), label='Re(a1g)')
-            plt.plot(w_in, np.imag(prefactor_dict_all_w['a1g']), label='Im(a1g)')
-            plt.plot(w_in, np.real(prefactor_dict_all_w['t1u']), label='Re(t1u)')
-            plt.plot(w_in, np.imag(prefactor_dict_all_w['t1u']), label='Im(t1u)')
-            plt.plot(w_in, np.real(prefactor_dict_all_w['t2g']), label='Re(t2g)')
-            plt.plot(w_in, np.imag(prefactor_dict_all_w['t2g']), label='Im(t2g)')
-            plt.xlabel("Energy (eV)")
-            plt.ylabel("Prefactor")
-            plt.legend()
-            
-            plt.figure("energy dependence summed all symmetry classes")
-            for p in range(4):
-                plt.plot(w_in, spectrum_4_test[p,:,0,0,0], label=f"Spectrum 4 Test {RIXS_config[p]}")
-            plt.legend()
-
     VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_4)
     VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_2)
     VALUES_TO_SAVE["figs_for_pdf"].append(fig_spectrum_complete)
@@ -3393,7 +3666,7 @@ def deal_with_divergencies(residues, q_values, material:Material, config:Config,
 
     max_value = max_value * 1/config.number_k_points
 
-    if use_averaging_TdT: #averaging idea still needs testing
+    if use_averaging_TdT: #TODO:averaging idea still needs testing
         decrease_ratio = 1/1.1
         refinement_steps = 30
         fraction_to_neighbour_to_include = 0.5
@@ -3418,11 +3691,33 @@ def deal_with_divergencies(residues, q_values, material:Material, config:Config,
                 residues_refined = np.einsum('...lc,...dl->cd...l', T_herm_conj, T, optimize='optimal')
                 config.debug_timer.print_difference("starting numerical integration", config.debug_timing)
                 # eigvecs_refined_int = np.zeros((2*material.N, 2*material.N), dtype=config.dtype_complex)
+                
+                
                 for i in range(2*material.N):
                     for j in range(2*material.N):
                         for l in range(2*material.N):
                             #refining only for commesnurate (t=0) implemented
                             residues[0,i,j,*index_div,l] = 1/(grid_volume)*functions.integrate_nd(residues_refined[i,j,:,:,:,l], refined_grid, dimension=material.dimension) 
+
+                #debug plots
+                if False:
+                    functions.plot_3d_grid_slider(residues_refined[0,0,:,:, :,0], title="Refined Residues 3D slider")
+                    
+                    plt.figure()
+                    data_plot = [residues_refined[0,0,x,x,x,0] for x in range(refined_grid.shape[0])]
+                    plt.plot(data_plot)
+                    plt.figure()
+                    data_plot = np.real(residues_refined[0,0,:,:,30,0])
+                    plt.pcolormesh(data_plot, norm=SymLogNorm(
+                                            linthresh=1e-5,          # linear range around zero
+                                            linscale=1e-5,           # linear scale for small values
+                                            vmin=np.min(data_plot), vmax=np.max(data_plot)      # set limits for color scale
+                                        ))
+                    plt.colorbar()
+                    plt.title("Refined Residues")
+                    plt.xlabel("X-axis")
+                    plt.ylabel("Y-axis")
+
                 
                 config.debug_timer.print_difference("done with numerical integration", config.debug_timing)
         #eigvecs_refined = eigvecs_refined.mean(axis=(0, 1, 2))  # averaging over the refined grid
