@@ -13,7 +13,6 @@ temp.py
 storage.py
 
 # Ignore all .dat files
-*.dat
 *.npz
 
 grid.npz
