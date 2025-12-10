@@ -6,6 +6,83 @@ import panel as pn
 pn.extension("bokeh")
 
 
+def plot_nd_heatmap_with_sliders(data, dim_names=None):
+    """
+    Plot an N-D array as a heatmap over the first two dimensions,
+    with sliders to select indices along all remaining dimensions.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        N-dimensional array. Must have ndim >= 2.
+    dim_names : sequence of str, optional
+        Names for each dimension. If None, uses ['dim0', 'dim1', ...].
+
+    Returns
+    -------
+    layout : panel.Row
+        Panel layout with sliders and interactive heatmap.
+    """
+    data = np.asarray(data)
+    if data.ndim < 2:
+        raise ValueError("data must have at least 2 dimensions")
+
+    ndim = data.ndim
+
+    # Dimension names
+    if dim_names is None:
+        dim_names = [f"dim{i}" for i in range(ndim)]
+    if len(dim_names) != ndim:
+        raise ValueError("len(dim_names) must equal data.ndim")
+
+    # First two dims are plotted
+    xdim, ydim = dim_names[0], dim_names[1]
+    extra_dims = dim_names[2:]
+
+    # Build xarray DataArray with simple index coords
+    coords = {name: np.arange(n) for name, n in zip(dim_names, data.shape)}
+    da = xr.DataArray(data, dims=dim_names, coords=coords, name="I")
+
+    # Create a slider for each "extra" dimension
+    sliders = {}
+    for dim in extra_dims:
+        size = da.sizes[dim]
+        sliders[dim] = pn.widgets.IntSlider(
+            name=dim, start=0, end=size - 1, value=size // 2
+        )
+
+    # Callback: slice with current slider values and return heatmap
+    def view(**indexers):
+        sl = da.isel(indexers) if indexers else da
+        return sl.hvplot.image(x=xdim, y=ydim, frame_width=700, frame_height=500)
+
+    # Bind sliders to the view function
+    bound_view = pn.bind(view, **{dim: slider for dim, slider in sliders.items()})
+
+    controls = pn.WidgetBox(*sliders.values(), width=250)
+    return pn.Row(controls, bound_view, sizing_mode="stretch_both")
+
+def plot_3D_grid_slider(data_3d, dim_names=("x", "y", "z")):
+    xdim, ydim, zdim = dim_names
+    nx, ny, nz = data_3d.shape
+
+    x = np.arange(nx)
+    y = np.arange(ny)
+    z = np.arange(nz)
+
+    da = xr.DataArray(data_3d, dims=[xdim, ydim, zdim],
+                      coords={xdim: x, ydim: y, zdim: z})
+
+    # x_sel = pn.widgets.IntSlider(name=xdim, start=0, end=nx-1, value=nx//2)
+    # y_sel = pn.widgets.IntSlider(name=ydim, start=0, end=ny-1, value=ny//2)
+    z_sel = pn.widgets.IntSlider(name=zdim, start=0, end=nz-1, value=nz//2)
+
+    @pn.depends(z=z_sel)
+    def view(z):
+        return da.isel({zdim: z}).hvplot.image()
+
+    return pn.Row(pn.Column(z_sel), view)
+
 def plot_rixs_spectrum(spectrum, plot_type = 1):
     # Suppose: data shape R p v w a b c
     spectrum = np.real(spectrum).astype(np.float32)

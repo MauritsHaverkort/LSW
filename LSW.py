@@ -2521,7 +2521,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             #xy symmetry class
             
             
-            
+            config.debug_timer.print_difference("start calculating coeffcients for different symmetry classes", debug_time_duration)
             if config.calc_conv_intensities:
                 spectrum_4_coeff = np.einsum("xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcxy"
                                         ,material.coeff_sym_classes_tioju_4
@@ -2530,13 +2530,31 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                                         ,material.coeff_xyz_rixs
                                         ,sigma_prefactors,
                                         optimize='optimal')
-            spectrum_2_coeff = np.einsum("xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx"
+            #memory efficient way of contraction
+            spectrum_2_coeff = np.einsum("xtioju,vabcij,OUMNioju->OUMNvabcx"
                                         ,material.coeff_sym_classes_tioju_2
                                         ,phase_factor_along_path
                                         ,material.coeff_tioju_xyz_2
+                                        ,optimize='optimal')
+            config.debug_timer.print_difference("intermediate_1", debug_time_duration)
+            
+            spectrum_2_coeff = np.einsum("OUMNvabcx,ROUMNsrpabc,srv->Rvpabcx"
+                                        ,spectrum_2_coeff
                                         ,material.coeff_xyz_rixs
                                         ,sigma_prefactors,
                                         optimize='optimal')
+            print(f"material.coeff_sym_classes_tioju_2: {material.coeff_sym_classes_tioju_2.size}\n material.coeff_tioju_xyz_2: {material.coeff_tioju_xyz_2.size}\n material.coeff_xyz_rixs: {material.coeff_xyz_rixs.size}\n sigma_prefactors: {sigma_prefactors.size}\n phase_factor_along_path: {phase_factor_along_path.size}")
+            print(f"material.coeff_sym_classes_tioju_2: {material.coeff_sym_classes_tioju_2.shape}\n material.coeff_tioju_xyz_2: {material.coeff_tioju_xyz_2.shape}\n material.coeff_xyz_rixs: {material.coeff_xyz_rixs.shape}\n sigma_prefactors: {sigma_prefactors.shape}\n phase_factor_along_path: {phase_factor_along_path.shape}")
+            path_info = np.einsum_path(
+                "xtioju, vabcij, OUMNioju, ROUMNsrpabc, srv -> Rvpabcx",
+                material.coeff_sym_classes_tioju_2,
+                phase_factor_along_path,
+                material.coeff_tioju_xyz_2,
+                material.coeff_xyz_rixs,
+                sigma_prefactors,
+                optimize="optimal"
+            )
+            print(path_info[1])
             config.debug_timer.print_difference("calculated coeffcients for different symmetry classes", debug_time_duration)
             
 
