@@ -2971,7 +2971,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             figs = [
             draw_BZ_in_exp_setup()
             ,draw_intensities_energies_along_path(standard_path, steps_between_points=100)
-            ,draw_intensities_energies_along_path(q_grid_points_crystal_momentum.T, steps_between_points=1)
+            ,draw_intensities_energies_along_path(relative_grid_points_lv_basis.reshape(*shape_v_angles,3)[0,:,0,0,:], steps_between_points=1)
             ,plot_total_sigma_prefactor_contributions(idx_Rpabc, include_all_polarisations=False, sum_alignments=False, plot_all_angles=False, plot_2_4_all = 0)
             ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_2.sum(axis=0), title="spectrum one magnon of transferred and incident energy")  #sum over alignments
             ]
