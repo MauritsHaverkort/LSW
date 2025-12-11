@@ -3,7 +3,7 @@ from typing import List
 from Atoms import Atom
 from Material import Material
 from Bonds import Bond
-import funtions as functions
+import Material as functions
 import numpy.linalg as la
 import rotation as rotation
 from Configurations import Config
@@ -96,8 +96,7 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     
     lv = [np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])]
     crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]   
-    
-    
+
     config.Gamma = 0.2
     
     M = np.array(lv) #transformation from euclidean to lattice vector basis (A1 A2 A3) = (a1 a2 a3)T (a being the euclidean vectors)
@@ -155,6 +154,8 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
 #     print(a1.position+u1)
 #     print(a2.position+u2)
 #     print("")
+
+    material.transform_from_cryst_basis_to_lv_basis(lv[0], False, True)
     
     material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2*X, 1/2*(X+Y), 1/2*(X+Y+Z), np.array([0,0,0])]
@@ -790,19 +791,19 @@ def DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a,
     atoms = [
         Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
         
-        Atom(relative_position_atom_2*np.array([a, 0, 0]), type=1, S=S2, spin_dir=sign_spin_dir*spin_dir),
+        Atom(relative_position_atom_2*np.array([1, 0, 0]), type=1, S=S2, spin_dir=sign_spin_dir*spin_dir),
         
-        Atom(relative_position_atom_2*np.array([0, a, 0]), type=2, S=S2, spin_dir=sign_spin_dir*spin_dir),
+        Atom(relative_position_atom_2*np.array([0, 1, 0]), type=2, S=S2, spin_dir=sign_spin_dir*spin_dir),
         
-        Atom(relative_position_atom_2*np.array([a, a, 0]), type=3, S=S1, spin_dir=spin_dir),
+        Atom(relative_position_atom_2*np.array([1, 1, 0]), type=3, S=S1, spin_dir=spin_dir),
         
-        Atom(relative_position_atom_2*np.array([0, 0, a]), type=4, S=S1, spin_dir=sign_spin_dir*spin_dir),
+        Atom(relative_position_atom_2*np.array([0, 0, 1]), type=4, S=S1, spin_dir=sign_spin_dir*spin_dir),
         
-        Atom(relative_position_atom_2*np.array([a, 0, a]), type=5, S=S2, spin_dir=spin_dir),
+        Atom(relative_position_atom_2*np.array([1, 0, 1]), type=5, S=S2, spin_dir=spin_dir),
         
-        Atom(relative_position_atom_2*np.array([0, a, a]), type=6, S=S2, spin_dir=spin_dir),
+        Atom(relative_position_atom_2*np.array([0, 1, 1]), type=6, S=S2, spin_dir=spin_dir),
         
-        Atom(relative_position_atom_2*np.array([a, a, a]), type=7, S=S1, spin_dir=sign_spin_dir*spin_dir),
+        Atom(relative_position_atom_2*np.array([1, 1, 1]), type=7, S=S1, spin_dir=sign_spin_dir*spin_dir),
         
         # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
         # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
@@ -815,7 +816,7 @@ def DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a,
             atoms = atoms[0:4]
         case 3:
             atoms = atoms[:]
-    J_values = [1]
+    J_values = [J]
     bonds = []
     combinations, distances = material.return_combinations_up_to_distance(atoms, 2*a)
     for i,j in enumerate(J_values):

@@ -32,6 +32,98 @@ def array_to_str(array):
 
 import numpy as np
 
+import numpy as np
+
+########################################################################################################################
+########################################################################################################################
+################################                          DEBUGGING                               ######################
+########################################################################################################################
+########################################################################################################################
+
+def compare_tensors_new(a, b, rtol=1e-6, atol=1e-12, zero_tol=1e-12, threshold=1e-8):
+    a = np.asarray(a); b = np.asarray(b)
+    a[np.abs(a) < threshold] = 0
+    b[np.abs(b) < threshold] = 0
+    
+    assert a.shape == b.shape, "Shapes must match"
+
+    # Valid entries: finite and at least one not ~0
+    finite = np.isfinite(a) & np.isfinite(b)
+    nontrivial = (np.abs(a) > zero_tol) | (np.abs(b) > zero_tol)
+    M = finite & nontrivial
+    if not np.any(M):
+        print("No valid elements to compare."); return
+
+    aM, bM = a[M], b[M]
+
+    # --- 1) Absolute / relative errors ---
+    abs_err = np.abs(aM - bM)
+    rel_err_asym = abs_err / np.maximum(np.abs(bM), zero_tol)        # asymmetric
+    rel_err_sym  = 2*abs_err / (np.abs(aM) + np.abs(bM) + 1e-300)    # symmetric, safe
+
+    L_inf = abs_err.max()
+    fro_rel = np.linalg.norm(a - b) / max(np.linalg.norm(a), np.linalg.norm(b), 1e-300)
+    print(f"L_inf max |a-b|: {L_inf:.3e}")
+    print(f"Frobenius relative error ||a-b||/max(||a||,||b||): {fro_rel:.3e}")
+    print(f"Median symmetric relative error 2|a-b|/(|a|+|b|): {np.median(rel_err_sym):.3e}")
+    print(f"95th pct symmetric relative error: {np.percentile(rel_err_sym,95):.3e}")
+
+    # --- 2) Ratio statistics (elementwise, where b ≠ 0) ---
+    nz = np.abs(bM) > zero_tol
+    if np.any(nz):
+        r = aM[nz] / bM[nz]
+        print(f"Ratio |a/b|: median={np.median(np.abs(r)):.3e}, IQR=({np.percentile(np.abs(r),25):.3e},{np.percentile(np.abs(r),75):.3e})")
+        # phase difference of a vs b (in radians)
+        dphi = np.angle(r)
+        # wrap to [-pi,pi]
+        print(f"Phase diff angle(a)−angle(b): median={np.median(dphi):.3e} rad, MAD={np.median(np.abs(dphi-np.median(dphi))):.3e}")
+
+    # --- 3) Best complex scalar factor α (least squares) ---
+    # α* = argmin_α ||a - α b||_F → α = <b,a>/<b,b>, using conjugate inner product
+    denom = np.vdot(bM, bM)
+    if np.abs(denom) > 0:
+        alpha = np.vdot(bM, aM) / denom
+        scaled_err = np.linalg.norm(a - alpha*b) / max(np.linalg.norm(a), 1e-300)
+        print(f"Best scale α: |α|={np.abs(alpha):.6g}, arg(α)={np.angle(alpha):.3e} rad")
+        print(f"Relative error after scaling ||a-αb||/||a||: {scaled_err:.3e}")
+
+    # --- 4) Magnitude-only and correlation ---
+    mag_rmse = np.sqrt(np.mean((np.abs(aM)-np.abs(bM))**2))
+    # Complex correlation / coherence in [0,1]
+    coh = np.abs(np.vdot(aM, bM)) / (np.linalg.norm(aM)*np.linalg.norm(bM) + 1e-300)
+    print(f"Magnitude RMSE: {mag_rmse:.3e}")
+    print(f"Complex coherence |<a,b>|/(||a|| ||b||): {coh:.6f}")
+
+    # --- 5) Quick pass/fail with tolerances (predefined behavior) ---
+    print(f"np.allclose(a,b, rtol={rtol}, atol={atol}) → {np.allclose(a, b, rtol=rtol, atol=atol)}")
+
+def compare_tensors(a,b):
+    # Mask out values where both a and b are close to zero
+    mask = (np.abs(a) > 1e-10) | (np.abs(b) > 1e-10)
+    a_masked = a[mask]
+    b_masked = b[mask]
+
+    relative = np.abs(a / (b + 1e-10))
+    print(f"max, mean, median, std relative np.abs(a/(b+1e-10)): {np.max(relative)}, {np.mean(relative)}, {np.median(relative)}, {np.std(relative)}")
+    difference = np.abs(a - b)
+    print(f"max, mean, median, std distance np.abs(a-b): {np.max(difference)}, {np.mean(difference)}, {np.median(difference)}, {np.std(difference)}")
+
+    # Masked comparison
+    relative_masked = np.abs(a_masked / (b_masked + 1e-10))
+    difference_masked = np.abs(a_masked - b_masked)
+    print(f"[Masked] max, mean, median, std relative np.abs(a/(b+1e-10)): {np.max(relative_masked)}, {np.mean(relative_masked)}, {np.median(relative_masked)}, {np.std(relative_masked)}")
+    print(f"[Masked] max, mean, median, std distance np.abs(a-b): {np.max(difference_masked)}, {np.mean(difference_masked)}, {np.median(difference_masked)}, {np.std(difference_masked)}")
+
+    a_rounded = np.round(a, decimals=5)
+    b_rounded = np.round(b, decimals=5)
+    mask = np.abs(a_rounded) > 1e-12  # Exclude values where a is (close to) zero
+    relative_difference_masked = np.abs((a_rounded[mask] - b_rounded[mask])) / np.abs(a_rounded[mask])
+    if not np.any(mask):
+        print("No valid elements to compare after rounding.")
+        return
+    print(f"[MASKED] max, mean, median, std distance np.abs((a-b))/abs(a)): {np.max(relative_difference_masked)}, {np.mean(relative_difference_masked)}, {np.median(relative_difference_masked)}, {np.std(relative_difference_masked)}")
+
+
 def is_hermitian(A, tol=1e-10):
         return np.allclose(A, A.conj().T, atol=tol)
 
@@ -158,91 +250,6 @@ def analyze_matrix(matrix):
 
     print("========================\n")
 
-import numpy as np
-
-def compare_tensors_new(a, b, rtol=1e-6, atol=1e-12, zero_tol=1e-12, threshold=1e-8):
-    a = np.asarray(a); b = np.asarray(b)
-    a[np.abs(a) < threshold] = 0
-    b[np.abs(b) < threshold] = 0
-    
-    assert a.shape == b.shape, "Shapes must match"
-
-    # Valid entries: finite and at least one not ~0
-    finite = np.isfinite(a) & np.isfinite(b)
-    nontrivial = (np.abs(a) > zero_tol) | (np.abs(b) > zero_tol)
-    M = finite & nontrivial
-    if not np.any(M):
-        print("No valid elements to compare."); return
-
-    aM, bM = a[M], b[M]
-
-    # --- 1) Absolute / relative errors ---
-    abs_err = np.abs(aM - bM)
-    rel_err_asym = abs_err / np.maximum(np.abs(bM), zero_tol)        # asymmetric
-    rel_err_sym  = 2*abs_err / (np.abs(aM) + np.abs(bM) + 1e-300)    # symmetric, safe
-
-    L_inf = abs_err.max()
-    fro_rel = np.linalg.norm(a - b) / max(np.linalg.norm(a), np.linalg.norm(b), 1e-300)
-    print(f"L_inf max |a-b|: {L_inf:.3e}")
-    print(f"Frobenius relative error ||a-b||/max(||a||,||b||): {fro_rel:.3e}")
-    print(f"Median symmetric relative error 2|a-b|/(|a|+|b|): {np.median(rel_err_sym):.3e}")
-    print(f"95th pct symmetric relative error: {np.percentile(rel_err_sym,95):.3e}")
-
-    # --- 2) Ratio statistics (elementwise, where b ≠ 0) ---
-    nz = np.abs(bM) > zero_tol
-    if np.any(nz):
-        r = aM[nz] / bM[nz]
-        print(f"Ratio |a/b|: median={np.median(np.abs(r)):.3e}, IQR=({np.percentile(np.abs(r),25):.3e},{np.percentile(np.abs(r),75):.3e})")
-        # phase difference of a vs b (in radians)
-        dphi = np.angle(r)
-        # wrap to [-pi,pi]
-        print(f"Phase diff angle(a)−angle(b): median={np.median(dphi):.3e} rad, MAD={np.median(np.abs(dphi-np.median(dphi))):.3e}")
-
-    # --- 3) Best complex scalar factor α (least squares) ---
-    # α* = argmin_α ||a - α b||_F → α = <b,a>/<b,b>, using conjugate inner product
-    denom = np.vdot(bM, bM)
-    if np.abs(denom) > 0:
-        alpha = np.vdot(bM, aM) / denom
-        scaled_err = np.linalg.norm(a - alpha*b) / max(np.linalg.norm(a), 1e-300)
-        print(f"Best scale α: |α|={np.abs(alpha):.6g}, arg(α)={np.angle(alpha):.3e} rad")
-        print(f"Relative error after scaling ||a-αb||/||a||: {scaled_err:.3e}")
-
-    # --- 4) Magnitude-only and correlation ---
-    mag_rmse = np.sqrt(np.mean((np.abs(aM)-np.abs(bM))**2))
-    # Complex correlation / coherence in [0,1]
-    coh = np.abs(np.vdot(aM, bM)) / (np.linalg.norm(aM)*np.linalg.norm(bM) + 1e-300)
-    print(f"Magnitude RMSE: {mag_rmse:.3e}")
-    print(f"Complex coherence |<a,b>|/(||a|| ||b||): {coh:.6f}")
-
-    # --- 5) Quick pass/fail with tolerances (predefined behavior) ---
-    print(f"np.allclose(a,b, rtol={rtol}, atol={atol}) → {np.allclose(a, b, rtol=rtol, atol=atol)}")
-
-
-def compare_tensors(a,b):
-    # Mask out values where both a and b are close to zero
-    mask = (np.abs(a) > 1e-10) | (np.abs(b) > 1e-10)
-    a_masked = a[mask]
-    b_masked = b[mask]
-
-    relative = np.abs(a / (b + 1e-10))
-    print(f"max, mean, median, std relative np.abs(a/(b+1e-10)): {np.max(relative)}, {np.mean(relative)}, {np.median(relative)}, {np.std(relative)}")
-    difference = np.abs(a - b)
-    print(f"max, mean, median, std distance np.abs(a-b): {np.max(difference)}, {np.mean(difference)}, {np.median(difference)}, {np.std(difference)}")
-
-    # Masked comparison
-    relative_masked = np.abs(a_masked / (b_masked + 1e-10))
-    difference_masked = np.abs(a_masked - b_masked)
-    print(f"[Masked] max, mean, median, std relative np.abs(a/(b+1e-10)): {np.max(relative_masked)}, {np.mean(relative_masked)}, {np.median(relative_masked)}, {np.std(relative_masked)}")
-    print(f"[Masked] max, mean, median, std distance np.abs(a-b): {np.max(difference_masked)}, {np.mean(difference_masked)}, {np.median(difference_masked)}, {np.std(difference_masked)}")
-
-    a_rounded = np.round(a, decimals=5)
-    b_rounded = np.round(b, decimals=5)
-    mask = np.abs(a_rounded) > 1e-12  # Exclude values where a is (close to) zero
-    relative_difference_masked = np.abs((a_rounded[mask] - b_rounded[mask])) / np.abs(a_rounded[mask])
-    if not np.any(mask):
-        print("No valid elements to compare after rounding.")
-        return
-    print(f"[MASKED] max, mean, median, std distance np.abs((a-b))/abs(a)): {np.max(relative_difference_masked)}, {np.mean(relative_difference_masked)}, {np.median(relative_difference_masked)}, {np.std(relative_difference_masked)}")
 
 def return_grid_samples_of_tensors(tensor, number_axis_to_exclude, reduction):
     # result = np.zeros((tensor.shape[:number_axis_to_exclude] + (tuple(np.ceil(np.array(tensor.shape[number_axis_to_exclude:]) / reduction).astype(int),))), dtype=np.complex128)
@@ -556,6 +563,20 @@ def give_highest_indices_of_matrix(matrix, number_of_indices=5):
         print(res[-1])
     return res
 
+def get_difference_of(M1,M2):
+    result=0
+    for i in range(len(M1)):
+        for j in range(len(M1[0])):
+            result+=abs(M1[i][j]-M2[i][j])
+    return result
+
+########################################################################################################################
+########################################################################################################################
+################################                          KREIN TRANSFORMATIONS                   ######################
+########################################################################################################################
+########################################################################################################################
+
+
 def first_order_perturbation_degenerate(dH, E, U, Gamma, deg_tol=1e-10):
     """
     First-order (static) perturbation theory with degeneracies.
@@ -804,82 +825,6 @@ def first_order_perturbation_degenerate_paraunitary(dH, E, U, Gamma, deg_tol=1e-
     # Energies E unchanged (these are the unperturbed values). dE are first-order shifts.
     return E, U_rot, dE.real, dU
 
-def orthonormalise(A):
-    """
-    Orthonormalises the column vectors of matrix A (like MATLAB's orth).
-    """
-    # Q, R = np.linalg.qr(A, mode='reduced')   # QR decomposition
-    # # # remove near-zero columns (if rank deficient)
-    # # tol = 1e-12
-    # # keep = np.abs(np.diag(R)) > tol
-    
-    # if Q.shape[1] == A.shape[1]:
-    #     return Q
-    # else:   # matrix is rank deficient --> no orthonormalisation possible
-    #     return A    
-    # MATLAB-like orth() using SVD
-    Q = scipy.linalg.orth(A)
-    return Q
-
-def give_line_width(indices, max_ranges, offset = 2, decrease_factor=0.5):
-    assert len(indices) == len(max_ranges), "indices and max_ranges must have the same length"
-    max_values_multiplied = [1]
-    for i in range(len(max_ranges)):
-        max_values_multiplied.append(max_values_multiplied[-1] * max_ranges[i])
-    max_values_multiplied = np.array(max_values_multiplied)
-    indices = np.array(indices)
-    result = np.einsum('i,i->', indices, max_values_multiplied[:-1]) * decrease_factor
-    return max_values_multiplied[-1]*decrease_factor - result + offset
-
-def cut_array_by_one(arr, dimensions_to_exclude=[], cut_also_first_element=False):
-    """
-    Cuts the last element of each dimension of the array, except if the dimension is already 1. also one can give dimensions to exclude as a list"""
-    slices = []
-    startindex = 1 if cut_also_first_element else 0
-    
-    for i,s in enumerate(arr.shape):
-        if i in dimensions_to_exclude:
-            slices.append(slice(0,s))
-        elif s>1:
-            slices.append(slice(startindex,s-1))
-        else:
-            slices.append(slice(0,s))
-    return arr[tuple(slices)]
-
-def subtract_grids_with_padding(big, small):
-    # Ensure `big` is the larger-by-shape; swap if not
-    if any(s > b for s, b in zip(small.shape, big.shape)):
-        big, small = small, big  # result will be small->padded to big
-    
-    out = np.zeros_like(big, dtype=np.result_type(big, small))
-    # slice the overlapping region
-    sl = tuple(slice(0, s) for s in small.shape)
-    out[sl] = small
-    return big - out
-
-def sort_atoms_for_type(atoms):
-    """Sorts atoms into a list of lists based on their type attribute."""
-    from Atoms import Atom
-    if not all(isinstance(atom, Atom) for atom in atoms):
-        raise TypeError("All elements in atoms must be of type Atom")
-    atoms: List[Atom] = atoms
-    sorted_atoms = []
-    type_index = 0
-    atoms_left = True
-    while atoms_left:
-        temp = []
-        atoms_left = False
-        for a in atoms:
-            if type_index == a.type:
-                temp.append(a)
-                atoms_left = True
-        if not atoms_left:
-            break
-        else:
-            sorted_atoms.append(temp)
-            type_index += 1
-    return sorted_atoms
-
 def path_k_space(k_points, total_steps, a, steps=None):
     xticks_pos=[]
     xticks_labels=[]
@@ -913,6 +858,130 @@ def path_k_space(k_points, total_steps, a, steps=None):
     
     return k_scalars,k_vectors, xticks_labels, xticks_pos
 
+########################################################################################################################
+########################################################################################################################
+################################                          General matrix / array operations       ######################
+########################################################################################################################
+########################################################################################################################
+
+def orthonormalise(A):
+    """
+    Orthonormalises the column vectors of matrix A (like MATLAB's orth).
+    """
+    # Q, R = np.linalg.qr(A, mode='reduced')   # QR decomposition
+    # # # remove near-zero columns (if rank deficient)
+    # # tol = 1e-12
+    # # keep = np.abs(np.diag(R)) > tol
+    
+    # if Q.shape[1] == A.shape[1]:
+    #     return Q
+    # else:   # matrix is rank deficient --> no orthonormalisation possible
+    #     return A    
+    # MATLAB-like orth() using SVD
+    Q = scipy.linalg.orth(A)
+    return Q
+
+def cut_array_by_one(arr, dimensions_to_exclude=[], cut_also_first_element=False):
+    """
+    Cuts the last element of each dimension of the array, except if the dimension is already 1. also one can give dimensions to exclude as a list"""
+    slices = []
+    startindex = 1 if cut_also_first_element else 0
+    
+    for i,s in enumerate(arr.shape):
+        if i in dimensions_to_exclude:
+            slices.append(slice(0,s))
+        elif s>1:
+            slices.append(slice(startindex,s-1))
+        else:
+            slices.append(slice(0,s))
+    return arr[tuple(slices)]
+
+def subtract_grids_with_padding(big, small):
+    # Ensure `big` is the larger-by-shape; swap if not
+    if any(s > b for s, b in zip(small.shape, big.shape)):
+        big, small = small, big  # result will be small->padded to big
+    
+    out = np.zeros_like(big, dtype=np.result_type(big, small))
+    # slice the overlapping region
+    sl = tuple(slice(0, s) for s in small.shape)
+    out[sl] = small
+    return big - out
+
+def make_grid_periodic(grid):
+    """Takes a grid of shape (..., X, Y, Z) and makes it periodic by adding the first slice to the end of each dimension."""
+    slices = [slice(None)] * grid.ndim
+    slices[-3] = slice(0, 1) #slice with length 1 [0:1] --> in the x-dimension only the one element
+    grid_x = np.concatenate((grid, grid[tuple(slices)]), axis=-3)
+    slices = [slice(None)] * grid_x.ndim
+    slices[-2] = slice(0, 1)
+    grid_xy =  np.concatenate((grid_x, grid_x[tuple(slices)]), axis=-2)
+    slices = [slice(None)] * grid_xy.ndim
+    slices[-1] = slice(0, 1)
+    grid_xyz =  np.concatenate((grid_xy, grid_xy[tuple(slices)]), axis=-1)
+    return grid_xyz
+
+def remove_small_parts(H, threshold=1e-6):
+    """
+    Remove small parts of the matrix below a certain threshold.
+    
+    Parameters:
+        H (numpy.ndarray): The input matrix.
+        threshold (float): The threshold value.
+        
+    Returns:
+        numpy.ndarray: The modified matrix with small parts removed.
+    """
+    for i in range(H.shape[0]):
+        for j in range(H.shape[1]):
+            if np.abs(H[i, j]) < threshold:
+                H[i, j] = 0
+    return H
+
+
+
+def flatten_axes(arr: np.ndarray, axes_to_flatten):
+    """
+    Flatten the specified axes of a NumPy array into a single axis.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        Input array.
+    axes_to_flatten : tuple of int
+        Axes to merge into one. Can be in any order and may be negative.
+
+    Returns
+    -------
+    out : np.ndarray
+        Array where selected axes are replaced by a single axis.
+        Shape (..., flattened_size, ...) depending on axis positions.
+    """
+
+    # Normalize axes (handle negative axes)
+    axes = tuple(sorted(ax % arr.ndim for ax in axes_to_flatten))
+
+    # Compute the flattened size
+    flat_size = np.prod([arr.shape[ax] for ax in axes])
+
+    # Build list of new axes order: 
+    #   1. all axes *not* being flattened (in original order)
+    #   2. the axes to flatten (in original order)
+    remaining_axes = tuple(ax for ax in range(arr.ndim) if ax not in axes)
+    new_order = remaining_axes + axes
+
+    # Move flattened axes to the end
+    arr_reordered = arr.transpose(new_order)
+
+    # New shape = remaining dims + (flat_size,)
+    new_shape = arr_reordered.shape[:len(remaining_axes)] + (flat_size,)
+
+    return arr_reordered.reshape(new_shape)
+
+########################################################################################################################
+########################################################################################################################
+################################                          PLOTTING                                ######################
+########################################################################################################################
+########################################################################################################################
 
 def plot_3d_grid_slider(grid, 
                         title="3D Grid Viewer", 
@@ -985,19 +1054,6 @@ def plot_3d_grid_slider(grid,
     plt.pause(0.001) 
     
     return fig
-    
-# def plot_vectors_3d(vectors, title="Debug vector plot", xlabel="X-axis", ylabel="Y-axis"):
-#     """plots a list of 3D vectors"""
-#     fig = plt.figure(title)
-#     ax = fig.add_subplot(111)
-#     for vec in vectors:
-#         ax.plot([0, vec[0]], [0, vec[1]], marker='o')
-#     ax.set_xlabel(xlabel)
-#     ax.set_ylabel(ylabel)
-#     ax.set_title(title)
-#     ax.grid(True)
-#     plt.show()
-#     return fig
 
 def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
               xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True):
@@ -1412,6 +1468,93 @@ def plot_path_through_grid(path, q_grid=None, material=None):
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
+
+def plot_plane_from_normal(ax, point, normal, size=1.0, alpha=0.4, color='lightblue', resolution=20):
+    """Plot a plane defined by a point and normal vector."""
+    normal = np.asarray(normal)
+    normal = normal / np.linalg.norm(normal)
+
+    # pick vector not parallel to normal
+    tmp = np.array([1,0,0]) if abs(normal[0]) < 0.9 else np.array([0,1,0])
+
+    # basis vectors of the plane
+    u = np.cross(normal, tmp); u /= np.linalg.norm(u)
+    v = np.cross(normal, u)
+
+    s = np.linspace(-size, size, resolution)
+    t = np.linspace(-size, size, resolution)
+    S, T = np.meshgrid(s, t)
+
+    X = point[0] + S*u[0] + T*v[0]
+    Y = point[1] + S*u[1] + T*v[1]
+    Z = point[2] + S*u[2] + T*v[2]  # corrected bug: use u and v consistently
+
+    ax.plot_surface(X, Y, Z, alpha=alpha, color=color)
+
+def plot_BZ_from_lv(ax, reciprocal_vectors, color='lightgreen', starting_depth=3, include_negative=True):
+    """Plot the Brillouin zone from reciprocal lattice vectors."""
+    # Create a meshgrid for the Brillouin zone
+    origin = np.zeros(3)
+    def plot_from_origin(origin, depth):
+        if depth == 0:
+            return
+        for vec in reciprocal_vectors:
+            if np.any(vec != origin):
+                linestyle = 'dashed' if depth < starting_depth else 'solid'
+                alpha = 1 if depth < starting_depth else 0.5
+                ax.quiver(*origin, *vec, color=color, linestyle=linestyle, alpha=alpha)
+                if include_negative:
+                    ax.quiver(*origin, *-vec, color=color, linestyle=linestyle, alpha=alpha)
+            plot_from_origin(origin + vec, depth - 1)
+            if include_negative:
+                plot_from_origin(origin - vec, depth - 1)
+    plot_from_origin(origin, depth=starting_depth)
+def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None):
+            """
+            Plots any number of vectors in a 3D space.
+
+            Parameters:
+                vectors (List[np.ndarray]): List of 3D vectors to plot.
+                colors (List[str]): List of colors for each vector (optional).
+                labels (List[str]): List of labels for each vector (optional).
+                title (str): Title of the plot.
+                save_path (str): Path to save the plot (optional).
+            """
+            vectors = [np.array(v).astype(np.complex128).flatten() for v in vectors]  # Ensure all vectors are numpy arrays
+            fig = fig or plt.figure()
+            ax = ax or fig.add_subplot(111, projection='3d')
+            ax.set_title(title)
+
+            origin = np.zeros(3)  # Origin point for all vectors
+            colors = colors or ['b'] * len(vectors)
+            labels = labels or [f"Vector {i+1}" for i in range(len(vectors))]
+
+            for vector, color, label in zip(vectors, colors, labels):
+                ax.quiver(*origin, *vector, color=color, label=label)
+
+            max_len = max(np.linalg.norm(v) for v in vectors)
+            ax.set_xlim([-max_len, max_len])
+            ax.set_ylim([-max_len, max_len])
+            ax.set_zlim([-max_len, max_len])
+
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_zlabel("Z")
+            ax.legend()
+
+            if save_path:
+                plt.savefig(save_path)
+            #plt.show()
+            
+            return fig, ax
+
+
+########################################################################################################################
+########################################################################################################################
+################################                          PATHS THROUGH GRIDS           ######################
+########################################################################################################################
+########################################################################################################################
+
 def path_through_grid_from_relative_points(relative_points, q_grid:np.ndarray):
     """
     Takes a list of relative points and returns startpoint, directions and steps to go through the grid.
@@ -1441,31 +1584,6 @@ def path_through_grid_from_relative_points(relative_points, q_grid:np.ndarray):
         steps.append(divisor)
     return startpoint, directions, steps
 
-
-# def path_through_grid_interpolated(grid, relative_grid_points, steps, dimension=None,material=None, config:Config=None ):
-#     from scipy.interpolate import RegularGridInterpolator
-#     """
-#     Takes relative_grid_points and total_steps and returns an interpolated path through the grid.
-#     """
-#     assert grid.ndim == 3, "Grid must be 3D (kx, ky, kz) for interpolation. Current shape: {}".format(grid.shape)
-#     nx,ny,nz = grid.shape
-#     x = np.arange(nx)
-#     y = np.arange(ny)
-#     z = np.arange(nz)
-#     all_relative_grid_points = np.zeros((0,3))
-#     steps = np.linspace(0, 1, steps)
-#     for i in range(1,len(relative_grid_points)):
-#         all_relative_grid_points = np.concatenate((all_relative_grid_points,np.einsum("i,j->ij",steps,relative_grid_points[i])))
-
-#     interp = RegularGridInterpolator((x, y, z), grid, method='linear')
-#     path_coords = np.column_stack([
-#     all_relative_grid_points[:, 0] * (x[-1] - x[0]) + x[0],
-#     all_relative_grid_points[:, 1] * (y[-1] - y[0]) + y[0],
-#     all_relative_grid_points[:, 2] * (z[-1] - z[0]) + z[0],
-#     ])
-#     values_on_path = interp(path_coords)
-    
-#     return values_on_path
 def interpolated_path_from_relative_points(relative_grid_points:np.ndarray, steps, nx=None, ny=None, nz=None):
     """
     Takes relative_grid_points of shape (N, 3) and steps and returns interpolated float indices of the target grid with dimension (nx, ny, nz) of shape (N*steps, 3).
@@ -1489,19 +1607,6 @@ def interpolated_path_from_relative_points(relative_grid_points:np.ndarray, step
             all_rel[:, 2] * (nz - 1),
         ])
     return path_coords
-
-def make_grid_periodic(grid):
-    """Takes a grid of shape (..., X, Y, Z) and makes it periodic by adding the first slice to the end of each dimension."""
-    slices = [slice(None)] * grid.ndim
-    slices[-3] = slice(0, 1) #slice with length 1 [0:1] --> in the x-dimension only the one element
-    grid_x = np.concatenate((grid, grid[tuple(slices)]), axis=-3)
-    slices = [slice(None)] * grid_x.ndim
-    slices[-2] = slice(0, 1)
-    grid_xy =  np.concatenate((grid_x, grid_x[tuple(slices)]), axis=-2)
-    slices = [slice(None)] * grid_xy.ndim
-    slices[-1] = slice(0, 1)
-    grid_xyz =  np.concatenate((grid_xy, grid_xy[tuple(slices)]), axis=-1)
-    return grid_xyz
 
 def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps, make_periodic=True):
     from scipy.interpolate import RegularGridInterpolator
@@ -1554,7 +1659,6 @@ def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps,
 
     # Reshape back
     return vals.reshape(grids_shape + (path_coords.shape[0],))
-
 
 def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relative_grid_points = None, startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, material=None, no_w_values=False):
     """
@@ -1658,7 +1762,6 @@ def path_through_k_grid(config:Config, grid, max_value_k=None, q_grid=None,relat
     
     return result, xticks_pos, xticks_labels
 
-
 def path_through_k_grid_old(config:Config, grid, max_value_k=None, q_grid=None,relative_grid_points = None, startpoint=None, directions=None, steps=None, dimension=None, plot_path=False, material=None, no_w_values=False):
     """
     Takes a startpoint, a list of directions and the number of steps in each direction and returns a grid with the values of the original grid at each point and w-value (y-axis)
@@ -1753,6 +1856,12 @@ def path_through_k_grid_old(config:Config, grid, max_value_k=None, q_grid=None,r
         result = np.array(result).T
     
     return result, xticks_pos, xticks_labels
+
+########################################################################################################################
+########################################################################################################################
+################################                          CONVOLUTIONS           ######################
+########################################################################################################################
+########################################################################################################################
 
 
 def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=None):
@@ -1915,76 +2024,11 @@ def convolute_grids_fft_phases(grid1, grid2, d_in_first_unit_cell, dimension=3, 
     # Output shape ((deg)*W, K1, K2, K3?, trailing...)
     return conv_spatial
 
-
-def sum_k_dependency(grid):
-    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
-    if grid.ndim < 2:
-        raise ValueError("Grid must have at least 2 dimensions.")
-    
-    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
-    return summed_grid
-
-def render_matrix_as_image(matrix, filename="matrix.png"):
-    """
-    Renders a given matrix as a LaTeX-styled image and saves it.
-    """
-    # Generate the LaTeX code for the matrix
-    tex_code = "\\begin{bmatrix}\n"
-    for row in matrix:
-        tex_code += "  " + " & ".join(map(str, row)) + " \\\\\n"
-    tex_code += "\\end{bmatrix}"
-
-    # Configure matplotlib for LaTeX rendering
-    plt.rc("text", usetex=True)
-    plt.rc("font", family="serif")
-
-    # Create a figure and render the LaTeX matrix
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.text(0.5, 0.5, f"${tex_code}$", fontsize=20, ha="center", va="center")
-    ax.axis("off")  # Turn off axes for clean output
-
-    # Save the image
-    #plt.savefig(filename, bbox_inches="tight", pad_inches=0.5)
-    plt.show()
-
-def give_vector_terms_of_lattice_vectors(parameters:List["float"], lattice_vectors):
-    result=0
-    for i in range(len(parameters)):
-        result+=parameters[i]*lattice_vectors[i]
-    return result
-
-def get_difference_of(M1,M2):
-    result=0
-    for i in range(len(M1)):
-        for j in range(len(M1[0])):
-            result+=abs(M1[i][j]-M2[i][j])
-    return result
-
-def create_Gamma(half_size):
-    half_size = int(half_size)
-    Gamma = np.zeros((2*half_size, 2*half_size), dtype=complex)
-    for i in range(half_size):
-        Gamma[i, i] = 1
-        Gamma[half_size + i, half_size + i] = -1
-    return Gamma
-
-def remove_small_parts(H, threshold=1e-6):
-    """
-    Remove small parts of the matrix below a certain threshold.
-    
-    Parameters:
-        H (numpy.ndarray): The input matrix.
-        threshold (float): The threshold value.
-        
-    Returns:
-        numpy.ndarray: The modified matrix with small parts removed.
-    """
-    for i in range(H.shape[0]):
-        for j in range(H.shape[1]):
-            if np.abs(H[i, j]) < threshold:
-                H[i, j] = 0
-    return H
-#saving
+########################################################################################################################
+########################################################################################################################
+################################                          OUTPUT / SAVINGS / RENDERING           ######################
+########################################################################################################################
+########################################################################################################################
 def save_grid_to_file(grid, *coords, filename="grid.npz"):
     """
     Save a d-dimensional grid and its coordinate arrays to a .npz file.
@@ -2081,27 +2125,78 @@ def save_figures_as_images_to_pdf(
             pdf.savefig(fig_text)
             plt.close(fig_text)
 
-# def save_config_to_json(config, filename: str = None):
-#     from LSW import Configurations  # Local import to avoid circular dependency
-#     config:Configurations = config  # Ensure config is of type Config
-    
-#     if filename is None:
-#         timestamp = config.timestamp
-#         filename = f"config/config_{timestamp}.json"
-    
-#     # Convert the Config dataclass to a dictionary
-#     config_dict = config.__dict__
-    
-#     # Save the dictionary to a JSON file
-#     with open(filename, "w") as json_file:
-#         #TODO: fix the json error for the dtype object
-#         try:
-#             json.dump(config_dict, json_file, indent=4, default=lambda o: "Unsupported type" if isinstance(o, np.dtype) else o.tolist()
-#                       )
-#         except Exception as e:
-#             print(f"Error saving configuration to {filename}: {e}")
+def render_matrix_as_image(matrix, filename="matrix.png"):
+    """
+    Renders a given matrix as a LaTeX-styled image and saves it.
+    """
+    # Generate the LaTeX code for the matrix
+    tex_code = "\\begin{bmatrix}\n"
+    for row in matrix:
+        tex_code += "  " + " & ".join(map(str, row)) + " \\\\\n"
+    tex_code += "\\end{bmatrix}"
 
-#     print(f"Configuration saved to {filename}")
+    # Configure matplotlib for LaTeX rendering
+    plt.rc("text", usetex=True)
+    plt.rc("font", family="serif")
+
+    # Create a figure and render the LaTeX matrix
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.text(0.5, 0.5, f"${tex_code}$", fontsize=20, ha="center", va="center")
+    ax.axis("off")  # Turn off axes for clean output
+
+    # Save the image
+    #plt.savefig(filename, bbox_inches="tight", pad_inches=0.5)
+    plt.show()
+
+
+def save_latex_matrices(array, filename="latex_matrices.txt", env="bmatrix", precision=4, split_files=False, output_dir="matrices"):
+    """
+    Save 2D or 3D NumPy array as LaTeX matrices.
+
+    Parameters:
+        array (np.ndarray): 2D or 3D array to export.
+        filename (str): Output file if saving all matrices in one.
+        env (str): LaTeX environment: "bmatrix", "pmatrix", etc.
+        precision (int): Number of decimal places.
+        split_files (bool): If True, saves each matrix to a separate file.
+        output_dir (str): Directory to save separate files.
+    """
+    def format_matrix(mat):
+        lines = [f"\\begin{{{env}}}"]
+        for row in mat:
+            row_str = " & ".join(
+                f"{x.real:.{precision}f}" + (f" + {x.imag:.{precision}f}i" if np.iscomplexobj(x) and x.imag != 0 else "")
+                for x in row
+            )
+            lines.append(f"{row_str} \\\\")
+        lines.append(f"\\end{{{env}}}")
+        return "\n".join(lines)
+
+    if array.ndim == 2:
+        # Single matrix
+        latex = format_matrix(array)
+        with open(filename, "w") as f:
+            f.write(latex)
+        print(f"Saved 2D matrix to {filename}")
+
+    elif array.ndim == 3:
+        if split_files:
+            os.makedirs(output_dir, exist_ok=True)
+            for i, mat in enumerate(array):
+                file_path = os.path.join(output_dir, f"matrix_{i:03d}.txt")
+                with open(file_path, "w") as f:
+                    f.write(format_matrix(mat))
+            print(f"Saved {len(array)} matrices to '{output_dir}' directory.")
+        else:
+            with open(filename, "w") as f:
+                for i, mat in enumerate(array):
+                    f.write(f"% Matrix {i}\n")
+                    f.write(format_matrix(mat))
+                    f.write("\n\n")
+            print(f"Saved {len(array)} matrices to {filename}")
+    else:
+        raise ValueError("Input array must be 2D or 3D.")
+
 
 def save_config_to_json(config, filename: str = None, max_array_size: int = 1000):
     """
@@ -2169,85 +2264,22 @@ def find_files_with_keywords(directory:str, keywords: List[str]) -> List[str]:
                 matching_files.append(os.path.join(root, file))
     return matching_files
 
-def plot_plane_from_normal(ax, point, normal, size=1.0, alpha=0.4, color='lightblue', resolution=20):
-    """Plot a plane defined by a point and normal vector."""
-    normal = np.asarray(normal)
-    normal = normal / np.linalg.norm(normal)
 
-    # pick vector not parallel to normal
-    tmp = np.array([1,0,0]) if abs(normal[0]) < 0.9 else np.array([0,1,0])
+def sum_k_dependency(grid):
+    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
+    if grid.ndim < 2:
+        raise ValueError("Grid must have at least 2 dimensions.")
+    
+    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
+    return summed_grid
 
-    # basis vectors of the plane
-    u = np.cross(normal, tmp); u /= np.linalg.norm(u)
-    v = np.cross(normal, u)
 
-    s = np.linspace(-size, size, resolution)
-    t = np.linspace(-size, size, resolution)
-    S, T = np.meshgrid(s, t)
 
-    X = point[0] + S*u[0] + T*v[0]
-    Y = point[1] + S*u[1] + T*v[1]
-    Z = point[2] + S*u[2] + T*v[2]  # corrected bug: use u and v consistently
-
-    ax.plot_surface(X, Y, Z, alpha=alpha, color=color)
-
-def plot_BZ_from_lv(ax, reciprocal_vectors, color='lightgreen', starting_depth=3, include_negative=True):
-    """Plot the Brillouin zone from reciprocal lattice vectors."""
-    # Create a meshgrid for the Brillouin zone
-    origin = np.zeros(3)
-    def plot_from_origin(origin, depth):
-        if depth == 0:
-            return
-        for vec in reciprocal_vectors:
-            if np.any(vec != origin):
-                linestyle = 'dashed' if depth < starting_depth else 'solid'
-                alpha = 1 if depth < starting_depth else 0.5
-                ax.quiver(*origin, *vec, color=color, linestyle=linestyle, alpha=alpha)
-                if include_negative:
-                    ax.quiver(*origin, *-vec, color=color, linestyle=linestyle, alpha=alpha)
-            plot_from_origin(origin + vec, depth - 1)
-            if include_negative:
-                plot_from_origin(origin - vec, depth - 1)
-    plot_from_origin(origin, depth=starting_depth)
-def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None):
-            """
-            Plots any number of vectors in a 3D space.
-
-            Parameters:
-                vectors (List[np.ndarray]): List of 3D vectors to plot.
-                colors (List[str]): List of colors for each vector (optional).
-                labels (List[str]): List of labels for each vector (optional).
-                title (str): Title of the plot.
-                save_path (str): Path to save the plot (optional).
-            """
-            vectors = [np.array(v).astype(np.complex128).flatten() for v in vectors]  # Ensure all vectors are numpy arrays
-            fig = fig or plt.figure()
-            ax = ax or fig.add_subplot(111, projection='3d')
-            ax.set_title(title)
-
-            origin = np.zeros(3)  # Origin point for all vectors
-            colors = colors or ['b'] * len(vectors)
-            labels = labels or [f"Vector {i+1}" for i in range(len(vectors))]
-
-            for vector, color, label in zip(vectors, colors, labels):
-                ax.quiver(*origin, *vector, color=color, label=label)
-
-            max_len = max(np.linalg.norm(v) for v in vectors)
-            ax.set_xlim([-max_len, max_len])
-            ax.set_ylim([-max_len, max_len])
-            ax.set_zlim([-max_len, max_len])
-
-            ax.set_xlabel("X")
-            ax.set_ylabel("Y")
-            ax.set_zlabel("Z")
-            ax.legend()
-
-            if save_path:
-                plt.savefig(save_path)
-            #plt.show()
-            
-            return fig, ax
-
+########################################################################################################################
+########################################################################################################################
+################################                  NUMERICS, Grid creation / integration           ######################
+########################################################################################################################
+########################################################################################################################
 #TODO: normalise "better"
 def normalise_grid(grid):
     total_sum = np.sum(grid)
@@ -2255,101 +2287,14 @@ def normalise_grid(grid):
         grid = grid / total_sum
     return grid
 
-def flatten_axes(arr: np.ndarray, axes_to_flatten):
-    """
-    Flatten the specified axes of a NumPy array into a single axis.
+def create_Gamma(half_size):
+    half_size = int(half_size)
+    Gamma = np.zeros((2*half_size, 2*half_size), dtype=complex)
+    for i in range(half_size):
+        Gamma[i, i] = 1
+        Gamma[half_size + i, half_size + i] = -1
+    return Gamma
 
-    Parameters
-    ----------
-    arr : np.ndarray
-        Input array.
-    axes_to_flatten : tuple of int
-        Axes to merge into one. Can be in any order and may be negative.
-
-    Returns
-    -------
-    out : np.ndarray
-        Array where selected axes are replaced by a single axis.
-        Shape (..., flattened_size, ...) depending on axis positions.
-    """
-
-    # Normalize axes (handle negative axes)
-    axes = tuple(sorted(ax % arr.ndim for ax in axes_to_flatten))
-
-    # Compute the flattened size
-    flat_size = np.prod([arr.shape[ax] for ax in axes])
-
-    # Build list of new axes order: 
-    #   1. all axes *not* being flattened (in original order)
-    #   2. the axes to flatten (in original order)
-    remaining_axes = tuple(ax for ax in range(arr.ndim) if ax not in axes)
-    new_order = remaining_axes + axes
-
-    # Move flattened axes to the end
-    arr_reordered = arr.transpose(new_order)
-
-    # New shape = remaining dims + (flat_size,)
-    new_shape = arr_reordered.shape[:len(remaining_axes)] + (flat_size,)
-
-    return arr_reordered.reshape(new_shape)
-
-def print_difference_to_timestamp(last_timestamp, debug_info, do_print):
-    new_timestamp = int(time.time() * 1000)-last_timestamp
-    print(str(new_timestamp)+"ms :"+str(debug_info))
-    return new_timestamp
-
-def save_latex_matrices(array, filename="latex_matrices.txt", env="bmatrix", precision=4, split_files=False, output_dir="matrices"):
-    """
-    Save 2D or 3D NumPy array as LaTeX matrices.
-
-    Parameters:
-        array (np.ndarray): 2D or 3D array to export.
-        filename (str): Output file if saving all matrices in one.
-        env (str): LaTeX environment: "bmatrix", "pmatrix", etc.
-        precision (int): Number of decimal places.
-        split_files (bool): If True, saves each matrix to a separate file.
-        output_dir (str): Directory to save separate files.
-    """
-    def format_matrix(mat):
-        lines = [f"\\begin{{{env}}}"]
-        for row in mat:
-            row_str = " & ".join(
-                f"{x.real:.{precision}f}" + (f" + {x.imag:.{precision}f}i" if np.iscomplexobj(x) and x.imag != 0 else "")
-                for x in row
-            )
-            lines.append(f"{row_str} \\\\")
-        lines.append(f"\\end{{{env}}}")
-        return "\n".join(lines)
-
-    if array.ndim == 2:
-        # Single matrix
-        latex = format_matrix(array)
-        with open(filename, "w") as f:
-            f.write(latex)
-        print(f"Saved 2D matrix to {filename}")
-
-    elif array.ndim == 3:
-        if split_files:
-            os.makedirs(output_dir, exist_ok=True)
-            for i, mat in enumerate(array):
-                file_path = os.path.join(output_dir, f"matrix_{i:03d}.txt")
-                with open(file_path, "w") as f:
-                    f.write(format_matrix(mat))
-            print(f"Saved {len(array)} matrices to '{output_dir}' directory.")
-        else:
-            with open(filename, "w") as f:
-                for i, mat in enumerate(array):
-                    f.write(f"% Matrix {i}\n")
-                    f.write(format_matrix(mat))
-                    f.write("\n\n")
-            print(f"Saved {len(array)} matrices to {filename}")
-    else:
-        raise ValueError("Input array must be 2D or 3D.")
-
-if __name__ == "__main__":
-    from LSW import call_main_with_material_config
-
-    call_main_with_material_config()
 
 def integrate_nd(f, grid_points, dimension):
     """
@@ -2471,7 +2416,6 @@ def give_grid_vectors_d(vectors:np.ndarray, steps:List[int], amount_BZ=1, includ
     
     return result
 
-
 def give_reciprocal_lv(lv):
     V = np.dot(lv[0], np.cross(lv[1], lv[2]))
     result = [
@@ -2480,3 +2424,10 @@ def give_reciprocal_lv(lv):
         np.array(2 * np.pi / V * np.cross(lv[0], lv[1])),
     ]
     return result
+
+
+
+if __name__ == "__main__":
+    from LSW import call_main_with_material_config
+
+    call_main_with_material_config()

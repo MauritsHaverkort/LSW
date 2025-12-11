@@ -343,4 +343,28 @@ class Material:
     if __name__ == "__main__":
         import LSW
         LSW.call_main_with_material_config()
+
+
+def sort_atoms_for_type(atoms):
+    """Sorts atoms into a list of lists based on their type attribute."""
+    from Atoms import Atom
+    if not all(isinstance(atom, Atom) for atom in atoms):
+        raise TypeError("All elements in atoms must be of type Atom")
+    atoms: List[Atom] = atoms
+    sorted_atoms = []
+    type_index = 0
+    atoms_left = True
+    while atoms_left:
+        temp = []
+        atoms_left = False
+        for a in atoms:
+            if type_index == a.type:
+                temp.append(a)
+                atoms_left = True
+        if not atoms_left:
+            break
+        else:
+            sorted_atoms.append(temp)
+            type_index += 1
+    return sorted_atoms
     

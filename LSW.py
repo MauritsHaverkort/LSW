@@ -132,7 +132,9 @@ def call_main_with_material_config():
             # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=1, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            
+            #In DG_AFM a is defined as the distance between NNN since I added the option to have the second atom somehow shifted so a=2 leads to NN distance of 1!
+            Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=2, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
             # Examples.NiO_supercell(config)
             # Examples.NiO_2_atom_cell(config)
             
@@ -219,19 +221,11 @@ def main(config: Config, material: Material):
     config.additional_values["q_grid"] = q_values
     material.q_values = q_values
     
-
-    
-    if config.path_load_pref_convolutions != "":
-        pref_grid, *_ = functions.load_grid_from_file(
-            config.path_load_pref_convolutions
-        )
-    else:
-        print("calculating new pref_grid")
-        energy_dependent_part, T, eigvalue_grid, w_values, eigvalues_deriv, T_deriv = calc_H_T_w_on_grid(
-            config=config,
-            q_values=q_values,
-            material=material,
-        )
+    energy_dependent_part, T, eigvalue_grid, w_values, eigvalues_deriv, T_deriv = calc_H_T_w_on_grid(
+        config=config,
+        q_values=q_values,
+        material=material,
+    )
     config.debug_timer.print_difference("calculated/ loaded T (pref) grid", config.debug_timing)
     material.w_values = w_values
 
@@ -239,22 +233,23 @@ def main(config: Config, material: Material):
     
     sqw_2_xyz, sqw_4_xyz, q_values = calculate_sqw_spectra(config, q_values_grid=q_values, w_values=w_values, material=material, energy_dependent_part=energy_dependent_part, T=T, eigvalue_grid=eigvalue_grid, eigvalues_deriv=eigvalues_deriv, T_deriv=T_deriv)
     if config.save_grid_to_file:
-        np.savez(f"outputs/sqw_intensities/results{config.timestamp}.npz", sqw_2_xyz=sqw_2_xyz, sqw_4_xyz=sqw_4_xyz, q_values=q_values, w_values=w_values)
-        np.savez(f"outputs/sqw_intensities/results_coeff{config.timestamp}.npz", 
-                 energies=material.energies,
-                 T=material.T,
-                 phase_factor=material.phase_factor,
-                 q_values = material.q_values,
-                 w_values= material.w_values,
-                 sqw_2_ad_a_sym_class=material.sqw_2_ad_a_sym_class,
-                 conv_sqw_2_ad_a_sym_classes=material.conv_sqw_2_ad_a_sym_classes,
-                 coeff_sym_classes_tioju_4=material.coeff_sym_classes_tioju_4,
-                 coeff_sym_class_tioju_2=material.coeff_sym_classes_tioju_2,
-                 coeff_tioju_xyz_2=material.coeff_tioju_xyz_2,
-                 coeff_tioju_xyz_4=material.coeff_tioju_xyz_4,
-                 coeff_prime_to_lab_2=material.coeff_prime_to_lab_2,
-                 coeff_prime_to_lab_4=material.coeff_prime_to_lab_4,
-                 coeff_xyz_rixs_4=material.coeff_xyz_rixs)
+        config.warnings.add("Saving grid to file taking out instead use save")
+        # np.savez(f"outputs/sqw_intensities/results{config.timestamp}.npz", sqw_2_xyz=sqw_2_xyz, sqw_4_xyz=sqw_4_xyz, q_values=q_values, w_values=w_values)
+        # np.savez(f"outputs/sqw_intensities/results_coeff{config.timestamp}.npz", 
+        #          energies=material.energies,
+        #          T=material.T,
+        #          phase_factor=material.phase_factor,
+        #          q_values = material.q_values,
+        #          w_values= material.w_values,
+        #          sqw_2_ad_a_sym_class=material.sqw_2_ad_a_sym_class,
+        #          conv_sqw_2_ad_a_sym_classes=material.conv_sqw_2_ad_a_sym_classes,
+        #          coeff_sym_classes_tioju_4=material.coeff_sym_classes_tioju_4,
+        #          coeff_sym_class_tioju_2=material.coeff_sym_classes_tioju_2,
+        #          coeff_tioju_xyz_2=material.coeff_tioju_xyz_2,
+        #          coeff_tioju_xyz_4=material.coeff_tioju_xyz_4,
+        #          coeff_prime_to_lab_2=material.coeff_prime_to_lab_2,
+        #          coeff_prime_to_lab_4=material.coeff_prime_to_lab_4,
+        #          coeff_xyz_rixs_4=material.coeff_xyz_rixs)
     config.debug_timer.print_difference("done with computing sqw_4 and sqw_2", config.debug_timing)
     
     # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values= q_values, sqw_4_xyz= sqw_4_xyz, sqw_2_xyz= sqw_2_xyz)
@@ -264,11 +259,12 @@ def main(config: Config, material: Material):
     symmetry_checks(config, material)
     
     functions.save_config_to_json(config)
-
+    if config.save_material:
+        np.savez(f"outputs/material/{material.name}{config.timestamp}.npz", material=material, allow_pickle=True)
     
     # plotting_additional_values()
 
-    
+
 
 
 def J_of_k(S: float, bonds: List[np.ndarray], J_couplings: List[float], k_: np.ndarray):
