@@ -170,6 +170,19 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     # all_atoms.append(atoms[0])
     return material
 
+def NiO_8_atom_cell(config:Config ,J=1):
+    alignements = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
+    # alignements = [np.array([1, 1, -2])]
+
+
+    crystallographic_lv = [np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1])]# this is in order to align with the epxperiment
+    material = DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=2, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2, alignements=alignements)
+    material.name = "NiO 8 atom cell"
+    material.set_crystallographic_lv(crystallographic_lv)
+    
+    config.Gamma = 0.2
+    
+    return material
 def NiO(config:Config ,J=1,a=1, alignement=0):
     
     #assert config.dimension == 3, "NiO configuration is only defined for 3D"

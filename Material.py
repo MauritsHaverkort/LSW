@@ -82,6 +82,10 @@ class Material:
         self.mat_R2 = np.outer(self.normal_vector_to_rotation_plane, self.normal_vector_to_rotation_plane)
         self.mat_R1 = (np.eye(3) - 1j * mat_nx - self.mat_R2) / 2
     
+    def set_crystallographic_lv(self, crystallographic_lv: np.ndarray):
+        self.crystallographic_lv = crystallographic_lv
+        self.from_cryst_to_lv_basis =  np.array(self.lattice_vectors) @ la.inv(np.array(self.crystallographic_lv))
+    
     def get_corner_points_of_BZ(self):
         return functions.give_grid_vectors_d(self.get_reciprocal_lattice_vectors(), steps=[2,2,2], include_endpoint=True)
 

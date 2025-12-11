@@ -134,7 +134,9 @@ def call_main_with_material_config():
             # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
             
             #In DG_AFM a is defined as the distance between NNN since I added the option to have the second atom somehow shifted so a=2 leads to NN distance of 1!
-            Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=2, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            # Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=2, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
+            
+            Examples.NiO_8_atom_cell(config, J = 1)
             # Examples.NiO_supercell(config)
             # Examples.NiO_2_atom_cell(config)
             
@@ -2889,10 +2891,11 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 energies_along_path = functions.path_through_grid_interpolated(grid= material.energies.transpose(0,-1,1,2,3),
                                                                                     relative_grid_points=np.array(relative_grid_points),
                                                                                     steps=steps_between_points)
+                
                 fig_energies = plt.figure(f"energies_{title_suffix}")
                 for i in range(energies_along_path.shape[1]):
                     plt.plot(energies_along_path[0,i])
-                
+                    
                 fig_spectrum_2 = []
                 fig_spectrum_4 = []  
                
@@ -2900,6 +2903,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 
                 for op_idx in indices_to_plot or np.ndindex(spectrum_2_xyz_standard_path.shape[:4]):
                     if np.real(spectrum_2_xyz_standard_path[*op_idx]).max() > 1e-2 * np.real(spectrum_2_xyz_standard_path).max():
+                        
                         fig_spectrum_2.append(plt.figure(f"spectrum one magnon xyz {op_idx}_{title_suffix}"))
 
                         grid_to_plot = np.real(spectrum_2_xyz_standard_path[*op_idx])
@@ -2913,6 +2917,10 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                                     ))
                         plt.colorbar()
                         plt.title(f"spectrum one magnon xyz {op_idx}")
+                        amount_yticks = 5
+                        step_yticks = max(1, len(material.w_values)//amount_yticks)
+                        plt.yticks(ticks=np.arange(0,len(material.w_values),step_yticks), labels=[f"{np.real(w):.1f}" for w in material.w_values[::step_yticks]])
+
                 #two magnon plots
                 if config.calc_conv_intensities:
                     
@@ -3046,10 +3054,12 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             #standard path (Gamma to X to M to R to Gamma)
             standard_path = [2*p for p in material.relative_grid_points_path]
             path_test_periodicy = [np.array([0,0,0]),np.array([5,0,0])]
+            spatial_idx_to_plot = [(0,3,0,3)]
+            # spatial_idx_to_plot = None  #plot all
             figs = [
             draw_BZ_in_exp_setup()
-            ,draw_xyz_spectra_energies_along_path(standard_path, steps_between_points=100, title_suffix="standard path", plot_phase_factor=True)
-            ,draw_xyz_spectra_energies_along_path(relative_grid_points_lv_basis.reshape(*shape_v_angles,3)[0,:,0,0,:], steps_between_points=1, title_suffix="experiment", plot_phase_factor=True)
+            ,draw_xyz_spectra_energies_along_path(standard_path, steps_between_points=100, title_suffix="standard path", plot_phase_factor=True, indices_to_plot=spatial_idx_to_plot)
+            ,draw_xyz_spectra_energies_along_path(relative_grid_points_lv_basis.reshape(*shape_v_angles,3)[0,:,0,0,:], steps_between_points=1, title_suffix="experiment", plot_phase_factor=True, indices_to_plot=spatial_idx_to_plot)
             # ,draw_xyz_spectra_energies_along_path(path_test_periodicy, steps_between_points=100, title_suffix="test periodicity", indices_to_plot=[(0,3,0,3)], plot_phase_factor=True)
             # ,plot_total_sigma_prefactor_contributions(idx_Rpabc, include_all_polarisations=False, sum_alignments=False, plot_all_angles=False, plot_2_4_all = 0)
             ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_2.sum(axis=0), title="spectrum one magnon of transferred and incident energy")  #sum over alignments
