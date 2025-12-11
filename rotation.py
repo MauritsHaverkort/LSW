@@ -35,7 +35,7 @@ def rotation_matrix_from_vectors(v1, v2):
     c = dot
 
     R = np.eye(3) + skew + (skew @ skew) * ((1 - c) / (s ** 2))
-    print(R)
+    # print(R)
     return R
 
 def rotation_matrix_from_axis_angle(axis, angle):

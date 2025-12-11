@@ -389,7 +389,7 @@ def calculate_sqw_spectra(
         
     #implementation of paper 4
 
-    phase_prefactor = give_phase_factor(material=material, config=config, q_values=q_values_grid)
+    phase_prefactor = give_phase_factor_from_total_k(material=material, config=config, q_values=q_values_grid)
     
     T_herm_conj = np.conjugate(T.swapaxes(-2, -1))
 
@@ -446,7 +446,7 @@ def calculate_sqw_spectra(
 
             q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], list(amount_k_values[:dimension]) , amount_BZ = config.amount_BZ*extension)
 
-            phase_factor = give_phase_factor(material=material, config=config, q_values=q_values)
+            phase_factor = give_phase_factor_from_total_k(material=material, config=config, q_values=q_values)
             sqw_prime_grid_extended = np.einsum('tcoduw...,...cd->tcoduw...',sqw_prime_grid_extended, phase_factor[:,:,:,:material.N,:material.N])
             return sqw_prime_grid_extended, q_values
         

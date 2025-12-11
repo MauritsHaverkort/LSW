@@ -1506,7 +1506,8 @@ def make_grid_periodic(grid):
 def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps, make_periodic=True):
     from scipy.interpolate import RegularGridInterpolator
     from scipy.ndimage import map_coordinates
-    """takes a grid of shape (..., X, Y, Z) and relative_grid_points of shape (N, 3) and steps and returns an interpolated path through the grids (...,N)."""
+    """takes a grid of shape (..., X, Y, Z) and relative_grid_points with respect to the whole grid of shape (N, 3) and steps and returns an interpolated path through the grids (...,N).
+    Example : grid of shape (..., 3, 4, 5) --> relative_grid_points[0] = [0.5,0.5,0,5] returns the grid interpolated at (...,1,1.5,2) for each index ..."""
 
     if make_periodic:
         grid = make_grid_periodic(grid)
