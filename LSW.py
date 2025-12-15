@@ -54,8 +54,8 @@ def test_normalisation():
         
     config = Configurations.config_experimental("SpinW TT")
     k_values = np.arange(6,30,2)
-    # material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
-    material = Examples.NiO_8_atom_cell(config)
+    material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
+    # material = Examples.NiO_8_atom_cell(config)
     filename = f"total_integral_intensities.txt"
     with open(filename, "a", encoding="utf-8") as f:
         f.write(f"{config.timestamp}: material: {material.name}\n")
@@ -140,7 +140,7 @@ def call_main_with_material_config():
             
             # Examples.NiO_8_atom_cell(config, J = 1)
             # Examples.NiO_supercell(config)
-            Examples.NiO_2_atom_cell(config)
+            # Examples.NiO_2_atom_cell(config)
             
             #AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
@@ -150,7 +150,7 @@ def call_main_with_material_config():
             # Examples.Fe2O3_rhombohedral(config, AFM=True),
             
             #tryout materials
-            # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1, spin_dir=np.array([0, 0, 1]), spin_dir_2=-np.array([0, 0, 1])),
+            Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1, spin_dir=np.array([0, 0, 1]), spin_dir_2=-np.array([0, 0, 1])),
             # Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1])),
             # Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0])),
             # Examples.spin_helix_tut30_D2(config, J=1, a=1, S1=1, d=2),
@@ -1360,7 +1360,7 @@ def calculate_sqw_spectra(
         
         #normalise to intensity per k-point (so that sum over all intensities is independent of the amount of grid points)
         if config.use_intensity_normalisation:
-            norm = 1/(config.number_k_points)
+            norm = 1#/(config.number_k_points*config.amount_w_values)
             config.warnings.add("use sqw as intensity per k and w-point")
         else:
             norm = 1
@@ -1765,7 +1765,7 @@ def calculate_sqw_spectra(
         # 
         sqw_2_xyz_comp = np.einsum("OUMN...x,xw...->OUMNw...",spectrum_2_xyz_coeff_std_path, np.tile(material.sqw_2_ad_a_sym_class, (1,1,)+extension_factor_tuple)).astype(config.dtype_complex)
 
-        assert np.max(np.abs(sqw_2_xyz - sqw_2_xyz_comp)) < 1e-4 *np.max(sqw_2_xyz), "experimental sqw_2 from a_ad to xyz not matching with explicit calculation"
+        assert np.max(np.abs(sqw_2_xyz - sqw_2_xyz_comp)) <= 1e-4 *np.max(sqw_2_xyz), "experimental sqw_2 from a_ad to xyz not matching with explicit calculation"
     
         
     
@@ -2014,6 +2014,7 @@ def calculate_sqw_spectra(
                 plt.legend()
         #plotting of Hamiltonian
         if config.plots_to_show_print["Hamiltonian_parts_plot"][0]: #securing this this is not just one slice but the grid calculations
+            
             for index_H, H in enumerate(VALUES_TO_SAVE["Hamiltonian_not_diagonalised"]):
                 if len(H.shape) != 5: #if the Hamiltonian is not a 3D grid
                     continue
@@ -3212,20 +3213,19 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
 
     config.debug_timer.print_difference(f"done calculating RIXS spectrum", debug_time_duration)
            
-
 def print_normalisation(config, sqw_2, sqw_4):
     actual_sum_2 = np.sum(sqw_2)
     actual_sum_4 = np.sum(sqw_4) if sqw_4 is not None else None
     value = 1 #int(config.number_k_points) #* int(config.amount_w_values)
-    
+    total_number_grid_points = int(config.number_k_points) * int(config.amount_w_values)
     # actual_sum_2 /= value
     # actual_sum_4 /= value if sqw_4 is not None else None
 
     os.makedirs("outputs", exist_ok=True)
     filename = f"total_integral_intensities.txt"
     with open(filename, "a", encoding="utf-8") as f:
-        f.write(f"2 {value}: {actual_sum_2}\n")
-        f.write(f"4 {value}: {actual_sum_4}\n") if sqw_4 is not None else None
+        f.write(f"2 {total_number_grid_points}: {actual_sum_2}\n")
+        f.write(f"4 {total_number_grid_points}: {actual_sum_4}\n") if sqw_4 is not None else None
 
 def normalise_to_total_sum_rule(sqw_2, sqw_4, material: Material, config: Config):
     #calculating the total sum rule

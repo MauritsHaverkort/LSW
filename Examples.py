@@ -540,7 +540,7 @@ def D1_2_atom_cluster(config: Config, J, a, S1, S2, spin_dir=np.array([0, 0, 1])
 
     atoms = [
         Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
-        Atom(np.array([a, 0, 0]), type=1, S=S2, spin_dir=spin_dir_2),
+        Atom(1/2*np.array([a, 0, 0]), type=1, S=S2, spin_dir=spin_dir_2),
     ]
     
     bonds = [
