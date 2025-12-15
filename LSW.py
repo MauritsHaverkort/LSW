@@ -1849,7 +1849,7 @@ def calculate_sqw_spectra(
                 config.debug_timer.print_difference("before searching for symmetries in sqw 4", config.debug_timing)
                 symmetries, tensor_of_symm_class_index = functions.give_symmetries_of_tensors(sqw_4_xyz, 4, threshold=1e-2, return_conjugated_symmetries=False)
                 material.sqw_4_symmetries = symmetries
-                indices_to_plot = [x[1] for x in symmetries]  #1 since first index is the information about the symmetry
+                indices_to_plot = [x[0] for x in symmetries]  
                 config.debug_timer.print_difference("after searching for symmetries in sqw 4", config.debug_timing)
                 
             else:
