@@ -619,6 +619,34 @@ def test_plot():
     plt.tight_layout()
     plt.show()
 
+def integration_spectral_weight():
+    from funtions import integrate_nd
+    res = []
+    omega_0 = 0
+    gamma = 0.05
+    def spectral_weight_function(omega):
+        return (1/np.pi) * (gamma / ((omega - omega_0)**2 + gamma**2))
+    
+    for Nw in np.arange(10, 500, 10):
+        omega_values = np.linspace(-10*gamma, 10.01*gamma, Nw)
+        sw_values = []
+        for omega in omega_values:
+            sw = spectral_weight_function(omega)
+            sw_values.append(sw)
+        sw_values = np.array(sw_values)
+        integral = np.trapezoid(sw_values, omega_values)
+        res.append((Nw, integral))
+        print(f"Nw: {Nw}, Integral: {integral}")
+    plt.figure()
+    plt.plot(*zip(*res))
+    plt.xlabel("Number of points (Nw)")
+    plt.ylabel("Integral")
+    plt.title("Spectral Weight Integration")
+    plt.grid()
+    plt.show()
+
+    return np.trapezoid(sw_values, omega_values)
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -637,4 +665,5 @@ if __name__ == "__main__":
     # normalisation_plotting()
     # plt_factor_x_point_to_max_angle()
     # test_interpolation_path()
-    test_plot()
+    # test_plot()
+    integration_spectral_weight()
