@@ -621,22 +621,30 @@ def test_plot():
 
 def integration_spectral_weight():
     from funtions import integrate_nd
+    def refine_w_values_around_pole(w_values, w_0, values_to_add = 10):
+        
+        delta_w = w_values[1]-w_values[0] #assumes equally spaced w_values
+        w_values_to_add = np.linspace(w_0 - 0.5*delta_w, w_0 + 0.5*delta_w, values_to_add)
+        w_values = np.sort(np.concatenate((w_values, w_values_to_add)))
+        return np.sort(w_values)
     res = []
-    omega_0 = 0
-    gamma = 0.05
-    def spectral_weight_function(omega):
-        return (1/np.pi) * (gamma / ((omega - omega_0)**2 + gamma**2))
-    
-    for Nw in np.arange(10, 500, 10):
-        omega_values = np.linspace(-10*gamma, 10.01*gamma, Nw)
+    w_0 = 6
+    gamma = 0.04
+    def spectral_weight_function(w):
+        return (1/np.pi) * (gamma / ((w - w_0)**2 + gamma**2))
+    plt.figure("Spectral Weight Function")
+    for Nw in np.concatenate((np.arange(22,26,2),np.array([300]))):
+        w_values = np.linspace(-0.2, w_0+20*gamma, Nw)
         sw_values = []
-        for omega in omega_values:
-            sw = spectral_weight_function(omega)
+        for w in w_values:
+            sw = spectral_weight_function(w)
             sw_values.append(sw)
+        plt.plot(w_values, sw_values, label=f"Nw={Nw}")
         sw_values = np.array(sw_values)
-        integral = np.trapezoid(sw_values, omega_values)
+        integral = np.trapezoid(sw_values, w_values)
         res.append((Nw, integral))
         print(f"Nw: {Nw}, Integral: {integral}")
+    plt.legend()
     plt.figure()
     plt.plot(*zip(*res))
     plt.xlabel("Number of points (Nw)")
@@ -645,7 +653,65 @@ def integration_spectral_weight():
     plt.grid()
     plt.show()
 
-    return np.trapezoid(sw_values, omega_values)
+    return np.trapezoid(sw_values, w_values)
+
+def normalisation_test_calc_fractions():
+    
+    # ---- first list ----
+    data_1 = {
+        (2, 216): 11.754838946761074 + 1.8663726958688568e-16j,
+        (4, 216): 15.18877982953477 + 3.451995415405216e-07j,
+        (2, 384): 28.27753339219652 - 3.461738813442057e-16j,
+        (4, 384): 161.93257032256713 + 3.6802856895089226e-06j,
+        (2, 600): 27.563826379281842 + 9.740289434275446e-17j,
+        (4, 600): 213.8483100214263 + 4.860188864242068e-06j,
+        (2, 864): 32.07589899522862 - 6.03488406195084e-16j,
+        (4, 864): 493.02201012947074 + 1.120504568387509e-05j,
+        (2, 1176): 25.515194272739578 + 1.566998781425767e-16j,
+        (4, 1176): 412.902779759267 + 9.384154085687477e-06j,
+        (2, 1536): 24.8817135173087 - 1.4598957923358397e-16j,
+        (4, 1536): 483.6321263084088 + 1.099163923357991e-05j,
+        (2, 1944): 31.538361448452775 + 2.7017541825091875e-17j,
+        (4, 1944): 1061.8932045928766 + 2.4133936468741177e-05j,
+        (2, 2400): 30.002072972340066 - 5.736665296503402e-17j,
+        (4, 2400): 1140.6823844977857 + 2.5924599648291547e-05j,
+        (2, 2904): 24.59254085878562 - 5.0256125240884e-17j,
+        (4, 2904): 885.1807424632109 + 2.0117744145929963e-05j,
+        (2, 3456): 27.93895974060895 - 2.65128398507443e-16j,
+        (4, 3456): 1369.8640828500686 + 3.11332746128631e-05j,
+    }
+
+    # ---- second list ----
+    data_2 = {
+        (2, 216): 3.1779127638214923 - 1.3877787838863646e-17j,
+        (4, 216): 3.5762960306007736 + 8.095402031366758e-08j,
+        (2, 384): 7.255230838007643 + 3.849919774886509e-17j,
+        (4, 384): 39.135166333942095 + 8.787490055616078e-07j,
+        (2, 600): 7.042662110744986 + 4.137823440834079e-16j,
+        (4, 600): 52.28837776970166 + 1.1699514646120697e-06j,
+        (2, 864): 8.14705067363124 - 9.877558419234776e-17j,
+        (4, 864): 118.92964098573924 + 2.785004398040915e-06j,
+        (2, 1176): 6.489578367302228 + 8.476809969481033e-17j,
+        (4, 1176): 100.57826464451995 + 2.2694067621783436e-06j,
+        (2, 1536): 6.318010802723897 + 1.7147296702539393e-16j,
+        (4, 1536): 118.27536298369846 + 2.631091992157959e-06j,
+        (2, 1944): 7.971776190014202 - 2.9269405301469446e-16j,
+        (4, 1944): 258.43635459493396 + 5.77545076669853e-06j,
+        (2, 2400): 7.579304483994331 - 2.5167325807858363e-16j,
+        (4, 2400): 279.5232899200959 + 6.311860359823209e-06j,
+        (2, 2904): 6.219995036614866 - 7.851491879974897e-18j,
+        (4, 2904): 216.94911046363615 + 4.975982112961627e-06j,
+        (2, 3456): 7.050790872742196 + 1.9259016550002046e-16j,
+        (4, 3456): 336.7601666588314 + 7.622420165744033e-06j,
+    }
+
+    # ---- compute ratios ----
+    print("ratio = first / second\n")
+    for key in sorted(data_1):
+        if key in data_2:
+            ratio = data_1[key] / data_2[key]
+            print(f"{key[0]} {key[1]} : {ratio.real:.6f}  {ratio.imag:+.3e}j")
+
 
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
@@ -667,3 +733,5 @@ if __name__ == "__main__":
     # test_interpolation_path()
     # test_plot()
     integration_spectral_weight()
+    # normalisation_test_calc_fractions()
+    # normalisation_plotting()

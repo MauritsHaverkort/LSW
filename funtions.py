@@ -864,6 +864,25 @@ def path_k_space(k_points, total_steps, a, steps=None):
 ########################################################################################################################
 ########################################################################################################################
 
+
+def extend_array_equal_spacing(arr, target_len: int):
+    """
+    Extend a 1D array to a target shape by adding equal spacing.
+    """
+    if arr.ndim != 1:
+        raise ValueError("Input array must be 1D")
+
+    arr = np.array(arr)
+    # Extend w_values with equal spacing until it matches grid.shape[1]
+    if len(arr) < target_len:
+        step = arr[1] - arr[0] if len(arr) > 1 else 1
+        num_to_add = target_len - len(arr)
+        last_value = arr[-1]
+        extension = [last_value + step * (i + 1) for i in range(num_to_add)]
+        arr = np.concatenate([arr, extension])
+
+    return arr
+
 def orthonormalise(A):
     """
     Orthonormalises the column vectors of matrix A (like MATLAB's orth).
@@ -1112,14 +1131,14 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
     if len(grid.shape)==2:
         if len(w_values) != 0:     
             if len(w_values) != grid.shape[0]+1:
-                    w_values = np.array(w_values)
-                    # Extend w_values with equal spacing until it matches grid.shape[1]
-                    if len(w_values) < grid.shape[0]+1:
-                        step = w_values[1] - w_values[0] if len(w_values) > 1 else 1
-                        num_to_add = grid.shape[0]+1 - len(w_values)
-                        last_value = w_values[-1]
-                        extension = [last_value + step * (i + 1) for i in range(num_to_add)]
-                        w_values = np.concatenate([w_values, extension])
+                w_values = np.array(w_values)
+                # Extend w_values with equal spacing until it matches grid.shape[1]
+                if len(w_values) < grid.shape[0]+1:
+                    step = w_values[1] - w_values[0] if len(w_values) > 1 else 1
+                    num_to_add = grid.shape[0]+1 - len(w_values)
+                    last_value = w_values[-1]
+                    extension = [last_value + step * (i + 1) for i in range(num_to_add)]
+                    w_values = np.concatenate([w_values, extension])
         
         if use_dos:
             dos_whole_k_space = False
@@ -1220,6 +1239,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         plt.savefig(save_path, bbox_inches='tight')
     
     return fig
+
 
 def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="Isosurface Plot", xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", save_path=None):
     
