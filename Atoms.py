@@ -31,9 +31,9 @@ class Atom:
         """
         self.position=position
         # self.neighbours = neighbours if neighbours is not None else []  #creating a new list
-        self.type=type
+        self.type=Atom.give_next_index()
         self.J_bonds=J_bonds if J_bonds is not None else []
-        self.index=Atom.give_next_index()
+        # self.index=Atom.give_next_index()
         self.S=S
         self.spin_dir = spin_dir/np.linalg.norm(spin_dir) if spin_dir is not None else np.array([0,0,1])  #direction of the atom z by default
         self.R_prime = rotation_matrix_from_vectors(np.array([0,0,1]), self.spin_dir)  #rotation matrix to align the atom with the z-axis

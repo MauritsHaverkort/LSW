@@ -381,7 +381,8 @@ class Material:
         if DRAW_BONDS_ONCE_PER_DISTANCE:
             DRAW_BONDS = False
 
-        fig = plt.figure("structure plot")
+        fig = plt.figure()
+        fig.suptitle("structure plot")
         colors = [
             "blue",
             "green",
@@ -461,6 +462,9 @@ class Material:
             if DRAW_ONLY_FIRST_BZ:
                 if not (np.all(bond.unit_cell_of_atom_0 == np.array([0,0,0])) and np.all(bond.unit_cell_of_atom_1 == np.array([0,0,0]))):
                     continue
+            
+            if np.all(bond.j == 0):
+                continue  # skip bonds with zero interaction
             
             pos = np.einsum("i,ij->j",(atom0.position + bond.unit_cell_of_atom_0),self.lattice_vectors)
             pos_n = np.einsum("i,ij->j",(atom1.position + bond.unit_cell_of_atom_1),self.lattice_vectors)

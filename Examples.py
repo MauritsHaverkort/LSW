@@ -169,7 +169,7 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1])):
+def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1])):
     S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
     # alignements = [np.array([1, 1, -2])]
     T_domains = [np.array([1, 1, 1]), np.array([1, 1, -1]), np.array([1, -1, 1]), np.array([-1, 1, 1])]
@@ -179,44 +179,51 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1,
     config.Gamma = 0.2
     
     M = np.array(lv) #transformation from euclidean to lattice vector basis (A1 A2 A3) = (a1 a2 a3)T (a being the euclidean vectors)
-    la.inv(M.T)
+    # la.inv(M.T)
     X,Y,Z = np.array([1,-1,1])/2,  np.array([1,1,-1])/2, np.array([-1,1,1])/2 #the absolute X,Y,Z vectors in lattice units
     normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     
     tau = np.array([0, 0, 0])  # commensurate
-    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell",
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell NN interactions",
                         extension=2, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
     atoms = [
         #TODO: Domains
-        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
-        Atom(position=X, type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        Atom(position=1/2*(X+Y), type=2, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        Atom(position=1/2*(X+Z), type=3, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        Atom(position=1/2*(Z+Y), type=4, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        # Atom(position=X, type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        Atom(position=1/2*(X+Y), type=0, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(X+Z), type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(Z+Y), type=4, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
         Atom(position=1/2*(X-Y), type=5, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        Atom(position=1/2*(X-Z), type=6, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        Atom(position=1/2*(Z-Y), type=7, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(X-Z), type=6, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(Z-Y), type=7, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
 
 
         # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
         # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
         # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
     ]
+    # test if shifting by an arbitrary vector changes the energies
+    # shift_vector = np.array([0.3, 0.5, 0.2])
+    # for atom in atoms:
+    #     atom.position = shift_vector + atom.position
+
+
     #set correct spin directions according to T_domains
     for atom in atoms[1:]:
         bond_to_atom_0 = atom.position - atoms[0].position
         bond_to_atom_1 = atom.position - atoms[1].position
-        if np.dot(T_domains[T_domain_idx], bond_to_atom_0) == np.array([0,0,0]).all():
+        if np.dot(T_domains[T_domain_idx], bond_to_atom_0) <= 1e-5:
             atom.spin_dir = atoms[0].spin_dir
-        elif np.dot(T_domains[T_domain_idx], bond_to_atom_1) == np.array([0,0,0]).all():
+        elif np.dot(T_domains[T_domain_idx], bond_to_atom_1) <= 1e-5:
             atom.spin_dir = atoms[1].spin_dir
         else:
             raise ValueError("Atom position does not correspond to the selected T_domain_idx")
 
     J_values = [J_NN,J_super_exchange]
+    J_values= [J_super_exchange]
     #this is not reliably working since I dont account for double counting correctly
     bonds = []
     combinations, distances = material.return_combinations_up_to_distance(atoms, 4*a)
@@ -265,6 +272,117 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1,
         material.relative_grid_points_path = [np.array([0,0,0]), Kx, (Kx+Ky), (Kx+Ky+Kz), np.array([0,0,0])]
     
     
+    # all_atoms.append(atoms[0])
+    return material
+
+def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-2.3/12,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1])):
+    S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
+    # alignements = [np.array([1, 1, -2])]
+    T_domains = [np.array([1, 1, 1]), np.array([-1, 1, 1]), np.array([1, -1, 1]), np.array([-1, -1, 1])]
+    #domain 1,1,1
+    A,B,C = np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])
+    #TODO: make this nicer and more general
+    A,B,C = A*T_domains[T_domain_idx], B*T_domains[T_domain_idx], C*T_domains[T_domain_idx]
+    
+    lv = [1/2*(A-B), 1/2*(A-C), A]
+    crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]   
+
+    config.Gamma = 0.2
+    
+    M = np.array(lv) #transformation from euclidean to lattice vector basis (A1 A2 A3) = (a1 a2 a3)T (a being the euclidean vectors)
+    # la.inv(M.T)
+    normal_vector = np.array([-1,1,0])#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
+    
+    tau = np.array([0, 0, 0])  # commensurate
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"NiO 2 atom cell NN_NNN T_domain_{T_domain_idx}",
+                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
+    X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)#the absolute X,Y,Z vectors in lattice units
+
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        #TODO: Domains
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        Atom(position=X, type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(X+Y), type=0, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(X+Z), type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(Z+Y), type=4, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(X-Y), type=5, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(X-Z), type=6, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        # Atom(position=1/2*(Z-Y), type=7, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+
+
+        # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+        # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
+    ]
+    # test if shifting by an arbitrary vector changes the energies
+    # shift_vector = np.array([0.3, 0.5, 0.2])
+    # for atom in atoms:
+    #     atom.position = shift_vector + atom.position
+
+
+    #set correct spin directions according to T_domains
+    for atom in atoms[1:]:
+        bond_to_atom_0 = atom.position - atoms[0].position
+        bond_to_atom_1 = atom.position - atoms[1].position
+        if np.dot(T_domains[T_domain_idx], bond_to_atom_0) <= 1e-5:
+            atom.spin_dir = atoms[0].spin_dir
+        elif np.dot(T_domains[T_domain_idx], bond_to_atom_1) <= 1e-5:
+            atom.spin_dir = atoms[1].spin_dir
+        else:
+            raise ValueError("Atom position does not correspond to the selected T_domain_idx")
+
+    J_values = [J_NN,J_super_exchange]
+    # J_values= [J_super_exchange]
+    #this is not reliably working since I dont account for double counting correctly
+    bonds = []
+    combinations, distances = material.return_combinations_up_to_distance(atoms, 4*a)
+    for i,j_value in enumerate(J_values):
+        for combs in combinations[i]:
+            atom1, uc1, atom2, uc2 = combs
+            assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
+            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j_value))
+    # bonds = [
+    #     Bond(
+    #         material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J
+    #     ),
+    #     Bond(
+    #         material, atoms[0], atoms[1], unit_cell_of_atom_2=(Z-X), j=J
+    #     ),
+    #     Bond(
+    #         material, atoms[0], atoms[1], unit_cell_of_atom_2=(Y-X), j=J
+    #     ),
+    #     Bond(
+    #         material, atoms[1], atoms[0], unit_cell_of_atom_2=(Z+X), j=J
+    #     ),
+    #     Bond(
+    #         material, atoms[1], atoms[0], unit_cell_of_atom_2=X+Y, j=J
+    #     ),
+    #     Bond(
+    #         material, atoms[1], atoms[0], unit_cell_of_atom_2=2*X, j=J
+    #     ) 
+    # ]
+# for c in combinations[0]:
+#     a1,u1,a2,u2 = c
+#     print(np.array(lv).T@(a1.position+u1))
+#     print(np.array(lv).T@(a2.position+u2))
+#     print(a1.position+u1)
+#     print(a2.position+u2)
+#     print("")
+
+    material.transform_from_cryst_basis_to_lv_basis(lv[0], False, True)
+    
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
+    # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2*X, 1/2*(X+Y), 1/2*(X+Y+Z), np.array([0,0,0])]
+    # Kx,Ky,Kz = np.array([1,0,1])/2,  np.array([1,1,0])/2, np.array([0,1,1])/2
+    # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2* np.array([1,0,1]), 1/2* np.array([0,1,1]), 1/2* np.array([0,0,0])]
+    
+    #give in euclidean basis for better readability
+    relative_grid_points_path = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]), np.array([1,1,1]), np.array([0,0,0])]
+    #transform to lattice vector basis
+    material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/4*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
+
     # all_atoms.append(atoms[0])
     return material
 

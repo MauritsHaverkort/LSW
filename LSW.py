@@ -143,6 +143,7 @@ def call_main_with_material_config():
             # Examples.NiO_8_atom_cell(config, J = 1)
             # Examples.NiO_supercell(config)
             # Examples.NiO_2_atom_cell(config)
+            # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             Examples.NiO_2_atom_cell_NN_and_NNN(config)
 
             #AFM sc
@@ -218,6 +219,7 @@ def main(config: Config, material: Material):
                     
 
     VALUES_TO_SAVE["figs_for_pdf"].append(material.draw_atoms_new_bond_system(DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=True))
+    VALUES_TO_SAVE["figs_for_pdf"].append(material.draw_atoms_new_bond_system(DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=False, DRAW_ONLY_FIRST_BZ=True, COLOR_BY_SPIN_DIR=True))
 
     lv = material.lattice_vectors
 
@@ -1399,8 +1401,9 @@ def calculate_sqw_spectra(
         #aa_conv = functions.convolute_grids(sqw_prime_of_a_ad[0,0,0,:,:,:], sqw_prime_of_a_ad[0,0,0,:,:,:], dimension=2)
 
         #flipping the indices to match my convention
-        sqw_prime_of_a_ad_k = flip_sqw_prime_ad_a(sqw_prime_of_a_ad_k, order_of_operator=2, material=material, config=config)
-        sqw_prime_of_a_ad = flip_sqw_prime_ad_a(sqw_prime_of_a_ad, order_of_operator=2, material=material, config=config)
+        if config.debug_Sa_ad:
+            sqw_prime_of_a_ad_k = flip_sqw_prime_ad_a(sqw_prime_of_a_ad_k, order_of_operator=2, material=material, config=config)
+            sqw_prime_of_a_ad = flip_sqw_prime_ad_a(sqw_prime_of_a_ad, order_of_operator=2, material=material, config=config)
         sqw_prime_of_a_ad_without_k_pref_with_w = flip_sqw_prime_ad_a(sqw_prime_of_a_ad_without_k_pref_with_w, order_of_operator=2, material=material, config=config)
         
         
@@ -2198,7 +2201,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     """plan is to compute the experimental setup RIXS for all values of alpha, theta and phi, (in radians) incoming energy (eV) wished, lattice constant (m)"""
     
     alpha = np.linspace(0,1,100)*np.pi # smooth incident angle from 0 to 180 degrees
-    alpha = alpha_exp
+    # alpha = alpha_exp
     
     # OUMN spin-operator index
     # s r sigma prefactor index
@@ -3216,12 +3219,12 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             if not config.test_normalisation:
                 figs = [
                 draw_BZ_in_exp_setup()
-                ,plot_sigma_prefactors()
+                # ,plot_sigma_prefactors()
                 ,draw_xyz_spectra_energies_along_path(standard_path, steps_between_points=100, title_suffix="standard path", plot_phase_factor=True, indices_to_plot_2=spatial_idx_to_plot_2, indices_to_plot_4=spatial_idx_to_plot_4)
                 ,draw_xyz_spectra_energies_along_path(relative_grid_points_lv_basis.reshape(*shape_v_angles,3)[0,:,0,0,:], steps_between_points=1, title_suffix="experiment", plot_phase_factor=True, indices_to_plot_2=spatial_idx_to_plot_2, indices_to_plot_4=spatial_idx_to_plot_4)
                 # ,draw_xyz_spectra_energies_along_path(path_test_periodicy, steps_between_points=100, title_suffix="test periodicity", indices_to_plot=[(0,3,0,3)], plot_phase_factor=True)
-                ,plot_total_sigma_prefactor_contributions(idx_Rpabc, include_all_polarisations=False, sum_alignments=False, plot_all_angles=False, plot_2_4_all = 0)
-                ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_2.sum(axis=0), title="spectrum one magnon of transferred and incident energy")  #sum over alignments
+                # ,plot_total_sigma_prefactor_contributions(idx_Rpabc, include_all_polarisations=False, sum_alignments=False, plot_all_angles=False, plot_2_4_all = 0)
+                # ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_2.sum(axis=0), title="spectrum one magnon of transferred and incident energy")  #sum over alignments
             
                 ]
                 if config.calc_conv_intensities:
