@@ -3,7 +3,6 @@ from typing import List
 from Atoms import Atom
 from Material import Material
 from Bonds import Bond
-import Material as functions
 import numpy.linalg as la
 import rotation as rotation
 from Configurations import Config
@@ -62,7 +61,7 @@ def General_D_FM_AFM_simple_cubic_J1_J2(config:Config,J1, J2 ,a1, a, S1, S2, d=3
     bonds = [bonds[i] for i in range(d)]                                                                  
     
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
 
     # all_atoms.append(atoms[0])
     return material
@@ -106,7 +105,7 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     
     tau = np.array([0, 0, 0])  # commensurate
     material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell",
-                        extension=2, alignments=alignements , crystallographic_lv=crystallographic_lv)
+                        extension=2, S_domains=alignements , crystallographic_lv=crystallographic_lv)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -157,7 +156,7 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
 
     material.transform_from_cryst_basis_to_lv_basis(lv[0], False, True)
     
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2*X, 1/2*(X+Y), 1/2*(X+Y+Z), np.array([0,0,0])]
     Kx,Ky,Kz = np.array([1,0,1])/2,  np.array([1,1,0])/2, np.array([0,1,1])/2
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2* np.array([1,0,1]), 1/2* np.array([0,1,1]), 1/2* np.array([0,0,0])]
@@ -170,10 +169,10 @@ def NiO_2_atom_cell(config:Config ,J=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,1])):
-    alignements = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
+def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1])):
+    S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
     # alignements = [np.array([1, 1, -2])]
-    
+    T_domains = [np.array([1, 1, 1]), np.array([1, 1, -1]), np.array([1, -1, 1]), np.array([-1, 1, 1])]
     lv = [np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])]
     crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]   
 
@@ -186,7 +185,7 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1,
     
     tau = np.array([0, 0, 0])  # commensurate
     material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell",
-                        extension=2, alignments=alignements , crystallographic_lv=crystallographic_lv)
+                        extension=2, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -206,6 +205,17 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1,
         # ,Atom(np.array([0,a1,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
         # ,Atom(np.array([0,0,a1]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
     ]
+    #set correct spin directions according to T_domains
+    for atom in atoms[1:]:
+        bond_to_atom_0 = atom.position - atoms[0].position
+        bond_to_atom_1 = atom.position - atoms[1].position
+        if np.dot(T_domains[T_domain_idx], bond_to_atom_0) == np.array([0,0,0]).all():
+            atom.spin_dir = atoms[0].spin_dir
+        elif np.dot(T_domains[T_domain_idx], bond_to_atom_1) == np.array([0,0,0]).all():
+            atom.spin_dir = atoms[1].spin_dir
+        else:
+            raise ValueError("Atom position does not correspond to the selected T_domain_idx")
+
     J_values = [J_NN,J_super_exchange]
     #this is not reliably working since I dont account for double counting correctly
     bonds = []
@@ -245,7 +255,7 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1/27,J_super_exchange=1,a=1,
 
     material.transform_from_cryst_basis_to_lv_basis(lv[0], False, True)
     
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2*X, 1/2*(X+Y), 1/2*(X+Y+Z), np.array([0,0,0])]
     Kx,Ky,Kz = np.array([1,0,1])/2,  np.array([1,1,0])/2, np.array([0,1,1])/2
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2* np.array([1,0,1]), 1/2* np.array([0,1,1]), 1/2* np.array([0,0,0])]
@@ -357,7 +367,7 @@ def D2_FM_AFM_simple_cubic_NNN_interactions(config: Config, J_AFM, J_FM, a, S, d
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
 
     # all_atoms.append(atoms[0])
     return material
@@ -422,7 +432,7 @@ def D12_FM_AFM_simple_cubic_NNN_interactions_supercell(config: Config, J, J2, a,
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
 
     # all_atoms.append(atoms[0])
     return material
@@ -532,7 +542,7 @@ def Fe2O3_hematite_hexagonal(
     # bonds = []  
     # for a in atoms:
     #     bonds.append(Bond(material, atoms[0], a, unit_cell_of_atom_2=np.array([0,0,0]), j=1))  # placeholder bonds with zero J
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
 
     # default k-path / grid path (3D)
     material.relative_grid_points_path = [
@@ -612,7 +622,7 @@ def Fe2O3_rhombohedral(
             assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
             bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j))
             
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
 
     material.relative_grid_points_path = [
         np.array([0.0, 0.0, 0.0]),
@@ -636,7 +646,7 @@ def D1_2_atom_cluster(config: Config, J, a, S1, S2, spin_dir=np.array([0, 0, 1])
         Bond(material, atoms[0], atoms[1], unit_cell_of_atom_2=np.array([0, 0, 0]), j=J)
     ]
 
-    material.set_bond_atoms(atoms = functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(atoms = material.sort_atoms_for_type(atoms), bonds=bonds)
 
     return material
 
@@ -689,7 +699,7 @@ def General_D_FM_AFM_simple_cubic(config: Config, J, a, S1, S2, d=3, spin_dir=np
     #     all_atoms=all_atoms+atoms[0].create_bonds(atoms[3], dir_with_neighbours=[[0,0,0],[0,0,-1]
     #                                                                         ], J=[J1,J2],pass_actual_vector=False, lv=lv)
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     match material.dimension:
         case 1:
@@ -734,7 +744,7 @@ def D1_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
         ),
        
     ]
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     
     match material.dimension:
@@ -786,7 +796,7 @@ def D2_AFM_simple_cubic_supercell(config: Config, J, a, S1, S2, spin_dir=np.arra
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     
     match material.dimension:
@@ -863,7 +873,7 @@ def D2_AFM_FM_simple_cubic_non_rotated_supercell(config: Config, J, a, S1, S2, J
         
     ]
     
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     
     match material.dimension:
@@ -884,7 +894,7 @@ def DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a,
     normal_vector = give_orthogonal_normal_vector(spin_dir=spin_dir)#this should be arbitrary as long as it is in the x,y plane --> bt it effects the shape of the Hamiltonian
     type_AFM = "AFM" if AFM else "FM"
     material = Material(config=config,lattice_vectors=lv, extension=2,tau=np.array([0,0,0]), normal_vector_to_rotation_plane=normal_vector, dimension=dimension
-                        , name=f"D={dimension} AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}", alignments=alignements)
+                        , name=f"D={dimension} AFM SC non rotated Supercell pos 2nd atom_{relative_position_atom_2}", S_domains=alignements)
 
     sign_spin_dir = -1 if AFM else 1
     
@@ -927,7 +937,7 @@ def DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config: Config, J, a,
             assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
             bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j))
             
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     # for c in combinations[0]:
     #     a1,u1,a2,u2 = c
@@ -984,7 +994,7 @@ def D1_AFM_FM_simple_cubic_supercell(config: Config, J, a, S1, S2, J2= None, spi
         
     ]
     
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     
     match material.dimension:
@@ -1052,7 +1062,7 @@ def spin_helix_tut30_D2(config: Config, J=1, a=1, S1=1, d=2, spin_dir=np.array([
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     
     # all_atoms.append(atoms[0])
@@ -1120,7 +1130,7 @@ def spin_helix_tut30_D2_two_atoms(config: Config, J=1, J2=1, factor_pos_atom_2=0
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     # all_atoms.append(atoms[0])
     return material
@@ -1177,7 +1187,7 @@ def D1_spin_spiral_inversion_sym_breaking_90_degree(config: Config, J_btw_chains
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
    
     # all_atoms.append(atoms[0])
@@ -1235,7 +1245,7 @@ def D1_spin_spiral_inversion_sym_breaking_general_degree(config: Config, rotated
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     
     # all_atoms.append(atoms[0])
@@ -1278,7 +1288,7 @@ def spin_helix_sc_D(config: Config, J=1, a=1, S1=1, d=1, spin_dir=np.array([0, 0
     ]
     #bonds = [bonds[i] for i in range(d)]
 
-    material.set_bond_atoms(functions.sort_atoms_for_type(atoms), bonds=bonds)
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
     
     # all_atoms.append(atoms[0])

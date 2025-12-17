@@ -2117,7 +2117,7 @@ def save_figures_as_images_to_pdf(
             fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
             if len(config.warnings) != 0 and i==0: 
                 warning_str = ""
-                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values} // G: {config.Gamma} \n tau:{material.tau} normal: {material.normal_vector_to_rotation_plane} spin direction: {material.atoms[0][0].dir} \n extension: {material.extension} // use extended k-space: {config.experimental_plots_on_extended_grid} \n Gamma {config.Gamma}"
+                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values} // G: {config.Gamma} \n tau:{material.tau} normal: {material.normal_vector_to_rotation_plane} spin direction: {material.atoms[0][0].spin_dir} \n extension: {material.extension} // use extended k-space: {config.experimental_plots_on_extended_grid} \n Gamma {config.Gamma}"
                 for w in config.warnings:
                     warning_str = warning_str + f"\n{w}"
                 fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')

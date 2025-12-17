@@ -9,7 +9,6 @@ from scipy.signal import fftconvolve
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
-from matplotlib import cm
 from typing import List, Callable  # Import List for type hints
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize
 from sympy import pprint
@@ -218,8 +217,8 @@ def main(config: Config, material: Material):
         calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(config, material, q_values_grid= None)
                     
 
-    draw_atoms_new_bond_system(material=material, DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=True)
-    
+    VALUES_TO_SAVE["figs_for_pdf"].append(material.draw_atoms_new_bond_system(DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=True))
+
     lv = material.lattice_vectors
 
     grid_fineness = config.amount_k_values
@@ -3251,7 +3250,8 @@ def compute_xyz_spectra(material: Material, config: Config, total_k_points:np.nd
     total_k_points_shape = total_k_points.shape[:-1] #last dimension is 3 for kx,ky,kz
     total_k_points = total_k_points.reshape(np.prod(total_k_points_shape),3)
     sqw_2_of_total_k_points_flat = sqw_2_of_total_k_points.reshape(sqw_2_of_total_k_points.shape[0],sqw_2_of_total_k_points.shape[1], np.prod(total_k_points_shape))  
-    sqw_4_of_total_k_points_flat = sqw_4_of_total_k_points.reshape(sqw_4_of_total_k_points.shape[0],sqw_4_of_total_k_points.shape[1],sqw_4_of_total_k_points.shape[2], np.prod(total_k_points_shape))
+    if config.calc_conv_intensities:
+        sqw_4_of_total_k_points_flat = sqw_4_of_total_k_points.reshape(sqw_4_of_total_k_points.shape[0],sqw_4_of_total_k_points.shape[1],sqw_4_of_total_k_points.shape[2], np.prod(total_k_points_shape))
     phase_factor_along_standard_path = give_phase_factor_from_total_k(material, config, total_k_points)[:,:material.N, :material.N]  #N,i,j
     phase_factor_along_standard_path.reshape(np.prod(total_k_points_shape), material.N, material.N)
     #-----------------------------------reconstruct the xyz  spectra for debugging-------------------------------------
@@ -3775,140 +3775,6 @@ def normalized_vector(v):
 
 
 
-def draw_atoms_new_bond_system(material:Material, DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE = False):
-    if DRAW_BONDS_ONCE_PER_DISTANCE:
-        DRAW_BONDS = False
-    
-    fig = plt.figure("structure plot")
-    colors = [
-        "blue",
-        "green",
-        "red",
-        "cyan",
-        "magenta",
-        "yellow",
-        "black",
-        "white",
-        "gray",
-        "orange",
-        "purple",
-        "pink",
-        "brown",
-        "lime",
-        "olive",
-        "gold",
-        "teal",
-        "navy",
-        "violet",
-        "indigo",
-        "turquoise",
-        "beige",
-    ]
-    ax = fig.add_subplot(111, projection="3d")
-    # Set equal aspect ratio for all axes
-    
-    def set_axes_equal(ax):
-        '''Make axes of 3D plot have equal scale so that spheres appear as spheres.'''
-        x_limits = ax.get_xlim3d()
-        y_limits = ax.get_ylim3d()
-        z_limits = ax.get_zlim3d()
-        x_range = abs(x_limits[1] - x_limits[0])
-        x_middle = np.mean(x_limits)
-        y_range = abs(y_limits[1] - y_limits[0])
-        y_middle = np.mean(y_limits)
-        z_range = abs(z_limits[1] - z_limits[0])
-        z_middle = np.mean(z_limits)
-        plot_radius = 0.5 * max([x_range, y_range, z_range])
-        ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
-        ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
-        ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
-    
-    
-    
-    positions_occupied = []
-    bonds_drawn = []
-    distances_drawn = []
-    J_values = [np.trace(bond.j) for bond in material.bonds] #
-    
-    cmap = cm.get_cmap('bwr')  # cm.get_cmap('coolwarm')
-    Jmin = np.min(J_values)
-    Jmax = np.max(J_values)
-
-    # handle degenerate range
-    if np.isclose(Jmin, Jmax):
-        if Jmax > 0:
-            Jmin = -Jmax if Jmax != 0 else -1.0
-        else:
-            Jmax = -Jmin if Jmin != 0 else 1.0
-
-    # use TwoSlopeNorm only when range straddles zero; otherwise use a plain Normalize
-    if Jmin < 0 and Jmax > 0:
-        norm = matplotlib.colors.TwoSlopeNorm(vmin=Jmin, vcenter=0.0, vmax=Jmax)
-    else:
-        norm = matplotlib.colors.Normalize(vmin=Jmin, vmax=Jmax)
-    #norm = matplotlib.colors.Normalize(vmin=np.min(J_values), vmax=np.max(J_values))
-    
-    for bond in material.bonds:
-        atom0 = bond.atom0
-        atom1 = bond.atom1
-        pos = np.einsum("i,ij->j",(atom0.position + bond.unit_cell_of_atom_0),material.lattice_vectors)
-        pos_n = np.einsum("i,ij->j",(atom1.position + bond.unit_cell_of_atom_1),material.lattice_vectors)
-        x, y, z = pos[0], pos[1], pos[2]
-         #dont draw multiple times the same atom if it is connected to multiple bonds
-        if (pos[0], pos[1], pos[2]) not in positions_occupied:
-            ax.scatter(pos[0], pos[1], pos[2], color=colors[atom0.type], s=50, marker="o") 
-            positions_occupied.append((pos[0], pos[1], pos[2]))
-        if (pos_n[0], pos_n[1], pos_n[2]) not in positions_occupied:
-            positions_occupied.append((pos_n[0], pos_n[1], pos_n[2]))
-            ax.scatter(pos_n[0], pos_n[1], pos_n[2], color=colors[atom1.type], s=50, marker="o") 
-        #only draw bond once
-        pos_set = (x, y, z, pos_n[0], pos_n[1], pos_n[2])
-        if DRAW_BONDS and (pos_set not in bonds_drawn) or (DRAW_BONDS_ONCE_PER_DISTANCE and la.norm(bond.d_absolut) not in distances_drawn):
-            bonds_drawn.append(pos_set)
-            distances_drawn.append(la.norm(bond.d_absolut))
-            u, v, w = pos_n[0], pos_n[1], pos_n[2]
-            # color_bond = "green" if np.trace(bond.j)>0 else "blue"
-            
-            
-
-            colors_mapped = cmap(norm(np.trace(bond.j)))
-            ax.quiver(
-                x,
-                y,
-                z,
-                u - x,
-                v - y,
-                w - z,
-                arrow_length_ratio=0.05,
-                linewidth=2,
-                color=colors_mapped,
-            )  # , color=['r', 'g', 'b'], arrow_length_ratio=0.1
-        if atom0.S != 0 and DRAW_SPINS:
-            rotation_matrix = np.round(rotation.rot_vec(np.dot(material.tau*2*np.pi, bond.unit_cell_of_atom_0), material.normal_vector_to_rotation_plane), 3)
-            arrow_dir = rotation_matrix @ atom0.dir / 4
-            #arrow_dir = atom0.dir / 4
-            ax.quiver(
-                x,
-                y,
-                z,
-                arrow_dir[0],
-                arrow_dir[1],   
-                arrow_dir[2],
-                color="red",
-                linewidth=4,
-                arrow_length_ratio=0.2 * np.abs(atom0.S),
-            )  # , color=['r', 'g', 'b'], arrow_length_ratio=0.1
-    set_axes_equal(ax)
-    sm = cm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array(J_values)
-    cbar = fig.colorbar(sm, ax=ax, shrink=0.5, aspect=10)
-    cbar.set_label('Tr[J]', rotation=270, labelpad=15)
-    
-    for lv in material.lattice_vectors:
-        # Draw the lattice vectors
-        ax.quiver(0, 0, 0, lv[0], lv[1], lv[2], color='black', arrow_length_ratio=0.1, linewidth=2)
-    
-    VALUES_TO_SAVE["figs_for_pdf"].append(fig)
     # plt.show()
 
 def is_approximately_diagonal(matrix, tolerance=1e-3):
