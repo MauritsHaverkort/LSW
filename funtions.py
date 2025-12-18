@@ -15,6 +15,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from Configurations import Config
 from scipy.signal import fftconvolve
 import scipy as scipy
+from scipy.ndimage import gaussian_filter1d
+
 
 from funtions import np
 def turn_comp_info_into_str(comp_info):
@@ -1074,8 +1076,11 @@ def plot_3d_grid_slider(grid,
     
     return fig
 
+
+
 def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
-              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True):
+              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True,
+              gaussian_filter_along_w = True):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
     grid = np.array(grid)
     if np.iscomplexobj(grid):
@@ -1195,6 +1200,8 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
             w_values = np.arange(grid.shape[0]+1)
         if config.shading_colormesh_plots == 'gouraud':
             X, Y = np.meshgrid(k_values_scalar[:-1], w_values[:-1])
+        if gaussian_filter_along_w:
+            grid = gaussian_filter1d(grid, sigma=1, axis=0)
         if not useLogNorm:
             image = ax0.pcolormesh(X, Y, grid, cmap='viridis', shading=config.shading_colormesh_plots)
         else:
@@ -2135,7 +2142,7 @@ def save_figures_as_images_to_pdf(
             plt.tight_layout(rect=[0, 0, 1, 0.95])
             pdf.savefig(fig)
             plt.close(fig)
-        if config.use_explicit_calc_of_sqw and config.calc_conv_intensities:
+        if config.use_explicit_calc_of_sqw and config.calc_two_magnon_spectra:
             info_str = "sqw 4 symmetries \n"
             for sym in material.sqw_4_symmetries:
                 info_str += f"{sym}\n"

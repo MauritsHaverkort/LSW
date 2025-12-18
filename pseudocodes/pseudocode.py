@@ -421,7 +421,7 @@ def calculate_sqw_spectra(
     
     sqw_prime_2_ad_a = material.transform_basis_i_order_i_to_n1_n2(sqw_prime_of_a_ad, axis_to_skip=1, backtransform=True)
     #------------------------------------------------------------------------------------------------------------
-    if config.calc_conv_intensities:
+    if config.calc_two_magnon_spectra:
         for t in range(config.amount_tau_values):
             for i in range(material.N):
                 for j in range(material.N):

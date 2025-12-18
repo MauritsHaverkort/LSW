@@ -53,8 +53,9 @@ def test_normalisation():
         
     config = Configurations.config_experimental("SpinW TT")
     k_values = np.arange(6,30,2)
-    material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=10, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
+    # material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=10, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
     # material = Examples.NiO_8_atom_cell(config)
+    material = Examples.NiO_2_atom_cell_NN_and_NNN(config)
     filename = f"total_integral_intensities.txt"
     with open(filename, "a", encoding="utf-8") as f:
         f.write(f"{config.timestamp}: material: {material.name}\n")
@@ -1117,13 +1118,14 @@ def calc_H_T_w_on_grid(
         config.debug_timer.print_difference("calculated H and bog_trafo ", config.debug_timing)
         #shape: (W,*k_shape)
         energy_dependent_part = calc_spectral_weight_grid(
-                            #config=config,
+                            config=config,
                             H=H_diag,
                             w=np.array(w_values),
                             Self_energy=1j*config.Gamma,
+                            use_broadening=config.use_broadening_before_convoluting
                         )
         #taking only the diagonal elements since H was diagonalised
-        energy_dependent_part = np.einsum('...ii->...i', energy_dependent_part)
+        # energy_dependent_part = np.einsum('...ii->...i', energy_dependent_part)
 
         config.debug_timer.print_difference("calculated energy dependent part ", config.debug_timing)
         
@@ -1463,7 +1465,7 @@ def calculate_sqw_spectra(
             phase_factor, q_values_extended = give_phase_factor_on_extended_grid(extension=material.extension)
             material.phase_factor = phase_factor
                         
-            if config.calc_conv_intensities:
+            if config.calc_two_magnon_spectra:
                 
                 len_sym_classes = len(material.coeff_sym_classes_tioju_2)
                 shape_w_k = material.sqw_2_ad_a_sym_class.shape[1:]
@@ -1854,7 +1856,7 @@ def calculate_sqw_spectra(
         #         config.warnings.add(f":--------------FOUND DIFFERENCE------------: \nSome sqw_prime components have significant differences between the two calculations of T^+ T switched and form factor matrix complex conjugated. biggest difference: {np.round(np.max(temp), 5)}, mean : {np.round(np.mean(temp), 5)}")
 
         #sqw_4 plots on extended grid
-        if config.experimental_plots_on_extended_grid and config.calc_conv_intensities:
+        if config.experimental_plots_on_extended_grid and config.calc_two_magnon_spectra:
             
             if config.plot_only_once_per_symmetry_class:
                 config.debug_timer.print_difference("before searching for symmetries in sqw 4", config.debug_timing)
@@ -2500,7 +2502,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
         #extract sqw2 and sqw4 along the path
         sqw_2_along_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class, relative_grid_points=relative_grid_points_lv_basis, steps=1)
         sqw_2_along_path = sqw_2_along_path.reshape((*sqw_2_along_path.shape[:-1],*shape_v_angles))
-        if config.calc_conv_intensities:
+        if config.calc_two_magnon_spectra:
             sqw_4_along_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes, relative_grid_points=relative_grid_points_lv_basis, steps=1)
             sqw_4_along_path = sqw_4_along_path.reshape((*sqw_4_along_path.shape[:-1],*shape_v_angles))
             
@@ -2534,7 +2536,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             
             
             config.debug_timer.print_difference("start calculating coeffcients for different symmetry classes", debug_time_duration)
-            if config.calc_conv_intensities:
+            if config.calc_two_magnon_spectra:
                 spectrum_4_coeff = opt_einsum.contract("xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcxy"
                                         ,material.coeff_sym_classes_tioju_4
                                         ,phase_factor_along_path
@@ -2597,12 +2599,12 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             config.debug_timer.print_difference("calculated coeffcients for different symmetry classes", debug_time_duration)
             
 
-            if config.calc_conv_intensities:
+            if config.calc_two_magnon_spectra:
                 material.rixs_spectrum_4 = np.einsum('Rvpabcxy, xywvabc->Rpvwabc', spectrum_4_coeff, sqw_4_along_path, optimize='optimal')
             
             material.rixs_spectrum_2 = np.einsum('Rvpabcx, xwvabc->Rpvwabc', spectrum_2_coeff, sqw_2_along_path, optimize='optimal').astype(config.dtype_complex)
-            material.rixs_spectrum = material.rixs_spectrum_4.copy() if config.calc_conv_intensities else material.rixs_spectrum_2.copy()
-            if config.calc_conv_intensities:
+            material.rixs_spectrum = material.rixs_spectrum_4.copy() if config.calc_two_magnon_spectra else material.rixs_spectrum_2.copy()
+            if config.calc_two_magnon_spectra:
                 material.rixs_spectrum[:,:,:,:material.rixs_spectrum_2.shape[3]] += material.rixs_spectrum_2 # transferred energy axis for spectrum 2 is half the length
             
             ########################################################################################################################
@@ -2857,7 +2859,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 sqw_2_along_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class,
                                                                                     relative_grid_points=np.array(relative_grid_points),
                                                                                     steps=steps_between_points)
-                if config.calc_conv_intensities:
+                if config.calc_two_magnon_spectra:
                     sqw_4_along_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes,
                                                                                         relative_grid_points=np.array(relative_grid_points),
                                                                                         steps=steps_between_points)
@@ -2913,7 +2915,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 #     spectrum_4_xyz_standard_path = opt_einsum.contract('OUMNkxy, xywk->OUMNwk', spectrum_4_xyz_coeff_std_path, sqw_4_along_path).astype(config.dtype_complex)
                 #                                                                     steps=steps_between_points)
                 
-                spectrum_2_xyz_standard_path, spectrum_4_xyz_standard_path, phase_factor_along_standard_path= compute_xyz_spectra(material, config, total_k_points= total_k_points_lv_interp, sqw_2_of_total_k_points= sqw_2_along_path, sqw_4_of_total_k_points= sqw_4_along_path if config.calc_conv_intensities else None)
+                spectrum_2_xyz_standard_path, spectrum_4_xyz_standard_path, phase_factor_along_standard_path= compute_xyz_spectra(material, config, total_k_points= total_k_points_lv_interp, sqw_2_of_total_k_points= sqw_2_along_path, sqw_4_of_total_k_points= sqw_4_along_path if config.calc_two_magnon_spectra else None)
                 
                 energies_along_path = functions.path_through_grid_interpolated(grid= material.energies.transpose(0,-1,1,2,3),
                                                                                     relative_grid_points=np.array(relative_grid_points),
@@ -2959,7 +2961,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                         # plt.yticks(ticks=np.arange(0,len(material.w_values),step_yticks), labels=[f"{np.real(w):.1f}" for w in material.w_values[::step_yticks]])
 
                 #two magnon plots
-                if config.calc_conv_intensities:
+                if config.calc_two_magnon_spectra:
                     for op_idx in indices_to_plot_4 or np.ndindex(spectrum_4_xyz_standard_path.shape[:4]):
                         if np.real(spectrum_4_xyz_standard_path[*op_idx]).max() > 1e-2 * np.real(spectrum_4_xyz_standard_path).max():
                             # fig_spectrum_4.append(plt.figure(f"spectrum two magnon xyz standard path {op_idx}_{title_suffix}"))
@@ -2995,7 +2997,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 sqw_2_along_path = functions.path_through_grid_interpolated(grid= material.sqw_2_ad_a_sym_class,
                                                                                     relative_grid_points=np.array(relative_grid_points),
                                                                                     steps=steps_between_points)
-                if config.calc_conv_intensities:
+                if config.calc_two_magnon_spectra:
                     sqw_4_along_path = functions.path_through_grid_interpolated(grid= material.conv_sqw_2_ad_a_sym_classes,
                                                                                         relative_grid_points=np.array(relative_grid_points),
                                                                                         steps=steps_between_points)
@@ -3017,7 +3019,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 #                             )
                 
                 
-                if config.calc_conv_intensities:
+                if config.calc_two_magnon_spectra:
                     spectrum_4_xyz_coeff_std_path = opt_einsum.contract("xytioju,kij,OUMNioju->OUMNkxy"
                                             ,material.coeff_sym_classes_tioju_4
                                             ,phase_factor_along_standard_path
@@ -3030,7 +3032,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 #                             ,material.coeff_tioju_xyz_2
                 #                             ,optimize='optimal')
                 spectrum_2_xyz_standard_path = opt_einsum.contract('OUMNkx, xwk->OUMNwk', spectrum_2_xyz_coeff_std_path, sqw_2_along_path).astype(config.dtype_complex)
-                if config.calc_conv_intensities:
+                if config.calc_two_magnon_spectra:
                     spectrum_4_xyz_standard_path = opt_einsum.contract('OUMNkxy, xywk->OUMNwk', spectrum_4_xyz_coeff_std_path, sqw_4_along_path).astype(config.dtype_complex)
                 energies_along_path = functions.path_through_grid_interpolated(grid= material.energies.transpose(0,-1,1,2,3),
                                                                                     relative_grid_points=np.array(relative_grid_points),
@@ -3074,7 +3076,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                         # plt.yticks(ticks=np.arange(0,len(material.w_values),step_yticks), labels=[f"{np.real(w):.1f}" for w in material.w_values[::step_yticks]])
 
                 #two magnon plots
-                if config.calc_conv_intensities:
+                if config.calc_two_magnon_spectra:
                     for op_idx in indices_to_plot_4 or np.ndindex(spectrum_4_xyz_standard_path.shape[:4]):
                         if np.real(spectrum_4_xyz_standard_path[*op_idx]).max() > 1e-2 * np.real(spectrum_4_xyz_standard_path).max():
                             # fig_spectrum_4.append(plt.figure(f"spectrum two magnon xyz standard path {op_idx}_{title_suffix}"))
@@ -3102,7 +3104,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 return [fig_energies]+ fig_spectrum_2 + fig_spectrum_4 + fig_phase
 
             def print_normalisation_of_spectra():
-                sqw_2_xyz, sqw_4_xyz, _ = compute_xyz_spectra(material, config, total_k_points= material.q_values, sqw_2_of_total_k_points= material.sqw_2_ad_a_sym_class, sqw_4_of_total_k_points= material.conv_sqw_2_ad_a_sym_classes if config.calc_conv_intensities else None)
+                sqw_2_xyz, sqw_4_xyz, _ = compute_xyz_spectra(material, config, total_k_points= material.q_values, sqw_2_of_total_k_points= material.sqw_2_ad_a_sym_class, sqw_4_of_total_k_points= material.conv_sqw_2_ad_a_sym_classes if config.calc_two_magnon_spectra else None)
                 print_normalisation(config= config, sqw_2= sqw_2_xyz, sqw_4= sqw_4_xyz)
                 
             def plot_at_peak_transferred_energy():
@@ -3227,7 +3229,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 # ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_2.sum(axis=0), title="spectrum one magnon of transferred and incident energy")  #sum over alignments
             
                 ]
-                if config.calc_conv_intensities:
+                if config.calc_two_magnon_spectra:
                     figs += [
                         plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum_4.sum(axis=0), title="spectrum two magnon of transferred and incident energy")  #sum over alignments
                         ,plot_spectrum_of_transferred_incident_energy(material.rixs_spectrum.sum(axis=0), title="spectrum complete of transferred energy")  #sum over alignments
@@ -3253,7 +3255,7 @@ def compute_xyz_spectra(material: Material, config: Config, total_k_points:np.nd
     total_k_points_shape = total_k_points.shape[:-1] #last dimension is 3 for kx,ky,kz
     total_k_points = total_k_points.reshape(np.prod(total_k_points_shape),3)
     sqw_2_of_total_k_points_flat = sqw_2_of_total_k_points.reshape(sqw_2_of_total_k_points.shape[0],sqw_2_of_total_k_points.shape[1], np.prod(total_k_points_shape))  
-    if config.calc_conv_intensities:
+    if config.calc_two_magnon_spectra:
         sqw_4_of_total_k_points_flat = sqw_4_of_total_k_points.reshape(sqw_4_of_total_k_points.shape[0],sqw_4_of_total_k_points.shape[1],sqw_4_of_total_k_points.shape[2], np.prod(total_k_points_shape))
     phase_factor_along_standard_path = give_phase_factor_from_total_k(material, config, total_k_points)[:,:material.N, :material.N]  #N,i,j
     phase_factor_along_standard_path.reshape(np.prod(total_k_points_shape), material.N, material.N)
@@ -3263,7 +3265,7 @@ def compute_xyz_spectra(material: Material, config: Config, total_k_points:np.nd
                                 ,phase_factor_along_standard_path
                                 ,material.coeff_tioju_xyz_2
                                 )
-    if config.calc_conv_intensities:
+    if config.calc_two_magnon_spectra:
         spectrum_4_xyz_coeff_std_path = opt_einsum.contract("xytioju,kij,OUMNioju->OUMNkxy"
                                 ,material.coeff_sym_classes_tioju_4
                                 ,phase_factor_along_standard_path
@@ -3275,7 +3277,7 @@ def compute_xyz_spectra(material: Material, config: Config, total_k_points:np.nd
     #                             ,material.coeff_tioju_xyz_2
     #                             ,optimize='optimal')
     spectrum_2_xyz_standard_path = opt_einsum.contract('OUMNkx, xwk->OUMNwk', spectrum_2_xyz_coeff_std_path, sqw_2_of_total_k_points_flat).astype(config.dtype_complex)
-    if config.calc_conv_intensities:
+    if config.calc_two_magnon_spectra:
         spectrum_4_xyz_standard_path = opt_einsum.contract('OUMNkxy, xywk->OUMNwk', spectrum_4_xyz_coeff_std_path, sqw_4_of_total_k_points_flat).astype(config.dtype_complex)
     else:
         spectrum_4_xyz_standard_path = None       
@@ -3717,7 +3719,7 @@ def sqw_prime_to_sqw(config: Config, sqw_prime: np.ndarray, material: Material):
     #config.debug_timer.print_difference("done with calculation of sqw components", config.debug_timing)
     return sqw, sqw_components
 
-def calc_spectral_weight_grid(H: np.ndarray, w: np.ndarray, Self_energy=0):
+def calc_spectral_weight_grid(config: Config, H: np.ndarray, w: np.ndarray, Self_energy=0, use_broadening=True):
     """
     Calculates the spectral weight A(k, w) for a grid of k-values and an array of w-values.
     H doesnt have to be diaganlaised here
@@ -3740,23 +3742,37 @@ def calc_spectral_weight_grid(H: np.ndarray, w: np.ndarray, Self_energy=0):
     k_shape = H.shape[:-2]
     N_2 = H.shape[-1]
     W_shape = w.shape[0] #int
+    if not use_broadening:
+        #divide the spectral weight to the two closest energy grid values according to their distance to the actual grid point
+        
+        energies = np.einsum("...ii->...i", H) #take the diagonal elements as the energies 
+        w_part = np.zeros((W_shape,) + k_shape + (N_2,), dtype=config.dtype_complex )
+        for idx_k_l in np.ndindex(energies.shape):
+            diff = np.abs(energies[idx_k_l] - w)
+            idx_closest_w = np.argsort(diff)
+            assert (diff[idx_closest_w[0]]+diff[idx_closest_w[1]] - np.abs(w[idx_closest_w[0]]-w[idx_closest_w[1]])<1e-3), "delta w is not sum of difference to the two nearest neighbors"
+            w_part[idx_closest_w[0], * idx_k_l] = diff[idx_closest_w[0]] / np.abs(w[idx_closest_w[0]]-w[idx_closest_w[1]])
+            w_part[idx_closest_w[1], * idx_k_l] = diff[idx_closest_w[1]] / np.abs(w[idx_closest_w[0]]-w[idx_closest_w[1]])
+        result = w_part
+    else:
+        # Step 1: Expand H to shape (W, *k_shape, 2N, 2N)
+        H_expanded = np.broadcast_to(H, (W_shape,) + k_shape + (N_2, N_2))
 
-    # Step 1: Expand H to shape (W, *k_shape, 2N, 2N)
-    H_expanded = np.broadcast_to(H, (W_shape,) + k_shape + (N_2, N_2))
+        # Step 2: Build w*I matrix of shape (W, 2N, 2N)
+        # None is inserting a new axis for broadcasting
+        w_matrix = np.eye(N_2)[None, :, :] * w[:, None, None] + np.eye(N_2)[None, :, :] * Self_energy
+        #shape: (W,N,N)
+        w_matrix = w_matrix.reshape((W_shape,) + (1,) * len(k_shape) + (N_2, N_2))
+        w_matrix = np.broadcast_to(w_matrix, (W_shape,) + k_shape + (N_2, N_2))  
+        #shape: (W, *k_shape, N, N)
+        
+        # Step 3: Green's function G(w,k) = [w + iε - H(k)]⁻¹
+        G_w = np.linalg.inv(w_matrix - H_expanded)  # shape (W, *k_shape, N, N)
+        result = -np.imag(G_w)  # shape (W, *k_shape, N, N)
+        result = np.einsum('...ii->...i', result) # shape (W, *k_shape, N)
 
-    # Step 2: Build w*I matrix of shape (W, 2N, 2N)
-    # None is inserting a new axis for broadcasting
-    w_matrix = np.eye(N_2)[None, :, :] * w[:, None, None] + np.eye(N_2)[None, :, :] * Self_energy
-    #shape: (W,N,N)
-    w_matrix = w_matrix.reshape((W_shape,) + (1,) * len(k_shape) + (N_2, N_2))
-    w_matrix = np.broadcast_to(w_matrix, (W_shape,) + k_shape + (N_2, N_2))  
-    #shape: (W, *k_shape, N, N)
-    
-    # Step 3: Green's function G(w,k) = [w + iε - H(k)]⁻¹
-    G_w = np.linalg.inv(w_matrix - H_expanded)  # shape (W, *k_shape, N, N)
 
-
-    return -np.imag(G_w)  # shape (W, *k_shape, N)
+    return result
 
 
 # Define the function to format the x-axis labels

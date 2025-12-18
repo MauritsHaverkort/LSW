@@ -191,14 +191,14 @@ def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a
     atoms: List["Atom"] = []
     atoms = [
         #TODO: Domains
-        # Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
-        # Atom(position=X, type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
+        Atom(position=X, type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
         Atom(position=1/2*(X+Y), type=0, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        # Atom(position=1/2*(X+Z), type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        # Atom(position=1/2*(Z+Y), type=4, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        Atom(position=1/2*(X+Z), type=1, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        Atom(position=1/2*(Z+Y), type=4, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
         Atom(position=1/2*(X-Y), type=5, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        # Atom(position=1/2*(X-Z), type=6, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
-        # Atom(position=1/2*(Z-Y), type=7, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        Atom(position=1/2*(X-Z), type=6, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
+        Atom(position=1/2*(Z-Y), type=7, S=S1, spin_dir=-spin_dir), #[1,0,0] in absolute coords
 
 
         # ,Atom(np.array([a1,0,0]),type=1,S=S2, spin_dir=np.array([0,0,S2]))
@@ -209,8 +209,7 @@ def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a
     # shift_vector = np.array([0.3, 0.5, 0.2])
     # for atom in atoms:
     #     atom.position = shift_vector + atom.position
-
-
+    
     #set correct spin directions according to T_domains
     for atom in atoms[1:]:
         bond_to_atom_0 = atom.position - atoms[0].position
