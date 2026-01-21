@@ -65,7 +65,7 @@ def main(config: Config, material: Material):
 
     amount_k_values = config.amount_k_values
 
-    q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], amount_k_values[:dimension])
+    q_values = create_q_grid(give_reciprocal_lv(lv)[:dimension], amount_k_values[:dimension])
 
    
     energy_dependent_part, T, eigvalue_grid, w_values, eigvalues_deriv, T_deriv = calc_H_T_w_on_grid(
@@ -444,7 +444,7 @@ def calculate_sqw_spectra(
             amount_k_values = config.amount_k_values*np.array(extension_factor_tuple) #elementwise multiplication
             dimension = material.dimension
 
-            q_values = give_grid_vectors_d(give_reciprocal_lv(lv)[:dimension], list(amount_k_values[:dimension]) , amount_BZ = config.amount_BZ*extension)
+            q_values = create_q_grid(give_reciprocal_lv(lv)[:dimension], list(amount_k_values[:dimension]) , amount_BZ = config.amount_BZ*extension)
 
             phase_factor = give_phase_factor_from_total_k(material=material, config=config, q_values=q_values)
             sqw_prime_grid_extended = np.einsum('tcoduw...,...cd->tcoduw...',sqw_prime_grid_extended, phase_factor[:,:,:,:material.N,:material.N])

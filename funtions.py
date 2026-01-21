@@ -371,7 +371,7 @@ def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=None,
     return result, tensor_of_symm_class_index
 
 def turn_symmetry_list_into_array(symmetry_list, shape_indices):
-    symmetry_array = np.zeros((len(symmetry_list), *shape_indices), dtype=object)
+    symmetry_array = np.zeros((len(symmetry_list), *shape_indices), dtype=np.complex128)
     for i, sym in enumerate(symmetry_list):
         for indices in sym:
             symmetry_array[i, *indices] = 1
@@ -998,6 +998,13 @@ def flatten_axes(arr: np.ndarray, axes_to_flatten):
 
     return arr_reordered.reshape(new_shape)
 
+    
+    def return_angle_between_vectors(v1, v2):
+        """Returns the angle in radians between vectors 'v1' and 'v2'"""
+        v1_u = v1 / np.linalg.norm(v1)
+        v2_u = v2 / np.linalg.norm(v2)
+        angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+        return angle
 ########################################################################################################################
 ########################################################################################################################
 ################################                          PLOTTING                                ######################
@@ -1144,7 +1151,8 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                     last_value = w_values[-1]
                     extension = [last_value + step * (i + 1) for i in range(num_to_add)]
                     w_values = np.concatenate([w_values, extension])
-        
+        else:
+            w_values = np.arange(grid.shape[0]+1)
         if use_dos:
             dos_whole_k_space = False
             if dos_grid is not None:
@@ -1166,8 +1174,6 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
 
         # grid is giving in the form (Y,X)!!!
         if k_values_scalar is None:
-            
-
             #making the spacing correct
             k_values_scalar = [0]
             xticks_pos_new=[]
@@ -1187,11 +1193,14 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                 k_values_scalar = np.array(k_values_scalar)
             else:
                 k_values_scalar = np.arange(grid.shape[1]+1)
-
+        elif k_values_scalar.shape[0] == grid.shape[1]: #for the plotting routine the k-values have to be one larger than the grid.shape[1] (just append last value again)
+            k_values_scalar = np.append(k_values_scalar, k_values_scalar[-1]) 
+        
         if use_intensity_k:
             # beneath intensity plot
             ax2 = plt.subplot(gs[2], sharex=ax0)
             intensity_k = np.sum(grid, axis=0)
+           
             ax2.plot(k_values_scalar[:-1], intensity_k)
             ax2.set_ylabel("Intensity")
             
@@ -1200,6 +1209,8 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
             w_values = np.arange(grid.shape[0]+1)
         if config.shading_colormesh_plots == 'gouraud':
             X, Y = np.meshgrid(k_values_scalar[:-1], w_values[:-1])
+        else:
+            X, Y = np.meshgrid(k_values_scalar, w_values) 
         if gaussian_filter_along_w:
             grid = gaussian_filter1d(grid, sigma=1, axis=0)
         if not useLogNorm:
@@ -2124,7 +2135,7 @@ def save_figures_as_images_to_pdf(
             fig.suptitle(f"{material_description} {i // figures_per_page + 1}", fontsize=16)
             if len(config.warnings) != 0 and i==0: 
                 warning_str = ""
-                warning_str = f"time: {config.timestamp}\n config:{config.name} // K: {config.amount_k_values} // G: {config.Gamma} \n tau:{material.tau} normal: {material.normal_vector_to_rotation_plane} spin direction: {material.atoms[0][0].spin_dir} \n extension: {material.extension} // use extended k-space: {config.experimental_plots_on_extended_grid} \n Gamma {config.Gamma}"
+                warning_str = f"time: {config.timestamp}\n config:{config.name} // W: {config.amount_w_values} K: {config.amount_k_values} // G: {config.Gamma} \n tau:{material.tau} normal: {material.normal_vector_to_rotation_plane} spin direction: {material.atoms[0][0].spin_dir} \n extension: {material.extension} // use extended k-space: {config.experimental_plots_on_extended_grid}"
                 for w in config.warnings:
                     warning_str = warning_str + f"\n{w}"
                 fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')
@@ -2409,7 +2420,7 @@ def decreasing_step_spacing(start: np.ndarray, end: np.ndarray, num_points: int,
         series = np.concatenate((series, np.flip(series_other_side)), axis=0)
     return series
 
-def give_grid_vectors_d(vectors:np.ndarray, steps:List[int], amount_BZ=1, include_endpoint=False):
+def create_q_grid(vectors:np.ndarray, steps:List[int], amount_BZ=1, include_endpoint=False):
     """ gives a up to 3 dimensional grid spanned by the three vectors given, each direction with the corresponding number of steps."""
     if amount_BZ != 1:
         vectors = [v * amount_BZ for v in vectors]

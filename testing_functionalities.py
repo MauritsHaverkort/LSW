@@ -143,7 +143,7 @@ def test_the_Hamiltonian_on_grids_of_k(config:Config):
     k_values_scalar, k_values, xticks_label, xticks_pos = (
         functions.path_k_space(path, amount_k_values, 0.5)
     )
-    q_values = give_grid_vectors_d(functions.give_reciprocal_lv(material.lattice_vectors)[:dimension], amount_k_values)
+    q_values = create_q_grid(functions.give_reciprocal_lv(material.lattice_vectors)[:dimension], amount_k_values)
     
     from LSW import current_Hamiltonian_to_use
     H, spin_creation, spin_anihil, bog_trafo = current_Hamiltonian_to_use(config, material=material, q_grid=q_values[:,0,0])
@@ -280,7 +280,7 @@ def test_grid_spectral_weight_computation(config:Config):
     
 def test_path_relative_points():
     size = [200,200,200]
-    q_values_grid = functions.give_grid_vectors_d(
+    q_values_grid = functions.create_q_grid(
         functions.give_reciprocal_lv(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])),
         steps=size,
         amount_BZ=1
@@ -320,7 +320,7 @@ def test_interaction():
     material = Examples.D1_spin_spiral_inversion_sym_breaking_90_degree(config=config)
 
     d = [np.array([0.3, 0, 0]),np.array([-0.3, 0, 0])]
-    k = functions.give_grid_vectors_d(
+    k = functions.create_q_grid(
         functions.give_reciprocal_lv(material.lattice_vectors)[:1], 
         steps=100
     )
@@ -453,7 +453,7 @@ def test_integration():
     def function_to_integrate(k):
         magnitude_k = np.linalg.norm(k, axis=-1)
         return 1/magnitude_k**n#**2 #k[:,:,:,0] #only in one direction 
-    q_values = functions.give_grid_vectors_d(
+    q_values = functions.create_q_grid(
         functions.give_reciprocal_lv(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))[:dimension], amount_BZ=1, steps=[*(50,)*dimension]
     )
     refinement_factors = np.arange(10, 100, 10)
@@ -732,6 +732,6 @@ if __name__ == "__main__":
     # plt_factor_x_point_to_max_angle()
     # test_interpolation_path()
     # test_plot()
-    integration_spectral_weight()
+    # integration_spectral_weight()
     # normalisation_test_calc_fractions()
-    # normalisation_plotting()
+    normalisation_plotting()

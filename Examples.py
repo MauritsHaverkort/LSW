@@ -274,7 +274,15 @@ def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-2.3/12,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1])):
+def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-2.3/12,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True):
+    
+    if add_all_domains:
+        if T_domain_idx != 0:
+            config.warnings.add("set the first domain idx to 0 when adding all domains")
+        T_domain_idx = 0 #set as first domain index
+        
+    
+    #1= 12meV
     S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
     # alignements = [np.array([1, 1, -2])]
     T_domains = [np.array([1, 1, 1]), np.array([-1, 1, 1]), np.array([1, -1, 1]), np.array([-1, -1, 1])]
@@ -380,7 +388,15 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-2.3/12,J_super_exchange=1,a=
     #give in euclidean basis for better readability
     relative_grid_points_path = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]), np.array([1,1,1]), np.array([0,0,0])]
     #transform to lattice vector basis
-    material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/4*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
+    material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/2*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
+    
+    if add_all_domains: #only the material of the first domain should have all other domains added
+        # add the additional domains
+        material.add_additional_domain_material([
+                NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=1, add_all_domains=False),
+                NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=2, add_all_domains=False),
+                NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=3, add_all_domains=False),
+            ])
 
     # all_atoms.append(atoms[0])
     return material
@@ -418,6 +434,92 @@ def NiO(config:Config ,J=1,a=1, alignement=0):
     #spin_dir = np.array([0,0,1])
 
     return General_D_FM_AFM_simple_cubic(config, J, a, S1=1, S2=-1, d=3, spin_dir=spin_dir)
+
+def RNiO_3(config:Config ,J_1=6.3/2,J_2=4.1, J_4=8.3,
+           anisotropy_K = -1.3 #being along this axis is energetically favorable
+           , a=1, S1=1/2*(1-0.4), S2=1/2*(1+0.4), alignement=0):
+    
+    spin_direction_crystallographic_lv = np.array([1,1,1])#np.array([0.9,0,1.1])
+    S_domains = [spin_direction_crystallographic_lv]
+    # alignements = [np.array([1, 1, -2])]
+    T_domains = [np.array([1, 1, 1]), np.array([-1, 1, 1]), np.array([1, -1, 1]), np.array([-1, -1, 1])]
+    #domain 1,1,1
+    A,B,C = np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])
+    #TODO: make this nicer and more general
+    # A,B,C = A*T_domains[T_domain_idx], B*T_domains[T_domain_idx], C*T_domains[T_domain_idx]
+    
+    lv = [A-B, A-C,4*C]
+    crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]   
+
+    config.Gamma = 0.2
+    
+    M = np.array(lv) #transformation from euclidean to lattice vector basis (A1 A2 A3) = (a1 a2 a3)T (a being the euclidean vectors)
+    # la.inv(M.T)
+    normal_vector = np.array([0,1,-1])
+    rot = rotation.rotation_matrix_from_axis_angle(normal_vector, np.pi/2)
+    
+    tau = np.array([0, 0, 0])  # commensurate
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"RNiO3_attempt_1",
+                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
+    X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)#the absolute X,Y,Z vectors in lattice units
+    spin_directions = [spin_direction_crystallographic_lv, rot@spin_direction_crystallographic_lv, rot@rot@spin_direction_crystallographic_lv, rot@rot@rot@spin_direction_crystallographic_lv]
+    # spin_directions = material.transform_from_cryst_basis_to_lv_basis(np.array(spin_directions), reciprocal=False, transform_coefficients=True, backtranform=False)
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        #TODO: Domains
+        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_directions[0]),
+        Atom(position=Z, type=1, S=S2, spin_dir=spin_directions[1]), #[1,0,0] in absolute coords
+        Atom(position=2*Z, type=2, S=S1, spin_dir=spin_directions[2]),
+        Atom(position=3*Z, type=3, S=S2, spin_dir=spin_directions[3])
+        
+    ]
+   
+    J_values = [J_1, J_2,0, J_4]
+    # J_values= [J_super_exchange]
+    #this is not reliably working since I dont account for double counting correctly ??? is it not ?
+    bonds = []
+    combinations, distances = material.return_combinations_up_to_distance(atoms, 8*a)
+    for i,j_value in enumerate(J_values):
+        for combs in combinations[i]:
+            atom1, uc1, atom2, uc2 = combs
+            assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
+            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j_value))
+    
+    easy_axis_list = [np.array([1,1,1]),np.array([1,-1,-1])]
+    #second one is the directions of the sublattice B spin_direction#[np.array([1,1,1]),np.array([-1,1,1]),np.array([1,-1,1]),np.array([1,1,-1])]
+    # for easy_axis in easy_axis_list:
+    #     anisotropy_tensor = anisotropy_K * np.einsum('i,j->ij', easy_axis, easy_axis)/np.linalg.norm(easy_axis)**2 #easy axis * easy_axis^T normalized
+    
+    # adding anisotropy terms
+    for atom in atoms:
+        if atom.type in [0,2]:#sublattice A
+            anisotropy_tensor = anisotropy_K * np.einsum('i,j->ij', easy_axis_list[0], easy_axis_list[0])/np.linalg.norm(easy_axis_list[0])**2 
+        else:#sublattice B
+            anisotropy_tensor = anisotropy_K * np.einsum('i,j->ij', easy_axis_list[1], easy_axis_list[1])/np.linalg.norm(easy_axis_list[1])**2
+        bonds.append(Bond(material, atom, atom, unit_cell_of_atom_2=np.array([0,0,0]), j=anisotropy_tensor))
+    
+    
+    material.transform_from_cryst_basis_to_lv_basis(lv[0], False, True)
+    
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
+    
+    #give in euclidean basis for better readability
+    relative_grid_points_path = [np.array([0,0,0]), np.array([1,1,1])]
+    #transform to lattice vector basis
+    
+    #1/4 to match the paper --> here they vary q up to the magnetic ordering vector (1/4,1/4,1/4) in crystallographic basis
+    material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/4*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
+# for c in combinations[0]:
+#     a1,u1,a2,u2 = c
+#     print(np.array(lv).T@(a1.position+u1))
+#     print(np.array(lv).T@(a2.position+u2))
+#     print(a1.position+u1)
+#     print(a2.position+u2)
+#     print("")
+    # all_atoms.append(atoms[0])
+    
+    return material
 
 def D2_with_FM(config:Config ,J=1, J2=0.1, a=1, alignement=0, dimension=2):
 
