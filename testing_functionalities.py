@@ -549,19 +549,44 @@ def normalisation_plotting():
     # --- Separate and plot each group ---
     groups = np.unique(data[:, 0])
 
+    
     plt.figure(figsize=(8, 5))
+    array_data = []
     for g in groups:
         mask = data[:, 0] == g
         xs = data[mask, 1].astype(int)
         ys = np.array([np.real(y) for y in data[mask, 2]])
         plt.plot(xs, ys, "o-", label=f"Group {g}")
-
+        array_data.append((xs, ys))
+    array_data = np.array(array_data, dtype=object)
     plt.xlabel("total grid size (w,K)")
     plt.ylabel("total sum sqw_2 / sqw_4")
     plt.title("normalisation testing")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    
+    plt.figure(figsize=(8, 5))
+    for g in groups:
+        mask = data[:, 0] == g
+        xs = data[mask, 1].astype(int)
+        ys = np.array([np.real(y) for y in data[mask, 2]])
+        plt.plot(xs, ys/xs, "o-", label=f"Group {g}")
+    plt.xlabel("total grid size (w,K)")
+    plt.ylabel("sum sqw_2 / sqw_4 divided by grid size")
+    plt.title("normalisation divided by grid size")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    
+    plt.figure("fraction between sqw_2 and sqw_4")
+    plt.plot(array_data[0,0], array_data[0,1]/array_data[1,1], "o-")
+    plt.xlabel("total grid size (w,K)")
+    plt.ylabel("sqw_2 / sqw_4")
+    plt.title("fraction between sqw_2 and sqw_4")
+    plt.grid(True)
+    
+    
     plt.show()
 
 def plt_factor_x_point_to_max_angle():

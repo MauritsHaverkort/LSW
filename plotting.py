@@ -23,7 +23,7 @@ def plot_nd_heatmap_with_sliders(data, dim_names=None):
     layout : panel.Row
         Panel layout with sliders and interactive heatmap.
     """
-    data = np.asarray(data)
+    data = np.asarray(np.real(data))
     if data.ndim < 2:
         raise ValueError("data must have at least 2 dimensions")
 

@@ -3771,6 +3771,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     
     w_in, prefactor_dict_all_w = load_fundamental_xray_absorption_spectra()
     
+    
     config.debug_timer.print_difference(
         "start calculating eff. RIXS operator for given angles", debug_time_duration
     )
@@ -3842,6 +3843,77 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 -np.sin(alpha) - np.sin(two_theta - alpha),
             ]
         )
+        
+         
+        def draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out):
+            """Helper function to visualise the scattering geometry."""
+            from mpl_toolkits.mplot3d import Axes3D
+            from matplotlib.lines import Line2D
+
+            fig = plt.figure("3D Scattering Geometry vectors in units of |k_in|") 
+            ax = fig.add_subplot(111, projection="3d")
+
+            origin = np.array([0, 0, 0])
+
+            ax.quiver(
+                *(-k_in),
+                *k_in,
+                color="r",
+                length=la.norm(k_in[:, 0, 0, 0]),
+                normalize=False,
+               
+            )
+            ax.quiver(
+                *origin,
+                *k_out,
+                color="g",
+                length=la.norm(k_out[:, 0, 0, 0]),
+                normalize=False,
+              
+            )
+            ax.quiver(
+                *origin,
+                *q,
+                color="b",
+                length=la.norm(q[:, 0, 0, 0]),
+                normalize=False,
+               
+            )
+            ax.quiver(
+                *(-k_in),
+                *(epsilon_in),
+                color="c",
+                length=la.norm(epsilon_in[:, 0, 0, 0]),
+                normalize=False,
+               
+            )
+            ax.quiver(
+                *(k_out),
+                *(epsilon_out),
+                color="m",
+                length=la.norm(epsilon_out[:, 0, 0, 0]),
+                normalize=False,
+               
+            )
+
+            ax.set_xlim([-2, 2])
+            ax.set_ylim([-2, 2])
+            ax.set_zlim([-2, 2])
+
+            ax.set_xlabel("X axis")
+            ax.set_ylabel("Y axis")
+            ax.set_zlabel("Z axis")
+            legend_handles = [
+                Line2D([0], [0], color="r", lw=2, label="k_in"),
+                Line2D([0], [0], color="g", lw=2, label="k_out"),
+                Line2D([0], [0], color="b", lw=2, label="q"),
+                Line2D([0], [0], color="c", lw=2, label="epsilon_in"),
+                Line2D([0], [0], color="m", lw=2, label="epsilon_out"),
+            ]
+            ax.legend(handles=legend_handles)
+            plt.show()
+        # draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out)
+
         
         return epsilon_in, epsilon_out, q, alpha, two_theta, phi, q
     
@@ -4125,7 +4197,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
 
     # ---------------------------- putting everything together to get the RIXS spectrum ---------------------------- 
     if config.use_explicit_calc_of_sqw:
-        print("")
+        assert False, "explicit calculation of sqw not implemented for experimental setup --> do the calculations without and run again"
         # spectrum_4 = np.einsum('abcdk,abcdwk->wk', coeff_array_spectrum_4,  sqw_4_xyz_along_path, optimize='optimal')
     else:
         #calculate the phase factors along the path
@@ -4220,6 +4292,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
         f"done calculating RIXS spectrum", debug_time_duration
     )
     
+    # ---------------------------- call the plot function with all intermediate important results ---------------------------- 
     if do_plotting:
         plotting_rixs_spectra(material, config,
                           w_in, 
@@ -4239,12 +4312,20 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                         prefactor_dict_all_w,
                         RIXS_config,
                         VALUES_TO_SAVE)
-
+        
+        def plot_fraction_first_BZ_covered():
+            fig = plt.figure("fraction of first 1/a penetrated by the incomming x-ray")
+            plt.plot(w_in, factor_BZ_size_to_k_in(w_in))
+            
+            fig_2 = plt.figure("norm of q vector in units of |k_in|")
+            plt.plot( la.norm(q, axis=0).flatten())
+            VALUES_TO_SAVE["figs"].extend([fig, fig_2])
+       
 def plotting_rixs_spectra(material: Material, config: Config, 
                           w_in, 
                           prefactor_list, 
                           sigma_prefactors,
-                          q_grid_points_lv_basis, 
+                          q_grid_points_lv, 
                           shape_v_angles,
                           q_grid_points_crystal_momentum,
                          relative_grid_points_cryst_basis,
@@ -4303,68 +4384,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 ax[s, r].legend()
         return fig
 
-    def draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out):
-        """Helper function to visualise the scattering geometry."""
-        from mpl_toolkits.mplot3d import Axes3D
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection="3d")
-
-        origin = np.array([0, 0, 0])
-
-        ax.quiver(
-            *(-k_in),
-            *k_in,
-            color="r",
-            length=la.norm(k_in[:, 0, 0, 0]),
-            normalize=False,
-            label="k_in",
-        )
-        ax.quiver(
-            *origin,
-            *k_out,
-            color="g",
-            length=la.norm(k_out[:, 0, 0, 0]),
-            normalize=False,
-            label="k_out",
-        )
-        ax.quiver(
-            *origin,
-            *q,
-            color="b",
-            length=la.norm(q[:, 0, 0, 0]),
-            normalize=False,
-            label="q",
-        )
-        ax.quiver(
-            *(-k_in),
-            *(epsilon_in),
-            color="c",
-            length=la.norm(epsilon_in[:, 0, 0, 0]),
-            normalize=False,
-            label="epsilon_in",
-        )
-        ax.quiver(
-            *(k_out),
-            *(epsilon_out),
-            color="m",
-            length=la.norm(epsilon_out[:, 0, 0, 0]),
-            normalize=False,
-            label="epsilon_out",
-        )
-
-        ax.set_xlim([-2, 2])
-        ax.set_ylim([-2, 2])
-        ax.set_zlim([-2, 2])
-
-        ax.set_xlabel("X axis")
-        ax.set_ylabel("Y axis")
-        ax.set_zlabel("Z axis")
-
-        ax.legend()
-        plt.show()
-
-    def draw_BZ_in_exp_setup():
+    def draw_BZ_in_exp_setup(show_legends=False):
         fig, ax = functions.plot_vectors_3d(
             material.get_reciprocal_lattice_vectors(), labels=[""] * 3
         )
@@ -4379,7 +4399,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
             colors=["orange"] * 3,
             labels=[""] * 3,
         )
-        points = np.real(q_grid_points_lv_basis)
+        points = np.real(q_grid_points_lv)
         points = points.T.reshape(points.shape[-1], *shape_v_angles)
         for color_idx, idx_tot_mom_point in enumerate(
             np.ndindex(points.shape[2:])
@@ -4408,7 +4428,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 label=f"angle {idx}",
                 color=colors[color_idx],
             )
-        ax.legend()
+        if show_legends:
+            ax.legend()
         max_len = 6
         ax.set_xlim([-max_len, max_len])
         ax.set_ylim([-max_len, max_len])
@@ -5315,7 +5336,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
 
         plt.figure("q_grid_points")
         for i in range(3):
-            plt.plot(q_grid_points_lv_basis[:, i], label=f"q component {i}")
+            plt.plot(q_grid_points_lv[:, i], label=f"q component {i}")
         plt.legend()
 
     def draw_prefactors_vs_w_in():
@@ -5401,6 +5422,10 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 indices_to_plot_4=spatial_idx_to_plot_4,
             ),
             functions.plot_3D_scatter(material.energies[0,:,:,0,0]),
+            #TODO: remove hardcoding plot
+            #this is the calculated at the kz value of the azimuthal experiment 
+            functions.plot_3D_scatter(material.energies[0,:,:,int(np.round((-0.647+1)*material.energies.shape[3])),0]),
+            # functions.plot_3d_grid_slider(material.energies[0,:,:,:,0], title="energies with slider over kz")
             (
                 draw_xyz_spectra_energies_along_path(
                     relative_grid_points_lv_basis.reshape(

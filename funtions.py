@@ -1353,7 +1353,7 @@ def plot_3D_scatter(Z, title="3D Scatter Plot", xlabel="X-axis", ylabel="Y-axis"
     ax.set_zlabel('Z')
     plt.title('3D Scatter Plot')
     
-    plt.show()
+    # plt.show()
 
 def plot_max_x_projection(values, title="Max X Projection", xlabel="W", ylabel="kx", zlabel="ky", save_path=None, log_scale=True):
     import plotly.graph_objects as go

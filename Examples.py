@@ -280,7 +280,6 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-2.3/12,J_super_exchange=1,a=
         if T_domain_idx != 0:
             config.warnings.add("set the first domain idx to 0 when adding all domains")
         T_domain_idx = 0 #set as first domain index
-        
     
     #1= 12meV
     S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]

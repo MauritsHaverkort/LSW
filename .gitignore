@@ -11,6 +11,8 @@ Configurations.py
 debug_timing_log.txt
 temp.py
 storage.py
+outputs_interesting/
+texts/
 
 # Ignore all .dat files
 *.npz
