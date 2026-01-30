@@ -1099,7 +1099,7 @@ def plot_3d_grid_slider(grid,
 
 def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity_label="Intensity (a.u.)", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
               xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True,
-              gaussian_filter_along_w = True):
+              gaussian_filter_along_w = True, sigma_w = 1):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
     grid = np.array(grid)
     if np.iscomplexobj(grid):
@@ -1233,7 +1233,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         else:
             X, Y = np.meshgrid(k_values_scalar, w_values) 
         if gaussian_filter_along_w:
-            grid = gaussian_filter1d(grid, sigma=1, axis=0)
+            grid = gaussian_filter1d(grid, sigma=sigma_w, axis=0)
         if not useLogNorm:
             image = ax0.pcolormesh(X, Y, grid, cmap=config.cmap_plots, shading=config.shading_colormesh_plots)
         else:

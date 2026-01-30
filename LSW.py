@@ -212,7 +212,7 @@ def main(
     config: Config,
     material: Material,
 ):
-
+    config.debug_timer.print_difference(f"\nstart main with {material.name}\n", config.debug_timing)
     # set global values in configuration and assert basic settings
     assert config.number_k_points is None, "number_k_points shouldnt be set"
     config.number_k_points = 1
@@ -3673,8 +3673,16 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     phi = (
         np.linspace(-180, 165, amount_steps_through_k_space) / 360 * 2 * np.pi
     )  # smooth phi from -180 to 165 degrees
-    alpha = np.array([alpha_exp[0]])
-    v_index = 10 # main incoming energy peak
+    
+    # 120° and first satellite peak
+    alpha = np.array([alpha_exp[-1]])
+    v_index = 21 
+    
+    #20° and main peak
+    # alpha = np.array([alpha_exp[0]])
+    # v_index = 10
+    
+    prefactor_domain = slice(300,1800,10) #(start 300) 400 main peak, 500-600 first satellite peak, satellite peaks slice(1500,1800,10) 1600 / 1710
 
     # alpha = alpha_exp
 
@@ -3729,7 +3737,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     a1g, eg, t1u, t2g = sp.symbols("a1g eg t1u t2g")
     prefactor_list = [a1g, eg, t1u, t2g]
 
-    def load_fundamental_xray_absorption_spectra(slice = slice(300,600,10)): # main peaks slice(300,600,10) # satellite peaks slice(1500,1800,10)
+    def load_fundamental_xray_absorption_spectra(slice = prefactor_domain): 
         """load the fundamental xray absorption spectra prefactors from file and return w_in and prefactor_dict_all_w"""
         
         # Now substitute the prefactors by their correct values
@@ -4293,7 +4301,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     config.debug_timer.print_difference(
         f"done calculating RIXS spectrum", debug_time_duration
     )
-    
+    config.warnings.add(f"w_in {w_in[v_index]}, v_shape {shape_v_angles}, alpha: {alpha[0:3,0,0]*360/(2*np.pi)}, two_theta: {two_theta[0,0:3,0]*360/(2*np.pi)}, phi: {phi[0,0,0:3]*360/(2*np.pi)}")
     # ---------------------------- call the plot function with all intermediate important results ---------------------------- 
     if do_plotting:
         plotting_rixs_spectra(material, config,
@@ -4380,6 +4388,18 @@ def plotting_rixs_spectra(material: Material, config: Config,
         )
         plt.show()
 
+    def plot_mean_rixs_2_to_rixs_4_ratio_vs_w_in():
+        
+        temp = material.rixs_spectrum_2.mean(axis=(0,1,3,4,5,6))
+        temp2 = material.rixs_spectrum_4.mean(axis=(0,1,3,4,5,6))
+        fig = plt.figure()
+        plt.plot(temp2/temp)
+        
+        fig2= plt.figure()
+        plt.plot(w_in, temp, label='mean RIXS 2')
+        plt.plot(w_in, temp2, label='mean RIXS 4')
+        plt.legend()
+        return fig, fig2
     def plot_sigma_prefactors():
 
         fig, ax = plt.subplots(4, 4, figsize=(4, 4))
@@ -5448,8 +5468,17 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.ylabel("Prefactor")
         plt.legend()
         
+        fig_abs_sqrd = plt.figure("Abs squared of prefactors vs w_in_index")
+        plt.plot(np.abs(prefactor_dict_all_w["eg"])**2, label="||eg||^2")
+        plt.plot(np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2")
+        plt.plot(np.abs(prefactor_dict_all_w["t1u"])**2, label="||t1u||^2")
+        plt.plot(np.abs(prefactor_dict_all_w["t2g"])**2, label="||t2g||^2")
+        plt.xlabel("Energy (eV)")
+        plt.ylabel("Prefactor abs squared")
+        plt.legend()
+        
         plt.axvline(x=v_index)
-        return fig1, fig2
+        return fig1, fig2, fig_abs_sqrd
         # plt.figure("energy dependence summed all symmetry classes")
         # for p in range(4):
         #     plt.plot(
@@ -5510,6 +5539,34 @@ def plotting_rixs_spectra(material: Material, config: Config,
     
     title_y = "Energy loss (meV)"
 
+    #the RIXS spectra
+    data_rixs = [
+        #one magnon spectrum
+        (material.rixs_spectrum_2.sum(axis=0)[2, v_index, :, *indices_shape_angles]
+                + material.rixs_spectrum_2.sum(axis=0)[3, v_index, :, *indices_shape_angles]).T,
+        #two magnon spectrum
+        (material.rixs_spectrum_4.sum(axis=0)[3, v_index, :, *indices_shape_angles]
+        + material.rixs_spectrum_4.sum(axis=0)[2, v_index, :, *indices_shape_angles]).T,
+        #complete spectrum
+        (material.rixs_spectrum.sum(axis=0)[3, v_index, :, *indices_shape_angles]
+         + material.rixs_spectrum.sum(axis=0)[2, v_index, :, *indices_shape_angles]).T,
+    ]
+    
+    
+    def load_rixs_plot_data(path):
+        with np.load(path, allow_pickle=True) as z:
+            data_rixs = z["data_rixs"].tolist()   # back to Python list
+            xlabel = z["xlabel"].item() if z["xlabel"].shape == () else z["xlabel"]
+            ylabel = z["ylabel"].item() if z["ylabel"].shape == () else z["ylabel"]
+            k_values_scalar = z["k_values_scalar"]
+            w_values = z["w_values"]
+
+        return data_rixs, xlabel, ylabel, k_values_scalar, w_values
+    
+    np.savez(f"outputs/RIXS_plot_data/data_rixs{config.timestamp}", data_rixs=np.array(data_rixs, dtype = object),xlabel=title_x,
+                ylabel=title_y,k_values_scalar=x_labels_plot,
+                w_values=material.w_values, allow_pickle=True)
+    
     if not config.test_normalisation:
         figs = [
             (
@@ -5532,8 +5589,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
             ,
             draw_prefactors_vs_w_in(), 
             functions.plot_2_1_d_grid(
-                (material.rixs_spectrum_2.sum(axis=0)[2, v_index, :, *indices_shape_angles]
-                + material.rixs_spectrum_2.sum(axis=0)[3, v_index, :, *indices_shape_angles]).T,
+                data_rixs[0],
                 k_values_scalar=x_labels_plot,
                 w_values=material.w_values,
                 config=config,
@@ -5603,10 +5659,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 # summed polarisation of sigma in and sigma and pi out
                 ,
                 functions.plot_2_1_d_grid(
-                    (material.rixs_spectrum_4.sum(axis=0)[3, 0, :, *indices_shape_angles]
-                    + material.rixs_spectrum_4.sum(axis=0)[
-                        2, 0, :, *indices_shape_angles
-                    ]).T,
+                    data_rixs[1],
                     k_values_scalar=x_labels_plot,
                     w_values=material.w_values,
                     config=config,
@@ -5620,10 +5673,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 ),
                 #complete RIXS spectrum
                 functions.plot_2_1_d_grid(
-                    (material.rixs_spectrum.sum(axis=0)[3, 0, :, *indices_shape_angles]
-                    + material.rixs_spectrum.sum(axis=0)[
-                        2, 0, :, *indices_shape_angles
-                    ]).T,
+                    data_rixs[2],
                     k_values_scalar=x_labels_plot,
                     w_values=material.w_values,
                     config=config,
@@ -5880,11 +5930,11 @@ def calc_spectral_weight_grid(
                 - np.abs(w[idx_closest_w[0]] - w[idx_closest_w[1]])
                 < 1e-3
             ), "delta w is not sum of difference to the two nearest neighbors"
-            w_part[idx_closest_w[0], *idx_k_l] = diff[idx_closest_w[0]] / np.abs(
+            w_part[idx_closest_w[0], *idx_k_l] = 1-(diff[idx_closest_w[0]] / np.abs(
                 w[idx_closest_w[0]] - w[idx_closest_w[1]]
-            )
-            w_part[idx_closest_w[1], *idx_k_l] = diff[idx_closest_w[1]] / np.abs(
-                w[idx_closest_w[0]] - w[idx_closest_w[1]]
+            ))
+            w_part[idx_closest_w[1], *idx_k_l] = 1-(diff[idx_closest_w[1]] / np.abs(
+                w[idx_closest_w[0]] - w[idx_closest_w[1]])
             )
         result = w_part
     else:
