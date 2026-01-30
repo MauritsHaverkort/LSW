@@ -108,11 +108,15 @@ class Material:
         self.rixs_spectrum: np.ndarray = None
 
         # self.coeff_xyz_rixs_2:np.ndarray = None
-        self.coeff_xyz_rixs: np.ndarray = None
+        self.coeff_xyz_rixs: np.ndarray = None #ROUMNsrpabc
 
         self.sqw_4_symmetries = None  # for explicit calculation of all steps this stores the sqw_4 symmetries (so not all are plotted)
         # self.sqw_prime_components = [[tau, alpha, beta] for alpha in range(dimension) for beta in range(dimension) for tau in range(self.config.amount_spatial_S_operator)]
 
+        #optionally saved in case needed for debugging
+        self.sym_classes_to_xyz_4 = None
+        self.sym_classes_to_xyz_2 = None
+        
         mat_nx = np.array(
             [
                 [
@@ -316,6 +320,26 @@ class Material:
     def __repr__(self):
         return f"Material(atoms={self.atoms}, bonds={self.bonds})"
 
+    def get_sym_classes_to_xyz(self):
+        """calculate the symmetry classes of the xyz spectra if it wasnt calculated before"""
+        if self.sym_classes_to_xyz_4 is None or self.sym_classes_to_xyz_2 is None:
+            if self.coeff_sym_classes_tioju_4 is not None and self.coeff_tioju_xyz_4 is not None:
+                self.sym_classes_to_xyz_4 = np.einsum(
+                    "xytioju,OUMNioju->OUMNxy",
+                    self.coeff_sym_classes_tioju_4,
+                    self.coeff_tioju_xyz_4,
+                    optimize="optimal",
+                )
+            if self.coeff_sym_classes_tioju_2 is not None and self.coeff_tioju_xyz_2 is not None:
+                
+                self.sym_classes_to_xyz_2 = np.einsum(
+                    "xtioju,OUMNioju->OUMNx",
+                    self.coeff_sym_classes_tioju_2,
+                    self.coeff_tioju_xyz_2,
+                    optimize="optimal",
+                )
+        return self.sym_classes_to_xyz_2, self.sym_classes_to_xyz_4
+    
     def transform_basis_i_order_i_to_n1_n2(
         self, tensor, axis_to_skip=0, backtransform=False
     ):
@@ -628,6 +652,9 @@ class Material:
         DRAW_BONDS_ONCE_PER_DISTANCE=False,
         COLOR_BY_SPIN_DIR=False,
         DRAW_ONLY_FIRST_BZ=False,
+        roll = 0,
+        elev = 25,
+        azim = 45,
     ):
         if DRAW_BONDS_ONCE_PER_DISTANCE:
             DRAW_BONDS = False
@@ -659,6 +686,8 @@ class Material:
             "beige",
         ]
         ax = fig.add_subplot(111, projection="3d")
+        
+        ax.view_init(elev=elev, azim=azim, roll=roll) 
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")

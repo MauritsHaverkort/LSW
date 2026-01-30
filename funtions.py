@@ -16,9 +16,21 @@ from Configurations import Config
 from scipy.signal import fftconvolve
 import scipy as scipy
 from scipy.ndimage import gaussian_filter1d
-
-
 from funtions import np
+
+#plot fonts control
+import matplotlib as mpl
+fontsize = 18
+mpl.rcParams.update({
+    "font.size": fontsize,          # base font
+    "axes.titlesize": fontsize,
+    "axes.labelsize": fontsize,
+    "xtick.labelsize": fontsize,
+    "ytick.labelsize": fontsize,
+    "legend.fontsize": fontsize,
+    "figure.titlesize": fontsize,
+})
+
 def turn_comp_info_into_str(comp_info):
     result=""
     for key, value in comp_info.items():
@@ -1085,7 +1097,7 @@ def plot_3d_grid_slider(grid,
 
 
 
-def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity="Intensity", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
+def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity_label="Intensity (a.u.)", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
               xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True,
               gaussian_filter_along_w = True):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
@@ -1093,12 +1105,12 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
     if np.iscomplexobj(grid):
         if plot_also_imaginary_part:
             #recall the function to plot the imaginary part
-            plot_2_1_d_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity=intensity, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
+            plot_2_1_d_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity_label=intensity_label, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
                       xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False)
         else:
             print("Warning: Grid contains complex values. Discarding imaginary part.")
         grid = np.real(grid)
-    
+    title = title +"\n" # make more space between title and plot
     if prevent_reusing_fig:
         fig = plt.figure( figsize=(10, 6))
         fig.canvas.manager.set_window_title(title)
@@ -1133,11 +1145,20 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
     # plt.ylabel(ylabel)
 
 
-    gs = gridspec.GridSpec(2, 2, width_ratios=[4, 1], height_ratios=[4,1], wspace=0.05)
+    # gs = gridspec.GridSpec(2, 2, width_ratios=[4, 1], height_ratios=[4,1], wspace=0.05)
+    gs = gridspec.GridSpec(
+    2, 4, figure=fig,
+    width_ratios=[4.0, 0.12, 0.8, 1.2],  # <-- col2 is the gap
+    height_ratios=[4.0, 1.0],
+    wspace=0.15,  # keep general spacing small
+    hspace=0.6
+)
 
-    # Main grid plot
-    ax0 = plt.subplot(gs[0])
-    
+    ax0 = fig.add_subplot(gs[0, 0])              # heatmap
+    ax2 = fig.add_subplot(gs[1, 0], sharex=ax0)  # bottom line plot (same width as ax0)
+    cax = fig.add_subplot(gs[0, 1])              # colorbar axis (close to heatmap)
+    # gs[0,2] is intentionally empty spacer
+    ax1 = fig.add_subplot(gs[0, 3], sharey=ax0)  # right DOS plot
     ax0.set_title(title)
     # if the grid is 2D, plot it as a 2D heatmap
     if len(grid.shape)==2:
@@ -1162,12 +1183,12 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                 dos = sum_k_dependency(grid)
                     
             # Side DOS plot
-            ax1 = plt.subplot(gs[1], sharey=ax0)
+            
             ax1.plot(dos, w_values[:-1])  # exclude last edge of w_values for bin alignment
             if dos_whole_k_space:
                 ax1.set_xlabel("DOS (whole k-space or other)")
             else:
-                ax1.set_xlabel("DOS")
+                ax1.set_xlabel(intensity_label)
             ax1.yaxis.set_tick_params(labelleft=False)  # Hide y-axis labels to avoid duplication
             ax1.grid(True)
             
@@ -1198,11 +1219,11 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         
         if use_intensity_k:
             # beneath intensity plot
-            ax2 = plt.subplot(gs[2], sharex=ax0)
+            
             intensity_k = np.sum(grid, axis=0)
            
             ax2.plot(k_values_scalar[:-1], intensity_k)
-            ax2.set_ylabel("Intensity")
+            # ax2.set_ylabel(intensity_label)
             
         
         if len(w_values) == 0:
@@ -1214,28 +1235,29 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         if gaussian_filter_along_w:
             grid = gaussian_filter1d(grid, sigma=1, axis=0)
         if not useLogNorm:
-            image = ax0.pcolormesh(X, Y, grid, cmap='viridis', shading=config.shading_colormesh_plots)
+            image = ax0.pcolormesh(X, Y, grid, cmap=config.cmap_plots, shading=config.shading_colormesh_plots)
         else:
             try:
                 image = ax0.pcolormesh(
                         X,
                         Y,
                         grid,
-                        cmap='viridis',
+                        cmap=config.cmap_plots,
                         shading=config.shading_colormesh_plots,
                         norm=SymLogNorm(
-                            linthresh=1e-5,          # linear range around zero
+                            linthresh=1e-10*np.max(grid),          # linear range around zero
                             linscale=1.0,            # scale of the linear range
-                            vmin=np.min(grid),
+                            vmin=np.max(grid) / range_from_max,
                             vmax=np.max(grid),
                             base=10
                         )
                     )
             except Exception as e:
                 print("Log Norm failed in plot_grid")
-                image = ax0.pcolormesh(X, Y, grid, cmap='viridis', shading=config.shading_colormesh_plots)
+                image = ax0.pcolormesh(X, Y, grid, cmap=config.cmap_plots, shading=config.shading_colormesh_plots)
         try:
-            fig.colorbar(image, ax=ax0, label=intensity)
+            cb = fig.colorbar(image, cax=cax)
+            cb.set_label(intensity_label)
         except Exception as e:
             print("Colorbar failed in plot_grid")
         ax0.set_xlabel(xlabel)
@@ -1332,26 +1354,31 @@ def plot_3D_scatter_color_coded(grid):
 
 def plot_3D_scatter(Z, title="3D Scatter Plot", xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", save_path=None):
     # Assuming eigvals_grid is already defined as a 4D array
-    Z = np.real(Z)  # Ensure Z is real for plotting
+    if not isinstance(Z, list):
+        Z = [Z]
+    for z in Z:
+        z = np.real(z)  # Ensure Z is real for plotting
 
-    # Create coordinate grid
-    nx, ny = Z.shape
-    X, Y = np.meshgrid(np.arange(ny), np.arange(nx))
+        # Create coordinate grid
+        nx, ny = z.shape
+        X, Y = np.meshgrid(np.arange(ny), np.arange(nx))
 
-    # Flatten for scatter plot
-    x = X.ravel()
-    y = Y.ravel()
-    z = Z.ravel()
+        # Flatten for scatter plot
+        x = X.ravel()
+        y = Y.ravel()
+        z = z.ravel()
 
-    # Create 3D scatter plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    sc = ax.scatter(x, y, z, marker='o')
+        # Create 3D scatter plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        sc = ax.scatter(x, y, z, marker='o')
 
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.title('3D Scatter Plot')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        plt.title('3D Scatter Plot')
+        
+        return fig
     
     # plt.show()
 
@@ -1547,7 +1574,7 @@ def plot_BZ_from_lv(ax, reciprocal_vectors, color='lightgreen', starting_depth=3
             if include_negative:
                 plot_from_origin(origin - vec, depth - 1)
     plot_from_origin(origin, depth=starting_depth)
-def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None):
+def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None, axis_labels=("kx", "ky", "kz")):
             """
             Plots any number of vectors in a 3D space.
 
@@ -1575,9 +1602,9 @@ def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_
             ax.set_ylim([-max_len, max_len])
             ax.set_zlim([-max_len, max_len])
 
-            ax.set_xlabel("X")
-            ax.set_ylabel("Y")
-            ax.set_zlabel("Z")
+            ax.set_xlabel(axis_labels[0])
+            ax.set_ylabel(axis_labels[1])
+            ax.set_zlabel(axis_labels[2])
             ax.legend()
 
             if save_path:
@@ -2153,15 +2180,30 @@ def save_figures_as_images_to_pdf(
             plt.tight_layout(rect=[0, 0, 1, 0.95])
             pdf.savefig(fig)
             plt.close(fig)
+        info_str = "additonal information:\n"
+            
         if config.use_explicit_calc_of_sqw and config.calc_two_magnon_spectra:
-            info_str = "sqw 4 symmetries \n"
+            info_str += "sqw 4 symmetries \n"
             for sym in material.sqw_4_symmetries:
                 info_str += f"{sym}\n"
-            fig_text = plt.figure(figsize=(8.5, 11), dpi=dpi)
-            fig_text.clf()
-            fig_text.text(0.5, 0.5, info_str, ha="center", va="center", wrap=True, fontsize=12)
-            pdf.savefig(fig_text)
-            plt.close(fig_text)
+            
+        if material.sym_classes_to_xyz_4 is not None:
+            info_str += "sqw 4 symmetries \n"
+            temp = give_symmetries_of_tensors(material.sym_classes_to_xyz_4,4, give_mean_abs_value=True, compare_only_a_sample = False)
+            for sym in temp[0]:
+                info_str += f"{sym}\n"
+        
+        if material.sym_classes_to_xyz_2 is not None:
+            info_str += "sqw 2 symmetries \n"
+            temp = give_symmetries_of_tensors(material.sym_classes_to_xyz_2,4, give_mean_abs_value=True, compare_only_a_sample = False)
+            for sym in temp[0]:
+                info_str += f"{sym}\n"
+        fig_text = plt.figure(figsize=(8.5, 11), dpi=dpi)
+        fig_text.clf()
+        fig_text.text(0.5, 0.5, info_str, ha="center", va="center", wrap=True, fontsize=12)
+        pdf.savefig(fig_text)
+        plt.close(fig_text)
+            
 
 def render_matrix_as_image(matrix, filename="matrix.png"):
     """
