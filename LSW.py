@@ -3679,8 +3679,8 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     v_index = 21 
     
     #20° and main peak
-    # alpha = np.array([alpha_exp[0]])
-    # v_index = 10
+    alpha = np.array([alpha_exp[0]])
+    v_index = 10
     
     prefactor_domain = slice(300,1800,10) #(start 300) 400 main peak, 500-600 first satellite peak, satellite peaks slice(1500,1800,10) 1600 / 1710
 
