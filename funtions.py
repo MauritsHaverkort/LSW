@@ -1158,7 +1158,8 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
     ax2 = fig.add_subplot(gs[1, 0], sharex=ax0)  # bottom line plot (same width as ax0)
     cax = fig.add_subplot(gs[0, 1])              # colorbar axis (close to heatmap)
     # gs[0,2] is intentionally empty spacer
-    ax1 = fig.add_subplot(gs[0, 3], sharey=ax0)  # right DOS plot
+    
+    ax1 = fig.add_subplot(gs[0, 3], sharey=ax0) if use_dos else None  # right DOS plot
     ax0.set_title(title)
     # if the grid is 2D, plot it as a 2D heatmap
     if len(grid.shape)==2:
@@ -1257,6 +1258,13 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                 image = ax0.pcolormesh(X, Y, grid, cmap=config.cmap_plots, shading=config.shading_colormesh_plots)
         try:
             cb = fig.colorbar(image, cax=cax)
+            if not useLogNorm:
+                from matplotlib.ticker import ScalarFormatter
+                formatter = ScalarFormatter(useMathText=False)
+                formatter.set_scientific(True)
+                formatter.set_powerlimits((0, 0))
+                cb.ax.yaxis.set_major_formatter(formatter)
+                cb.update_ticks()
             cb.set_label(intensity_label)
         except Exception as e:
             print("Colorbar failed in plot_grid")

@@ -1250,7 +1250,6 @@ def calc_H_T_w_on_grid(
 
     assert len(q_values.shape) == 4, "q_values should be a 3D grid of k-vectors"
 
-    use_direct_grid_computation = config.use_direct_grid_calculation
     load_saved_grid = config.load_saved_grid
     # grid_fineness = q_values.shape[0]
 
@@ -1362,7 +1361,7 @@ def calc_H_T_w_on_grid(
         config.debug_timer.print_difference(
             "calculated H and bog_trafo ", config.debug_timing
         )
-        # shape: (W,*k_shape)
+        # shape: (W,*k_shape,2N)
         energy_dependent_part = calc_spectral_weight_grid(
             config=config,
             H=H_diag,
@@ -1650,7 +1649,6 @@ def calculate_sqw_spectra(
     config: Config,
     q_values_grid,
     w_values,
-    pref_grids_matrix: np.ndarray = None,
     material: Material = None,
     energy_dependent_part=None,
     T=None,
@@ -2054,7 +2052,7 @@ def calculate_sqw_spectra(
                                         sqw_prime_2_ad_a[t, i, is_ad_2, j, is_ad_3],
                                         dimension=material.dimension,
                                     )
-                                    if np.max(temp_1 - temp_2) > 1e-5:
+                                    if np.max(np.abs(temp_1 - temp_2)) > 1e-5:
                                         config.warnings.add(
                                             f"convolution order matters"
                                         )
@@ -3649,7 +3647,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     debug_time_duration=True,
     do_plotting=True,
     save_RIXS_spectra_to_material=True,  # with this flag False material is not altered --> can be used just for plotting
-    debug_RIXS_operator=False,
+    debug_RIXS=False,
    
     # experimental_compute_non_squared_use_commutative = False,
     filename="NiO2atomsK24_28_11",
@@ -3705,7 +3703,9 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     config.debug_timer.print_difference("start calculating RIXS operator")
 
     def factor_BZ_size_to_k_in(E):
-        return E * lattice_constant / (hbar * c * np.pi)
+        config.warnings.add("changed factor_BZ_size_to_k_in to 2pi!!!")
+        return E * lattice_constant / (hbar * c * 2*np.pi)
+    
 
     
     # if I want to use prefcalculated data
@@ -3789,11 +3789,12 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
         for p, (polarisation_in_sigma, polarisation_out_sigma) in enumerate(
             RIXS_config
         ):
-            # pi-polarised input
+            # sigma-polarised input
             if polarisation_in_sigma:
                 epsilon_in[p] = np.array(
                     [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
                 )
+            # pi-polarised input
             else:
                 epsilon_in[p] = np.array(
                     [
@@ -3809,6 +3810,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 epsilon_out[p] = np.array(
                     [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
                 )
+            # pi-polarised output
             else:
                 epsilon_out[p] = np.array(
                     [
@@ -3910,9 +3912,9 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
         # draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out)
 
         
-        return epsilon_in, epsilon_out, q, alpha, two_theta, phi, q
+        return epsilon_in, epsilon_out, q, alpha, two_theta, phi
     
-    epsilon_in, epsilon_out, q, alpha, two_theta, phi, q = define_experimental_setup()
+    epsilon_in, epsilon_out, q, alpha, two_theta, phi = define_experimental_setup()
 
     config.debug_timer.print_difference(
         "calculated q and polarisation vectors from angles", debug_time_duration
@@ -4001,7 +4003,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 [np.eye(3)], dtype=config.dtype_complex
             )
         # rotate the rixs coeff_array rot^T * RIXS * rot for all alignments
-        if debug_RIXS_operator:
+        if debug_RIXS:
             rixs_coeff_arr_numerical_4_comp = np.einsum(
                 "RBA,BCOUs,RCD->RADOUs",
                 alignment_rotation_of_complete_material,
@@ -4093,7 +4095,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             material.get_reciprocal_lattice_vectors(),
         )
         # ---------------------------debug the transformation of q points to reciprocal lattice vectors (assert that all transformation run as expected) ---------------------------
-        if debug_RIXS_operator:
+        if debug_RIXS:
             q_grid_points_comp = np.einsum(
                 "Nv,vi->Ni",
                 relative_grid_points_cryst_basis,
@@ -4121,21 +4123,22 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             steps=1,
             make_periodic=False,
         )
-
-        q_grid_points_crystal_momentum_comp = (
-            material.transform_from_cryst_basis_to_lv_basis(
-                functions.path_through_grid_interpolated(
-                    grid=material.transform_from_cryst_basis_to_lv_basis(
-                        q_values_grid, backtranform=False, reciprocal=True
-                    ).transpose(-1, 0, 1, 2),
-                    relative_grid_points=relative_grid_points_lv_basis,
-                    steps=1,
-                    make_periodic=False,
-                ).T,
-                backtranform=True,
-                reciprocal=True,
-            ).T
-        )
+        if debug_RIXS:
+            # transforming back to crystal basis to check correctness
+            q_grid_points_crystal_momentum_comp = (
+                material.transform_from_cryst_basis_to_lv_basis(
+                    functions.path_through_grid_interpolated(
+                        grid=material.transform_from_cryst_basis_to_lv_basis(
+                            q_values_grid, backtranform=False, reciprocal=True
+                        ).transpose(-1, 0, 1, 2),
+                        relative_grid_points=relative_grid_points_lv_basis,
+                        steps=1,
+                        make_periodic=False,
+                    ).T,
+                    backtranform=True,
+                    reciprocal=True,
+                ).T
+            )
         
         return relative_grid_points_lv_basis, relative_grid_points_cryst_basis, shape_v_angles, q_grid_points_crystal_momentum, q_grid_points_lv
 
