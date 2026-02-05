@@ -54,6 +54,70 @@ import numpy as np
 ########################################################################################################################
 ########################################################################################################################
 
+def debug_check_rixs_coeff_array(
+    RIXSMatrix,
+    rixs_coeff_arr_numerical_4,
+    S_op_list,
+    prefactor_list,
+    config,
+    tol=1e-12,
+    max_print=20,
+):
+    """
+    Verifies that for each (i,j): sum_{a,b,sigma} coeff[i,j,a,b,sigma] * prefactor[sigma] * Sa*Sb
+    reproduces the symbolic RIXSMatrix[i,j] (after rewriting squares).
+    Also prints the largest mismatches.
+    """
+    
+    def expand_squares_to_products(expr):
+        return expr.replace(
+            lambda x: isinstance(x, sp.Pow) and x.exp == 2,
+            lambda x: x.base * x.base
+        )
+    
+    mismatches = []
+    for i in range(3):
+        for j in range(3):
+            Rij = RIXSMatrix[i, j]
+            Rij_cmp = expand_squares_to_products(sp.expand(Rij))
+
+            # reconstruct
+            Rij_reconstruct = 0
+            for a in range(config.amount_spatial_S_operator):
+                for b in range(config.amount_spatial_S_operator):
+                    # same identity convention as your extraction
+                    if config.amount_spatial_S_operator == 4 and (a != 3 and b == 3):
+                        continue
+
+                    SaSb = S_op_list[a] * S_op_list[b]
+                    for sigma, p in enumerate(prefactor_list):
+                        c = rixs_coeff_arr_numerical_4[i, j, a, b, sigma]
+                        if c != 0:
+                            Rij_reconstruct += sp.nsimplify(c) * p * SaSb
+
+            Rij_reconstruct = sp.expand(Rij_reconstruct)
+
+            diff = sp.expand(Rij_cmp - Rij_reconstruct)
+
+            if diff != 0:
+                mismatches.append((i, j, diff))
+                
+            print(f"\nRIXSMatrix[{i},{j}] reconstructed:")
+            sp.pprint(Rij_reconstruct)
+    
+    if not mismatches:
+        print("OK: coefficient array reconstructs all RIXSMatrix elements (under square->product rewrite).")
+        return True
+
+    print(f"FAIL: {len(mismatches)} / 9 matrix elements mismatch.")
+    for k, (i, j, diff) in enumerate(mismatches[:max_print]):
+        print(f"\nMismatch (i={i}, j={j}):")
+        # print only short form
+        print(diff)
+
+    return False
+
+
 def compare_tensors_new(a, b, rtol=1e-6, atol=1e-12, zero_tol=1e-12, threshold=1e-8):
     a = np.asarray(a); b = np.asarray(b)
     a[np.abs(a) < threshold] = 0

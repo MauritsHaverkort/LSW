@@ -4363,7 +4363,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
     draw_xyz_spectra = True
     
     draw_energies_3D = False
-    draw_energies_3D = True
+    # draw_energies_3D = True
     
     draw_total_sigma_prefactor_contributions = False
     # draw_total_sigma_prefactor_contributions = True
