@@ -1747,7 +1747,7 @@ def interpolated_path_from_relative_points(relative_grid_points:np.ndarray, step
         ])
     return path_coords
 
-def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps, make_periodic=True):
+def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps, make_periodic=True, config:Config=None):
     from scipy.interpolate import RegularGridInterpolator
     from scipy.ndimage import map_coordinates
     """takes a grid of shape (..., X, Y, Z) and relative_grid_points with respect to the whole grid of shape (N, 3) and steps and returns an interpolated path through the grids (...,N).
@@ -1781,7 +1781,10 @@ def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps,
 
     # Create vectorized interpolator
     # interp = RegularGridInterpolator((x, y, z), grid_for_interp, method="linear", )
+    config.debug_timer.print_difference("before allocating vals for interpolation")
     vals = np.empty((batch, path_coords.shape[0]), dtype=np.complex128) 
+    config.debug_timer.print_difference("after allocating vals for interpolation")
+    
     for b in range(batch):
         #use map_coordinates to have wrapping around the grid
         
@@ -1792,7 +1795,8 @@ def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps,
                                     order=1, mode='wrap')
         vals[b] = real_interp + 1j * imag_interp
         # vals[b] = map_coordinates(grid_flat[b], path_coords.T, order=1, mode='wrap')
-
+    config.debug_timer.print_difference("after interpolation loop")
+    
     # Interpolate -> (num_steps_total, batch)
     #vals = interp(path_coords)
 

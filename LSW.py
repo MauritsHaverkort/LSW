@@ -144,7 +144,11 @@ def call_main_with_material_config():
             # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             
             #NiO with NN and NNN
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0)
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0),
+            
+            #only first domain
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False),
+            
             # ,Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=2)
             
             #Nickelates
@@ -2461,7 +2465,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
 
         # q_values are in the lv basis, so we need to interpolate in that basis
         q_grid_points_crystal_momentum = functions.path_through_grid_interpolated(
-            grid=material.get_corner_points_of_BZ().transpose(-1, 0, 1, 2),
+            config= config, grid=material.get_corner_points_of_BZ().transpose(-1, 0, 1, 2),
             relative_grid_points=relative_grid_points_lv_basis,
             steps=1,
             make_periodic=False,
@@ -2471,6 +2475,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             q_grid_points_crystal_momentum_comp = (
                 material.transform_from_cryst_basis_to_lv_basis(
                     functions.path_through_grid_interpolated(
+                        config= config,
                         grid=material.transform_from_cryst_basis_to_lv_basis(
                             q_values_grid, backtranform=False, reciprocal=True
                         ).transpose(-1, 0, 1, 2),
@@ -2489,7 +2494,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     # 
      # --------------------------- extract sqw2 and sqw4 along the path ---------------------------
     sqw_2_along_path = functions.path_through_grid_interpolated(
-        grid=material.sqw_2_ad_a_equiv_class,
+        config= config, grid=material.sqw_2_ad_a_equiv_class,
         relative_grid_points=relative_grid_points_lv_basis,
         steps=1,
     )
@@ -2498,7 +2503,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     )
     if config.calc_two_magnon_spectra:
         sqw_4_along_path = functions.path_through_grid_interpolated(
-            grid=material.conv_sqw_2_ad_a_sym_classes,
+            config= config, grid=material.conv_sqw_2_ad_a_sym_classes,
             relative_grid_points=relative_grid_points_lv_basis,
             steps=1,
         )
@@ -2950,7 +2955,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
 
     def draw_k_points_compared_to_energies_and_spectra():
         energies_k_values = functions.path_through_grid_interpolated(
-            grid=material.energies.transpose(0, -1, 1, 2, 3),
+            config= config, grid=material.energies.transpose(0, -1, 1, 2, 3),
             relative_grid_points=relative_grid_points_lv_basis,
             steps=1,
         )
@@ -3194,12 +3199,13 @@ def plotting_rixs_spectra(material: Material, config: Config,
             indices_to_plot_4 = [sym_class_4[0][i][0] for i in range(len(sym_class_4[0]))]
             
         sqw_2_along_path = functions.path_through_grid_interpolated(
-            grid=material.sqw_2_ad_a_equiv_class,
+            config= config, grid=material.sqw_2_ad_a_equiv_class,
             relative_grid_points=np.array(relative_grid_points),
             steps=steps_between_points,
         )
         if config.calc_two_magnon_spectra:
             sqw_4_along_path = functions.path_through_grid_interpolated(
+                config= config,
                 grid=material.conv_sqw_2_ad_a_sym_classes,
                 relative_grid_points=np.array(relative_grid_points),
                 steps=steps_between_points,
@@ -3286,7 +3292,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         # temp2 = np.einsum("ROUMNsrpabk, OUMNx->xak", material.coeff_xyz_rixs, OUMNx, optimize="optimal")
         
         energies_along_path = functions.path_through_grid_interpolated(
-            grid=material.energies.transpose(0, -1, 1, 2, 3),
+            config= config, grid=material.energies.transpose(0, -1, 1, 2, 3),
             relative_grid_points= np.array(relative_grid_points),
             steps=steps_between_points,
         )
@@ -3450,12 +3456,13 @@ def plotting_rixs_spectra(material: Material, config: Config,
         relative_grid_points = np.real(relative_grid_points)
 
         sqw_2_along_path = functions.path_through_grid_interpolated(
-            grid=material.sqw_2_ad_a_equiv_class,
+            config= config, grid=material.sqw_2_ad_a_equiv_class,
             relative_grid_points=np.array(relative_grid_points),
             steps=steps_between_points,
         )
         if config.calc_two_magnon_spectra:
             sqw_4_along_path = functions.path_through_grid_interpolated(
+                config= config,
                 grid=material.conv_sqw_2_ad_a_sym_classes,
                 relative_grid_points=np.array(relative_grid_points),
                 steps=steps_between_points,
@@ -3519,7 +3526,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 sqw_4_along_path,
             ).astype(config.dtype_complex)
         energies_along_path = functions.path_through_grid_interpolated(
-            grid=material.energies.transpose(0, -1, 1, 2, 3),
+            config= config, grid=material.energies.transpose(0, -1, 1, 2, 3),
             relative_grid_points=np.array(relative_grid_points),
             steps=steps_between_points,
         )
