@@ -1646,7 +1646,7 @@ def plot_BZ_from_lv(ax, reciprocal_vectors, color='lightgreen', starting_depth=3
             if include_negative:
                 plot_from_origin(origin - vec, depth - 1)
     plot_from_origin(origin, depth=starting_depth)
-def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None, axis_labels=("kx", "ky", "kz")):
+def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None, axis_labels=("kx", "ky", "kz"), view_elev=20, view_azim=45, view_roll=0):
             """
             Plots any number of vectors in a 3D space.
 
@@ -1678,6 +1678,8 @@ def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_
             ax.set_ylabel(axis_labels[1])
             ax.set_zlabel(axis_labels[2])
             ax.legend()
+            
+            ax.view_init(elev=view_elev, azim=view_azim, roll=view_roll)
 
             if save_path:
                 plt.savefig(save_path)

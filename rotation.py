@@ -55,7 +55,7 @@ def rotation_matrix_from_axis_angle(axis, angle):
 
 def rot_vec(theta, n):
     """
-    Rotate theta (in radian) about unit vector n
+    Rotate theta (in radian) about unit vector n returns the rotation matrix
     """
     if theta:
         n_norm = n / np.linalg.norm(n)
