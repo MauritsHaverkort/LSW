@@ -91,11 +91,11 @@ class Material:
         self.q_values: np.ndarray = None
         self.w_values: np.ndarray = None
 
-        self.sqw_2_ad_a_sym_class: np.ndarray = None
+        self.sqw_2_ad_a_equiv_class: np.ndarray = None
         self.conv_sqw_2_ad_a_sym_classes: np.ndarray = None
 
         self.coeff_sym_classes_tioju_4: np.ndarray = None
-        self.coeff_sym_classes_tioju_2: np.ndarray = None
+        self.coeff_equiv_classes_tioju_2: np.ndarray = None
 
         self.coeff_tioju_xyz_2: np.ndarray = None
         self.coeff_tioju_xyz_4: np.ndarray = None
@@ -330,11 +330,11 @@ class Material:
                     self.coeff_tioju_xyz_4,
                     optimize="optimal",
                 )
-            if self.coeff_sym_classes_tioju_2 is not None and self.coeff_tioju_xyz_2 is not None:
+            if self.coeff_equiv_classes_tioju_2 is not None and self.coeff_tioju_xyz_2 is not None:
                 
                 self.sym_classes_to_xyz_2 = np.einsum(
                     "xtioju,OUMNioju->OUMNx",
-                    self.coeff_sym_classes_tioju_2,
+                    self.coeff_equiv_classes_tioju_2,
                     self.coeff_tioju_xyz_2,
                     optimize="optimal",
                 )

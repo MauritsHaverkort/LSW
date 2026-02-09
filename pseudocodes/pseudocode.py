@@ -309,6 +309,243 @@ def general_Hamiltonian(
         H_deriv_diag = (None,None,None,None)
     return H_diag, H_deriv_diag
 
+def calculate_sqw_spectra(
+    config: Config,
+    q_values_grid,
+    w_values,
+    material: Material = None,
+    energy_dependent_part=None,
+    T=None,
+    eigvalue_grid: np.ndarray = None,
+    eigvalues_deriv: np.ndarray = None,
+    T_deriv: np.ndarray = None,
+):
+    """Calculates the convolutions of the pref grids for the spectral weight grid.
+    pref_grids: np.ndarray
+        The pref grids of shape (W, kx, ky, kz, 2N, 2N) --> given as the complete matrix
+    """
+    k_shape = q_values_grid.shape[:-1]
+
+    results = []
+    names_plots = []
+
+    # added so no error when they are not calculated but accessed
+    sqw_2_xyz = None
+    sqw_4_xyz = None
+
+   
+    T_herm_conj = np.conjugate(T.swapaxes(-2, -1))
+    
+    sqw_prime_of_a_ad_without_phase_factor = np.einsum(
+        "t...lc,t...dl->tcd...l", T_herm_conj, T, optimize="optimal"
+    )
+
+    # deal with divergencies
+    if config.cut_diverging_spectral_weights:
+        sqw_prime_of_a_ad_without_phase_factor = deal_with_divergencies(
+            residues=sqw_prime_of_a_ad_without_phase_factor,
+            config=config,
+            material=material,
+            q_values=q_values_grid,
+            use_averaging_TdT=config.use_averaging_TdT,
+        )
+
+    sqw_prime_of_a_ad_without_phase_factor = (
+        norm * sqw_prime_of_a_ad_without_phase_factor
+    )
+
+    sqw_prime_of_a_ad_without_k_pref_with_w = np.einsum(
+        "tcd...l,tw...l->tcdw...l",
+        sqw_prime_of_a_ad_without_phase_factor,
+        energy_dependent_part,
+        optimize="optimal",
+    )
+
+    # summing over all eigenvectors, (taking the trace in paper 4)
+    # config.warnings.add("summing only over second half of the eigenvectors")
+
+    extraction_only_creation_operator = np.array(
+        [0] * material.N + [1] * material.N
+    )
+    sqw_prime_of_a_ad_without_k_pref_with_w = (
+        1 / sqw_prime_of_a_ad_without_k_pref_with_w.shape[-1]
+    ) * np.einsum(
+        "tcd...l,l->tcd...",
+        sqw_prime_of_a_ad_without_k_pref_with_w,
+        extraction_only_creation_operator,
+        optimize="optimal",
+    )
+
+    sqw_prime_of_a_ad_without_k_pref_with_w = flip_sqw_prime_ad_a(
+        sqw_prime_of_a_ad_without_k_pref_with_w,
+        order_of_operator=2,
+        material=material,
+        config=config,
+    )
+
+    # initialising HP correlation functions
+    sqw_prime_4_ad_a = np.zeros(
+        (
+            config.amount_tau_values,
+            material.N,
+            4,
+            material.N,
+            4,
+            2 * config.amount_w_values,
+            *k_shape,
+        ),
+        dtype=config.dtype_complex,
+    )
+    sqw_prime_2_ad_a = np.zeros(
+        (
+            config.amount_tau_values,
+            material.N,
+            2,
+            material.N,
+            2,
+            config.amount_w_values,
+            *k_shape,
+        ),
+        dtype=config.dtype_complex,
+    )
+
+    # I am only calculating here all the convolutions that might be needed later so all convolutions from any i factor of a_i (a^+_i) to a_j (a^+_j)
+    orders_ad_a = material.return_order_of_a_ad_operator_indices(
+        order_of_operator=4
+    )  # the orders of a and a^+ in the four particle dependent S matrix
+    
+
+    # config.warnings.add("computing the convolutions without k prefactor for testing")
+    sqw_prime_of_a_ad = sqw_prime_of_a_ad_without_k_pref_with_w
+# ----------reshaping the sqw_prime_of_a_ad into the shape of i order_i j order_j------------------------------------------------------
+    # for i in range(material.N):
+    #     for j in range(material.N):
+    #         for (is_ad_1, is_ad_2) in orders_ad_a:
+    #             #sqw_prime_2_ad_a[:,i,is_ad_1,j,is_ad_2] = sqw_prime_of_a_ad[:,2*i+is_ad_1,2*j+is_ad_2]
+    #             sqw_prime_2_ad_a[:,i,is_ad_1,j,is_ad_2] = sqw_prime_of_a_ad[:,i+is_ad_1*material.N,j+is_ad_2*material.N]
+    #             #int(not is_ad_1)
+    sqw_prime_2_ad_a = material.transform_basis_i_order_i_to_n1_n2(
+        sqw_prime_of_a_ad, axis_to_skip=1, backtransform=True
+    )
+    # ------------------------------------------------------------------------------------------------------------
+    # search for symmetries in the sqw'_ad_a --> only save once per symmetry class
+    symmety_list_ad_a_2, index_of_symmetries_ad_a_2 = (
+        functions.give_symmetries_of_tensors(
+            sqw_prime_2_ad_a,
+            number_axis_to_include=5,
+            return_conjugated_symmetries=False,
+            give_mean_abs_value=False,
+        )
+    )
+    material.sqw_2_ad_a_equiv_class = np.zeros(
+        (len(symmety_list_ad_a_2), *sqw_prime_2_ad_a.shape[5:]),
+        dtype=np.complex128,
+    )
+
+    # functions.test_symmetries_sqw_4(*functions.give_symmetries_of_tensors(sqw_prime_2_ad_a[0],number_axis_to_include=4, return_conjugated_symmetries=False, give_mean_abs_value=False),material)
+    for i, sym in enumerate(symmety_list_ad_a_2):
+        material.sqw_2_ad_a_equiv_class[i] = sqw_prime_2_ad_a[tuple(sym[0])]
+    material.coeff_equiv_classes_tioju_2 = (
+        functions.turn_equivalence_list_into_array(
+            symmety_list_ad_a_2, shape_indices=sqw_prime_2_ad_a.shape[0:5]
+        )
+    )
+
+
+    if config.calc_two_magnon_spectra:
+
+        len_sym_classes = len(material.coeff_equiv_classes_tioju_2)
+        shape_w_k = material.sqw_2_ad_a_equiv_class.shape[1:]
+        convoluted_grids_symmetry_classes = []
+        for s1 in range(material.coeff_equiv_classes_tioju_2.shape[0]):
+            convoluted_grids_symmetry_classes.append([])
+            for s2 in range(material.coeff_equiv_classes_tioju_2.shape[0]):
+                convoluted_grids_symmetry_classes[-1].append(
+                    functions.convolute_grids_fft(
+                        material.sqw_2_ad_a_equiv_class[s1],
+                        material.sqw_2_ad_a_equiv_class[s2],
+                        dimension=material.dimension,
+                    )
+                )
+
+        norm = (
+            1 / config.number_k_points
+            if config.use_intensity_normalisation
+            else 1
+        )  # only 1/Nk
+        material.conv_sqw_2_ad_a_sym_classes = norm * np.array(
+            convoluted_grids_symmetry_classes
+        )
+
+        coeff_sym_classes_tioju_4 = np.zeros(
+            (
+                len_sym_classes,
+                len_sym_classes,
+                config.amount_tau_values,
+                material.N,
+                4,
+                material.N,
+                4,
+            ),
+            dtype=np.complex128,
+        )
+        for t in range(config.amount_tau_values):
+            for i in range(material.N):
+                for j in range(material.N):
+                    for order_idx, (is_ad_1, is_ad_2) in enumerate(orders_ad_a):
+                        for order_idx2, (is_ad_3, is_ad_4) in enumerate(
+                            orders_ad_a
+                        ):
+                            # sqw_prime_4_ad_a[t,i,order_idx,j,order_idx2] = functions.convolute_grids(
+                            #     sqw_prime_2_ad_a[t,i,is_ad_1,i,is_ad_2],
+                            #     sqw_prime_2_ad_a[t,j,is_ad_3,j,is_ad_4], dimension=material.dimension)
+                            # config.warnings.add("using fft convolution new for testing")
+                            s1 = index_of_symmetries_ad_a_2[
+                                t, i, is_ad_1, j, is_ad_3
+                            ]
+                            s2 = index_of_symmetries_ad_a_2[
+                                t, i, is_ad_2, j, is_ad_4
+                            ]
+                            coeff_sym_classes_tioju_4[
+                                s1, s2, t, i, order_idx, j, order_idx2
+                            ] += 1
+                            s1 = index_of_symmetries_ad_a_2[
+                                t, i, is_ad_1, j, is_ad_4
+                            ]
+                            s2 = index_of_symmetries_ad_a_2[
+                                t, i, is_ad_2, j, is_ad_3
+                            ]
+                            coeff_sym_classes_tioju_4[
+                                s1, s2, t, i, order_idx, j, order_idx2
+                            ] += 1
+
+                            if config.use_explicit_calc_of_sqw:
+                                temp_1 = functions.convolute_grids_fft(
+                                    sqw_prime_2_ad_a[t, i, is_ad_1, j, is_ad_3],
+                                    sqw_prime_2_ad_a[t, i, is_ad_2, j, is_ad_4],
+                                    dimension=material.dimension,
+                                )
+                                temp_2 = functions.convolute_grids_fft(
+                                    sqw_prime_2_ad_a[t, i, is_ad_1, j, is_ad_4],
+                                    sqw_prime_2_ad_a[t, i, is_ad_2, j, is_ad_3],
+                                    dimension=material.dimension,
+                                )
+                                if np.max(np.abs(temp_1 - temp_2)) > 1e-5:
+                                    config.warnings.add(
+                                        f"convolution order matters"
+                                    )
+                                sqw_prime_4_ad_a[
+                                    t, i, order_idx, j, order_idx2
+                                ] = norm * (temp_1 + temp_2)
+
+        material.coeff_sym_classes_tioju_4 = coeff_sym_classes_tioju_4
+
+
+    
+    
+    return 
+
+
 def diagonalising_Hamiltonian(config, H, shape_k_parts, N,  use_eigvecs_correction=True, state_cr=None):
     """ diagonalises the Hamiltonian H of shape (...,2N,2N) for each k-point in the grid defined by shape_k_parts"""
     
@@ -379,7 +616,7 @@ def diagonalising_Hamiltonian(config, H, shape_k_parts, N,  use_eigvecs_correcti
     
     return H_diag_grid, eigvecs_grid
 
-def calculate_sqw_spectra(
+
     config: Config,  q_values_grid, w_values, pref_grids_matrix: np.ndarray = None, material:Material=None, energy_dependent_part=None, T=None, eigvalue_grid:np.ndarray=None, eigvalues_deriv:np.ndarray=None, T_deriv:np.ndarray=None
 ):
     """Calculates the convolutions of the pref grids for the spectral weight grid.
@@ -531,3 +768,5 @@ def calculate_sqw_spectra(
         names_debug.append(f"sqw_2_xyz_symmetrised_xx_convoluted_with_itself_not_working_grid_not_extended")
     
     return sqw_2_xyz, sqw_4_xyz
+
+

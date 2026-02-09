@@ -446,7 +446,7 @@ def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=None,
     result = symmetries + conj_symmetries if return_conjugated_symmetries else symmetries
     return result, tensor_of_symm_class_index
 
-def turn_symmetry_list_into_array(symmetry_list, shape_indices):
+def turn_equivalence_list_into_array(symmetry_list, shape_indices):
     symmetry_array = np.zeros((len(symmetry_list), *shape_indices), dtype=np.complex128)
     for i, sym in enumerate(symmetry_list):
         for indices in sym:
