@@ -46,7 +46,7 @@ def _parse_output_subscripts(expr: str) -> str:
 
 
 def _infer_output_shape(expr: str, operands: Sequence[np.ndarray]) -> Tuple[int, ...]:
-    """this is used to estimate output size without performing the contraction"""
+    """this is used to estimate output size without performing the contraction (from the size of the input arrays and the subscripts)"""
     in_part = expr.split("->", 1)[0]
     in_terms = [t.strip() for t in in_part.split(",")]
     if len(in_terms) != len(operands):
@@ -66,6 +66,115 @@ def _infer_output_shape(expr: str, operands: Sequence[np.ndarray]) -> Tuple[int,
 
     return tuple(dim_map[ch] for ch in out_sub)
 
+# experimental to capture ... 
+def _infer_output_shape_ellipsis(expr: str, operands: Sequence[np.ndarray]) -> Tuple[int, ...]:
+    """
+    Estimate einsum output shape without performing the contraction.
+    Supports ellipsis ("...") in input and output subscripts.
+
+    Notes
+    -----
+    - Handles explicit output form: "ab...,bc->ac..."
+    - Handles implicit output form (no '->'): follows NumPy einsum rule:
+      output indices are the ellipsis (if present) plus indices that appear exactly once.
+    - Assumes valid einsum expression; will raise on inconsistent dimensions.
+    """
+    expr = expr.replace(" ", "")
+    if "->" in expr:
+        in_part, out_sub = expr.split("->", 1)
+    else:
+        in_part, out_sub = expr, None
+
+    in_terms = in_part.split(",")
+    if len(in_terms) != len(operands):
+        raise ValueError(
+            f"Expression has {len(in_terms)} operands but got {len(operands)} arrays."
+        )
+
+    # ---- Determine how many axes the ellipsis stands for in each operand ----
+    # term_len_no_ellipsis counts explicit labels (single letters)
+    ell_lens = []
+    for term, arr in zip(in_terms, operands):
+        if "..." in term:
+            term_wo = term.replace("...", "")
+            n_ell = arr.ndim - len(term_wo)
+            if n_ell < 0:
+                raise ValueError(
+                    f"Operand with shape {arr.shape} does not match subscripts '{term}'."
+                )
+        else:
+            if arr.ndim != len(term):
+                raise ValueError(
+                    f"Operand with shape {arr.shape} does not match subscripts '{term}'."
+                )
+            n_ell = 0
+        ell_lens.append(n_ell)
+
+    max_ell = max(ell_lens) if ell_lens else 0
+
+    # ---- Build a canonical ellipsis label sequence: E0, E1, ... ----
+    ell_labels = [f"§E{m}§" for m in range(max_ell)]  # sentinel labels unlikely to collide
+
+    # ---- Expand each term by replacing "..." with the rightmost portion of ell_labels ----
+    # Numpy aligns ellipsis dimensions to the left; effectively, shorter ellipses are padded on the left.
+    expanded_terms = []
+    for term, n_ell in zip(in_terms, ell_lens):
+        if "..." in term:
+            # pad on the left so that the *rightmost* ellipsis axes line up
+            pad = max_ell - n_ell
+            replacement = "".join(ell_labels[pad:])
+            expanded = term.replace("...", replacement)
+        else:
+            expanded = term
+        expanded_terms.append(expanded)
+
+    # ---- Infer output subscripts if implicit ----
+    if out_sub is None:
+        # Count each label occurrence (including ellipsis labels)
+        counts: dict[str, int] = {}
+        for term in expanded_terms:
+            for ch in term:
+                counts[ch] = counts.get(ch, 0) + 1
+
+        # If any operand had ellipsis, numpy includes ellipsis in output by default
+        has_ellipsis = max_ell > 0
+        out_labels = []
+        if has_ellipsis:
+            out_labels.extend(ell_labels)
+
+        # Then labels that appear exactly once, in sorted order for determinism
+        singles = sorted([k for k, v in counts.items() if v == 1 and k not in ell_labels])
+        out_labels.extend(singles)
+    else:
+        # Expand output ellipsis if present
+        if "..." in out_sub:
+            replacement = "".join(ell_labels)
+            out_expanded = out_sub.replace("...", replacement)
+        else:
+            out_expanded = out_sub
+        out_labels = list(out_expanded)
+
+    # ---- Map labels to dimensions and validate consistency ----
+    dim_map: dict[str, int] = {}
+
+    for term, arr, n_ell in zip(expanded_terms, operands, ell_lens):
+        # term now has length == arr.ndim
+        if len(term) != arr.ndim:
+            raise ValueError(
+                f"Internal error: expanded subscripts '{term}' do not match ndim={arr.ndim}."
+            )
+        for ch, dim in zip(term, arr.shape):
+            if ch in dim_map and dim_map[ch] != dim:
+                raise ValueError(
+                    f"Index '{ch}' has inconsistent dims: {dim_map[ch]} vs {dim}."
+                )
+            dim_map[ch] = dim
+
+    # ---- Construct output shape ----
+    try:
+        return tuple(dim_map[ch] for ch in out_labels)
+    except KeyError as e:
+        raise ValueError(f"Output index '{e.args[0]}' not present in any input.") from None
 
 def _available_ram_bytes() -> Optional[int]:
     if psutil is None:

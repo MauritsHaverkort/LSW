@@ -191,7 +191,7 @@ def general_Hamiltonian(
     
     
     for bond in material.bonds:
-        i, j = bond.atom0.type, bond.atom1.type
+        i, j = bond.atom0.index, bond.atom1.index
         J_bond = bond.j  # matrix
         bond_distance = bond.d_of_unit_cells
 

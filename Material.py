@@ -248,7 +248,7 @@ class Material:
         for atom1 in atoms:
             atom1_uc, atom1_abs_pos = np.array([0, 0, 0]), atom1.position
             for atom2, atom2_uc, atom2_abs_pos in atoms_extended:
-                if atom2.type < atom1.type:
+                if atom2.index < atom1.index:
                     continue  # avoid double counting: looking in all directions but strict order of atoms
                 if atom1 != atom2 or np.any(
                     atom1_uc != atom2_uc
@@ -517,7 +517,7 @@ class Material:
                     raise ValueError("S is not the same for all atoms of the same type")
 
                 for j in range(len(neighbours)):
-                    neighbour_type = neighbours[j].type
+                    neighbour_type = neighbours[j].index
                     bonds_distances[i][neighbour_type].append(
                         current_atom.position - neighbours[j].position
                     )
@@ -562,8 +562,8 @@ class Material:
         for bond in self.bonds:
             atom0 = bond.atom0
             atom1 = bond.atom1
-            bonds_distances[atom0.type][atom1.type].append(bond.d_absolut)
-            J_bonds[atom0.type][atom1.type].append(la.trace(bond.j) / 3)
+            bonds_distances[atom0.index][atom1.index].append(bond.d_absolut)
+            J_bonds[atom0.index][atom1.index].append(la.trace(bond.j) / 3)
         self.J_bonds = J_bonds
         self.bonds_distances = bonds_distances
         self.spins = spins
@@ -588,7 +588,7 @@ class Material:
             temp = []
             atoms_left = False
             for a in atoms:
-                if type_index == a.type:
+                if type_index == a.index:
                     temp.append(a)
                     atoms_left = True
             if not atoms_left:
@@ -748,7 +748,7 @@ class Material:
                 continue  # skip bonds with zero interaction
 
             if (
-                (atom0.atom_index == atom1.atom_index)
+                (atom0.index == atom1.index)
                 and np.all(bond.unit_cell_of_atom_0 == np.array([0, 0, 0]))
                 and np.all(bond.unit_cell_of_atom_1 == np.array([0, 0, 0]))
             ):
@@ -789,8 +789,8 @@ class Material:
                     (atom1.spin_dir[0], atom1.spin_dir[1], atom1.spin_dir[2])
                 ) % len(colors)
             else:
-                color_index_0 = atom0.type % len(colors)
-                color_index_1 = atom1.type % len(colors)
+                color_index_0 = atom0.index % len(colors)
+                color_index_1 = atom1.index % len(colors)
             # dont draw multiple times the same atom if it is connected to multiple bonds
             if (pos[0], pos[1], pos[2]) not in positions_occupied:
                 ax.scatter(

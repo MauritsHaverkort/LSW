@@ -146,11 +146,14 @@ def call_main_with_material_config():
             
             #NiO with NN and NNN
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
-            
+            Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
             
             # ,Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=2)
+            
+            # 2 atom cluster
+            # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #Nickelates
             # Examples.RNiO_3(config)
@@ -212,6 +215,8 @@ def call_main_with_material_config():
             # reset config values
             config.number_k_points = None
 
+    # delete intermediate memmap files after all calculations are done
+    einsum_RAM.clean_memmap_files(config) if config.use_RAM_einsum else None
 
 def main(
     config: Config,
@@ -319,9 +324,15 @@ def main(
         
         # calculate RIXS spectrum for all domains (as materials) but without plotting
         if config.compute_RIXS_spectrum:
-            calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
-                config, current_material, q_values_grid=None, do_plotting=False
-            )
+            if additional_domain_material is not None:
+                calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
+                    config, current_material, q_values_grid=None, do_plotting=False
+                )
+            else:
+                # In case there are no additional domains we can directly calculate the RIXS spectrum for the material without worrying about adding up spectra of different domains afterwards (and thus also plot resilts right away)
+                calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
+                    config, current_material, q_values_grid=None, do_plotting=True
+                )
 
     # add the RIXS spectra for all domains up
     if additional_domain_material is not None:
@@ -332,11 +343,11 @@ def main(
             material.rixs_spectrum_4 += material_additional.rixs_spectrum_4
             material.rixs_spectrum += material_additional.rixs_spectrum
     
-    # call RIXS function only for plotting again
-    if config.compute_RIXS_spectrum:
-        calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
-            config, material, q_values_grid=None, save_RIXS_spectra_to_material=False
-        )
+        # call RIXS function only for plotting again 
+        if config.compute_RIXS_spectrum:
+            calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
+                config, material, q_values_grid=None, save_RIXS_spectra_to_material=False
+            )
 
     symmetry_checks(config, material)
 
@@ -420,7 +431,7 @@ def general_Hamiltonian(
     # interaction_summed = np.zeros(shape_k_parts, dtype=config.dtype_complex)
     for bond in material.bonds:
         # TODO: this has to be checked if the indices mathch the positions
-        i, j = bond.atom0.type, bond.atom1.type
+        i, j = bond.atom0.index, bond.atom1.index
         J_bond = bond.j  # at this point a matrix
         bond_distance = bond.d_of_unit_cells
 
@@ -2407,7 +2418,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     
     coeff_arr_numerical_4_p_angles = compute_rixs_coeff_array()
     config.debug_timer.print_difference(
-            "donw rewriting RIXS matrix into coefficient array", debug_time_duration
+            "done rewriting RIXS matrix into coefficient array", debug_time_duration
         )
     # ---------------------------debug the rixs coeff array---------------------------
     # for idx in np.ndindex(coeff_arr_numerical_4_p_angles.shape):
