@@ -13,6 +13,7 @@ from typing import List, Callable  # Import List for type hints
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize
 from sympy import pprint
 import opt_einsum as opt_einsum
+import einsum_RAM as einsum_RAM
 
 from Material import Material
 import funtions as functions
@@ -1704,27 +1705,44 @@ def calculate_sqw_spectra(
 
   
     #adding energy part
-    residues_2_prime_ad_a_w = np.einsum(
+    if config.use_RAM_einsum:
+        residues_2_prime_ad_a_w = einsum_RAM.contract_autostore(
         "tcd...l,tw...l->tcdw...l",
         residues_ad_a,
         energy_dependent_part,
         optimize="optimal",
-    )
+        config=config
+    )   
+    else: 
+        residues_2_prime_ad_a_w = np.einsum(
+            "tcd...l,tw...l->tcdw...l",
+            residues_ad_a,
+            energy_dependent_part,
+            optimize="optimal",
+        )
 
     # summing over all eigenvectors, (taking the trace in paper 4)
 
     extraction_only_creation_operator = np.array(
         [0] * material.N + [1] * material.N
     )
-   
-    residues_2_prime_ad_a_w = (
-        1 / residues_2_prime_ad_a_w.shape[-1]
-    ) * np.einsum(
+    if config.use_RAM_einsum:
+        residues_2_prime_ad_a_w = einsum_RAM.contract_autostore(
         "tcd...l,l->tcd...",
         residues_2_prime_ad_a_w,
         extraction_only_creation_operator,
         optimize="optimal",
+        config=config
     )
+    else:
+        residues_2_prime_ad_a_w = (
+            1 / residues_2_prime_ad_a_w.shape[-1]
+        ) * np.einsum(
+            "tcd...l,l->tcd...",
+            residues_2_prime_ad_a_w,
+            extraction_only_creation_operator,
+            optimize="optimal",
+        )
     # sqw_prime_of_a_ad_k = (1/sqw_prime_of_a_ad_k.shape[-1]) * np.einsum('tcd...l,l->tcd...',sqw_prime_of_a_ad_k, extraction_only_creation_operator)
 
     # assert np.max(np.abs(sqw_prime_of_a_ad - np.einsum("tcd...,...cd->tcd...",sqw_prime_of_a_ad_without_k_pref_with_w, k_dependent_prefactor, optimize='optimal'))) < 1e-3, "k prefactor not matching in sqw_prime_of_a_ad"
@@ -2584,15 +2602,16 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             )
         # ------------------------------------memory efficient way of contraction------------------------------------
         # TODO: cite this
-        path, info = opt_einsum.contract_path(
-            "xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx",
-            material.coeff_equiv_classes_tioju_2,
-            phase_factor_along_path,
-            material.coeff_tioju_xyz_2,
-            material.coeff_xyz_rixs,
-            sigma_prefactors,
-            optimize="optimal",  # seemingly optimal is a lot faster than auto here
-        )
+        if debug_RIXS:
+            path, info = opt_einsum.contract_path(
+                "xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx",
+                material.coeff_equiv_classes_tioju_2,
+                phase_factor_along_path,
+                material.coeff_tioju_xyz_2,
+                material.coeff_xyz_rixs,
+                sigma_prefactors,
+                optimize="optimal",  # seemingly optimal is a lot faster than auto here
+            )
         spectrum_2_coeff = opt_einsum.contract(
             "xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx",
             material.coeff_equiv_classes_tioju_2,
@@ -2600,7 +2619,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             material.coeff_tioju_xyz_2,
             material.coeff_xyz_rixs,
             sigma_prefactors,
-            optimize=path,
+            optimize="optimal",
         )
 
         config.debug_timer.print_difference(
@@ -2612,20 +2631,37 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
 
             if config.calc_two_magnon_spectra:
                 # contract the coefficient
-                material.rixs_spectrum_4 = np.einsum(
+                if config.use_RAM_einsum:
+                    material.rixs_spectrum_4 = einsum_RAM.contract_autostore(
                     "Rvpabcxy, xywvabc->Rpvwabc",
                     spectrum_4_coeff,
                     sqw_4_along_path,
                     optimize="optimal",
+                    config=config,
                 )
-
-            material.rixs_spectrum_2 = np.einsum(
-                "Rvpabcx, xwvabc->Rpvwabc",
-                spectrum_2_coeff,
-                sqw_2_along_path,
-                optimize="optimal",
-            ).astype(config.dtype_complex)
-            
+                else:
+                    material.rixs_spectrum_4 = np.einsum(
+                        "Rvpabcxy, xywvabc->Rpvwabc",
+                        spectrum_4_coeff,
+                        sqw_4_along_path,
+                        optimize="optimal",
+                    )
+            if config.use_RAM_einsum:
+                material.rixs_spectrum_2 = einsum_RAM.contract_autostore(
+                    "Rvpabcx, xwvabc->Rpvwabc",
+                    spectrum_2_coeff,
+                    sqw_2_along_path,
+                    optimize="optimal",
+                    config=config,
+                )
+            else:    
+                material.rixs_spectrum_2 = np.einsum(
+                    "Rvpabcx, xwvabc->Rpvwabc",
+                    spectrum_2_coeff,
+                    sqw_2_along_path,
+                    optimize="optimal",
+                ).astype(config.dtype_complex)
+                
             #this makes it possible to plot spectra in one plot easily (looses information about physics)
             if config.normalise_rixs_spectra_to_max:
                 material.rixs_spectrum_2 /= np.max(
