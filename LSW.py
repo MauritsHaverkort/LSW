@@ -144,10 +144,10 @@ def call_main_with_material_config():
             # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             
             #NiO with NN and NNN
-            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0),
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             
             #only first domain
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False),
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
             
             # ,Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=2)
             

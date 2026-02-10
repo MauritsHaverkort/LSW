@@ -275,7 +275,7 @@ def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True):
+def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = ""):
     #J_NN=-2.3,J_super_exchange=12,
     #J_NN=-1.4,J_super_exchange=19,
     
@@ -319,7 +319,7 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     normal_vector = np.array([-1,1,0]) #arbitrary since commensurate case
     
     tau = np.array([0, 0, 0])  # commensurate
-    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"NiO 2 atom cell NN_NNN T_domain_{T_domain_idx}",
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"NiO 2 atom cell NN_NNN T_domain_{T_domain_idx}_{title_suffix}",
                         extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
     X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)#the absolute X,Y,Z vectors in lattice units
     

@@ -9,6 +9,7 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter
 from typing import List  # Import List for type hints
 import funtions as functions
 from funtions import *
+import einsum_RAM as einsum_RAM
 
 from matplotlib.colors import LogNorm
 import time
@@ -738,6 +739,65 @@ def normalisation_test_calc_fractions():
             print(f"{key[0]} {key[1]} : {ratio.real:.6f}  {ratio.imag:+.3e}j")
 
 
+
+def test_einsum_two_random_arrays(
+    shape_a=(400, 3000),
+    shape_b=(3000, 200),
+    dtype=np.float64,
+    seed=0,
+    rtol=1e-10,
+    atol=1e-12,
+):
+    """
+    Tests a simple matrix multiplication contraction 'ij,jk->ik' using:
+      - np.einsum
+      - opt_einsum.contract
+
+    Prints timing + verifies numerical equality.
+    """
+    config = Configurations.config_experimental()
+    
+    rng = np.random.default_rng(seed)
+    A = rng.standard_normal(shape_a).astype(dtype, copy=False)
+    B = rng.standard_normal(shape_b).astype(dtype, copy=False)
+
+    expr = "ij,jk->ikj"
+
+   
+
+    # --- opt_einsum ---
+    t2 = time.perf_counter()
+    out_oe = einsum_RAM.contract_autostore(expr, A, B, optimize="optimal", config=config)
+    t3 = time.perf_counter()
+    
+    try:
+       
+        # --- NumPy einsum ---
+        t0 = time.perf_counter()
+        out_np = np.einsum(expr, A, B, optimize=True)
+        t1 = time.perf_counter()
+    except MemoryError:
+        print("MemoryError: np.einsum could not compute the result with the given shapes and dtype.")
+        out_np = None
+
+    # --- Compare ---
+    ok = np.allclose(out_np, out_oe, rtol=rtol, atol=atol)
+
+    print(f"expr: {expr}")
+    print(f"A shape {A.shape}, B shape {B.shape}, dtype={dtype}")
+    print(f"np.einsum time:      {t1 - t0:.4f} s")
+    print(f"opt_einsum time:     {t3 - t2:.4f} s")
+    print(f"max|diff|:           {np.max(np.abs(out_np - out_oe)):.3e}")
+    print(f"allclose:            {ok}")
+
+    if not ok:
+        raise AssertionError("opt_einsum and np.einsum results differ beyond tolerance.")
+
+    einsum_RAM.clean_memmap_files(config)  # Clean up any memmap files created during the test
+    return out_np, out_oe
+
+
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -759,4 +819,5 @@ if __name__ == "__main__":
     # test_plot()
     # integration_spectral_weight()
     # normalisation_test_calc_fractions()
-    normalisation_plotting()
+    # normalisation_plotting()
+    test_einsum_two_random_arrays()

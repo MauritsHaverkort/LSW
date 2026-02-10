@@ -13,6 +13,7 @@ temp.py
 storage.py
 outputs_interesting/
 texts/
+intermediate_arrays/
 
 # Ignore all .dat files
 *.npz
