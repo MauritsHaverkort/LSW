@@ -538,12 +538,12 @@ def NiO(config:Config ,J=1,a=1, alignement=0):
 
 def RNiO_3(config:Config ,J_1=6.3/2,J_2=4.1, J_4=8.3,
            anisotropy_K = -1.3 #being along this axis is energetically favorable
-           , a=1, S1=1/2*(1-0.4), S2=1/2*(1+0.4), alignement=0):
+           , a=1, S1=1/2*(1-0.4), S2=1/2*(1+0.4), add_all_domains = False, T_domain_idx = 0, lattice_constant=3.8e-10):
     
     spin_direction_crystallographic_lv = np.array([1,1,1])#np.array([0.9,0,1.1])
     S_domains = [spin_direction_crystallographic_lv]
     # alignements = [np.array([1, 1, -2])]
-    T_domains = [np.array([1, 1, 1]), np.array([-1, 1, 1]), np.array([1, -1, 1]), np.array([-1, -1, 1])]
+    # T_domains = [np.array([1, 1, 1]), np.array([-1, 1, 1]), np.array([1, -1, 1]), np.array([-1, -1, 1])]
     #domain 1,1,1
     A,B,C = np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])
     #TODO: make this nicer and more general
@@ -552,28 +552,27 @@ def RNiO_3(config:Config ,J_1=6.3/2,J_2=4.1, J_4=8.3,
     lv = [A-B, A-C,4*C]
     crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]   
 
-    config.Gamma = 0.2
     
-    M = np.array(lv) #transformation from euclidean to lattice vector basis (A1 A2 A3) = (a1 a2 a3)T (a being the euclidean vectors)
-    # la.inv(M.T)
+    S_domains = np.einsum("ij,vj->vi", rotation.rot_vec(T_domain_idx*1/2*np.pi, crystallographic_lv[2]), np.array(S_domains)) #roate S-domain vectors by 90 degrees around the z-axis to get the four different T domains
+    
+    lv = np.einsum("ij,vj->vi", rotation.rot_vec(T_domain_idx*1/2*np.pi, crystallographic_lv[2]), np.array(lv)) #roate lattice vectors by 90 degrees around the z-axis to get the four different T domains
+    
     normal_vector = np.array([0,1,-1])
     rot = rotation.rotation_matrix_from_axis_angle(normal_vector, np.pi/2)
     
     tau = np.array([0, 0, 0])  # commensurate
     material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"RNiO3_attempt_1",
-                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
+                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv, lattice_constant=lattice_constant)
     X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)#the absolute X,Y,Z vectors in lattice units
     spin_directions = [spin_direction_crystallographic_lv, rot@spin_direction_crystallographic_lv, rot@rot@spin_direction_crystallographic_lv, rot@rot@rot@spin_direction_crystallographic_lv]
     # spin_directions = material.transform_from_cryst_basis_to_lv_basis(np.array(spin_directions), reciprocal=False, transform_coefficients=True, backtranform=False)
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
     atoms = [
-  
         Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_directions[0]),
         Atom(position=Z, type=1, S=S2, spin_dir=spin_directions[1]), #[1,0,0] in absolute coords
         Atom(position=2*Z, type=2, S=S1, spin_dir=spin_directions[2]),
         Atom(position=3*Z, type=3, S=S2, spin_dir=spin_directions[3])
-        
     ]
    
     J_values = [J_1, J_2,0, J_4]
@@ -611,6 +610,13 @@ def RNiO_3(config:Config ,J_1=6.3/2,J_2=4.1, J_4=8.3,
     
     #1/4 to match the paper --> here they vary q up to the magnetic ordering vector (1/4,1/4,1/4) in crystallographic basis
     material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/4*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
+    if add_all_domains: #only the material of the first domain should have all other domains added
+        assert False, "not working yet anisotropy terms are not correctly rotated to the other domains"
+        material.add_additional_domain_material([
+                    RNiO_3(config, J_1, J_2, J_4, anisotropy_K, a, S1, S2, add_all_domains=False, T_domain_idx=1, lattice_constant=lattice_constant),
+                    RNiO_3(config, J_1, J_2, J_4, anisotropy_K, a, S1, S2, add_all_domains=False, T_domain_idx=2, lattice_constant=lattice_constant),
+                    RNiO_3(config, J_1, J_2, J_4, anisotropy_K, a, S1, S2, add_all_domains=False, T_domain_idx=3, lattice_constant=lattice_constant),
+                ])  
 # for c in combinations[0]:
 #     a1,u1,a2,u2 = c
 #     print(np.array(lv).T@(a1.position+u1))

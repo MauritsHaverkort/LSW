@@ -146,7 +146,7 @@ def call_main_with_material_config():
             
             #NiO with NN and NNN
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
-            Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
+            # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
             
@@ -156,7 +156,7 @@ def call_main_with_material_config():
             # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #Nickelates
-            # Examples.RNiO_3(config)
+            Examples.RNiO_3(config)
             
             # AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
@@ -2703,7 +2703,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                           q_grid_points_crystal_momentum,
                         relative_grid_points_cryst_basis,
                         relative_grid_points_lv_basis,
-                        alpha, two_theta, phi, alpha_exp,
+                        alpha, two_theta, phi,
                         debug_time_duration,
                         phase_factor_along_path,
                         sqw_2_along_path, sqw_4_along_path,
@@ -2731,7 +2731,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                           q_grid_points_crystal_momentum,
                          relative_grid_points_cryst_basis,
                          relative_grid_points_lv_basis,
-                        alpha, two_theta, phi, alpha_exp,
+                        alpha, two_theta, phi,
                         debug_time_duration,
                         phase_factor_along_path,
                         sqw_2_along_path, sqw_4_along_path,

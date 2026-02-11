@@ -1749,6 +1749,7 @@ def interpolated_path_from_relative_points(relative_grid_points:np.ndarray, step
     return path_coords
 
 def from_q_points_to_angles(q_points):
+    assert False, "doesnt work since the three angles can only move around the unit sphere... so not all w-values are accessible"
     phi = []
     alpha = []
     theta = []
@@ -1758,8 +1759,8 @@ def from_q_points_to_angles(q_points):
                   sp.Eq(q[1], sp.cos(p) * ((sp.cos(a) - sp.cos(2*t - a)))),
                   sp.Eq(q[2], -sp.sin(a) - sp.sin(2*t - a))], (p, t, a))
         phi.append(sol[0][0])        
-        alpha.append(sol[0][1])
-        theta.append(sol[0][2])
+        alpha.append(sol[0][2])
+        theta.append(sol[0][1])
     return np.array(phi), np.array(alpha), np.array(theta)
     
 
