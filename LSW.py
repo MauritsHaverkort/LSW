@@ -1828,17 +1828,16 @@ def calculate_sqw_spectra(
 
         len_sym_classes = len(material.coeff_equiv_classes_tioju_2)
         shape_w_k = material.sqw_2_ad_a_equiv_class.shape[1:]
-        convoluted_grids_equivalence_classes = []
+        convoluted_grids_equivalence_classes = np.empty(
+            (len_sym_classes, len_sym_classes, 2*shape_w_k[0], *shape_w_k[1:]), dtype=np.complex128) #convoluted result will have double the energy dimension
         for s1 in range(material.coeff_equiv_classes_tioju_2.shape[0]):
-            convoluted_grids_equivalence_classes.append([])
             for s2 in range(material.coeff_equiv_classes_tioju_2.shape[0]):
-                convoluted_grids_equivalence_classes[-1].append(
-                    functions.convolute_grids_fft(
+                convoluted_grids_equivalence_classes[s1,s2] = functions.convolute_grids_fft(
                         material.sqw_2_ad_a_equiv_class[s1],
                         material.sqw_2_ad_a_equiv_class[s2],
                         dimension=material.dimension,
                     )
-                )
+                
 
         norm = (
             (np.max(w_values) - np.min(w_values))
@@ -2027,36 +2026,24 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
    
     # experimental_compute_non_squared_use_commutative = False,
     filename="NiO2atomsK24_28_11",
-    alpha_exp=np.array([20, 45, 70, 95, 120]) * 2 * np.pi / 360,  # angle of incidence
-    two_theta=np.array([150]) * 2 * np.pi / 360,  # scattering angle
-    phi=np.array([0]),
-    lattice_constant=4.17e-10,  # lattice constant in m
+    
+    
     hbar=6.582e-16,  # hbar in eV*s
     c=2.992792e8,  # c in m/s
     offset_energy=855,  # offset energy in eV of the prefactor dataset (defined in plot_script.py in quanty_win directory)
 ):
     """plan is to compute the experimental setup RIXS for all values of alpha, theta and phi, (in radians) incoming energy (eV) wished, lattice constant (m)"""
 
-    amount_steps_through_k_space = 500
+    lattice_constant = material.lattice_constant
     
-    alpha = (
-        np.linspace(0, 1, amount_steps_through_k_space) * np.pi
-    )  # smooth incident angle from 0 to 180 degrees
-
-    # for azimuthal dependence
-    phi = (
-        np.linspace(-180, 165, amount_steps_through_k_space) / 360 * 2 * np.pi
-    )  # smooth phi from -180 to 165 degrees
     
-    # 120° and first satellite peak
-    alpha = np.array([alpha_exp[-1]])
-    v_index = 21 
+    alpha=config.rixs_config.alpha  # angle of incidence
+    two_theta=config.rixs_config.two_theta  # scattering angle
+    phi=config.rixs_config.phi  # azimuthal angle
     
-    #20° and main peak
-    alpha = np.array([alpha_exp[0]])
-    v_index = 10
     
-    prefactor_domain = slice(300,1800,10) #(start 300) 400 main peak, 500-600 first satellite peak, satellite peaks slice(1500,1800,10) 1600 / 1710
+    
+    # prefactor_domain = slice(300,1800,10) #(start 300) 400 main peak, 500-600 first satellite peak, satellite peaks slice(1500,1800,10) 1600 / 1710
 
     # alpha = alpha_exp
 
@@ -2113,21 +2100,26 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     a1g, eg, t1u, t2g = sp.symbols("a1g eg t1u t2g")
     prefactor_list = [a1g, eg, t1u, t2g]
 
-    def load_fundamental_xray_absorption_spectra(slice = prefactor_domain): 
+    def load_fundamental_xray_absorption_spectra(incident_energies, energy_debug_plots): 
         """load the fundamental xray absorption spectra prefactors from file and return w_in and prefactor_dict_all_w"""
         
         # Now substitute the prefactors by their correct values
         input_filename = "prefactors_results.dat"
         loaded_data_orig = pd.read_csv(input_filename, sep="\t")
-
+        
+        w_in = np.array(loaded_data_orig["Energy"]) + offset_energy
+        indices_to_load = []
+        for e in incident_energies:
+            indices_to_load.append(np.argmin(np.abs(w_in - e)))
+        
         # compress data for faster computation
         loaded_data = {}
         for key in loaded_data_orig.keys():
-            loaded_data[key] = np.array(loaded_data_orig[key])[slice]  # 500:1000:30
+            loaded_data[key] = np.array(loaded_data_orig[key])[indices_to_load]  # 500:1000:30
 
         # getting the prefactors a1g, eg, t1u, t2g for the given w_in-----------------------------------------------------------------------
 
-        w_in = np.array(loaded_data["Energy"]) + offset_energy
+        w_in = np.array(loaded_data["Energy"]) + offset_energy #load energy again only the slice we want to look at
         prefactor_dict_all_w = {
             "a1g": np.array(loaded_data["Re a1g"])
             + 1j * np.array(loaded_data["Im a1g"]),
@@ -2137,10 +2129,10 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             "t2g": np.array(loaded_data["Re t2g"])
             + 1j * np.array(loaded_data["Im t2g"]),
         }
-        
-        return w_in, prefactor_dict_all_w
+        idx_energy_debug_plots = np.argmin(np.abs(w_in - energy_debug_plots))
+        return w_in, prefactor_dict_all_w, idx_energy_debug_plots
     
-    w_in, prefactor_dict_all_w = load_fundamental_xray_absorption_spectra()
+    w_in, prefactor_dict_all_w, idx_energy_debug_plots = load_fundamental_xray_absorption_spectra(config.rixs_config.incident_energies, config.rixs_config.energy_for_debug_plots)
     
     
     config.debug_timer.print_difference(
@@ -2699,7 +2691,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     config.debug_timer.print_difference(
         f"done calculating RIXS spectrum", debug_time_duration
     )
-    config.warnings.add(f"w_in {w_in[v_index]}, v_shape {shape_v_angles}, alpha: {alpha[0:3,0,0]*360/(2*np.pi)}, two_theta: {two_theta[0,0:3,0]*360/(2*np.pi)}, phi: {phi[0,0,0:3]*360/(2*np.pi)}")
+    config.warnings.add(f"w_in {w_in[idx_energy_debug_plots]}, v_shape {shape_v_angles}, alpha: {alpha[0:3,0,0]*360/(2*np.pi)}, two_theta: {two_theta[0,0:3,0]*360/(2*np.pi)}, phi: {phi[0,0,0:3]*360/(2*np.pi)}")
     # ---------------------------- call the plot function with all intermediate important results ---------------------------- 
     if do_plotting:
         plotting_rixs_spectra(material, config,
@@ -2718,7 +2710,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                         spectrum_2_coeff, spectrum_4_coeff,
                         S_op_list,
                         prefactor_dict_all_w,
-                        v_index,
+                        idx_energy_debug_plots,
                         RIXS_config,
                         VALUES_TO_SAVE)
         

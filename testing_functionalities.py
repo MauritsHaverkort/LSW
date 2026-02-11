@@ -797,6 +797,13 @@ def test_einsum_two_random_arrays(
     return out_np, out_oe
 
 
+def test_finding_angles_for_q():
+    q = np.array([1, 1, 1])
+    phi, alpha, theta = functions.from_q_points_to_angles(q_points= np.array([a*q for a in np.linspace(0, 1, 100)]))
+    print("")
+
+
+
 
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
@@ -820,4 +827,5 @@ if __name__ == "__main__":
     # integration_spectral_weight()
     # normalisation_test_calc_fractions()
     # normalisation_plotting()
-    test_einsum_two_random_arrays()
+    # test_einsum_two_random_arrays()
+    test_finding_angles_for_q()

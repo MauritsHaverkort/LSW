@@ -17,6 +17,7 @@ from scipy.signal import fftconvolve
 import scipy as scipy
 from scipy.ndimage import gaussian_filter1d
 from funtions import np
+import sympy as sp
 
 #plot fonts control
 import matplotlib as mpl
@@ -1746,6 +1747,21 @@ def interpolated_path_from_relative_points(relative_grid_points:np.ndarray, step
             all_rel[:, 2] * (nz - 1),
         ])
     return path_coords
+
+def from_q_points_to_angles(q_points):
+    phi = []
+    alpha = []
+    theta = []
+    p,t,a = sp.symbols("p t a")
+    for q in q_points:
+        sol = sp.solve([sp.Eq(q[0], sp.sin(p) * ((sp.cos(a) - sp.cos(2*t - a)))),
+                  sp.Eq(q[1], sp.cos(p) * ((sp.cos(a) - sp.cos(2*t - a)))),
+                  sp.Eq(q[2], -sp.sin(a) - sp.sin(2*t - a))], (p, t, a))
+        phi.append(sol[0][0])        
+        alpha.append(sol[0][1])
+        theta.append(sol[0][2])
+    return np.array(phi), np.array(alpha), np.array(theta)
+    
 
 def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps, make_periodic=True, config:Config=None):
     from scipy.interpolate import RegularGridInterpolator

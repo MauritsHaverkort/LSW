@@ -29,12 +29,16 @@ class Material:
         S_domains: List[np.ndarray] = [],
         crystallographic_lv: np.ndarray = [],
         additional_domain_materials: List["Material"] = [],
+        lattice_constant = 1.0, #lattice constant in m
     ):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
 
         Atom.initialize_atom_index()  # Reset atom index to 0
 
+        self.lattice_constant = lattice_constant
+        if lattice_constant == 1:
+            config.warnings.add("Lattice vectors set to 1m, which is not physical")
         self.atoms: List[List[Atom]] = atoms  # List to store atoms
         self.bonds: List[Bond] = bonds  # List to store bonds
         self.tau = tau

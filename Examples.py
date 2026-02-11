@@ -68,7 +68,7 @@ def General_D_FM_AFM_simple_cubic_J1_J2(config:Config,J1, J2 ,a1, a, S1, S2, d=3
     return material
 # adding bonds to my code
 
-def NiO_supercell(config: Config, J=1, a=1):
+def NiO_supercell(config: Config, J=1, a=1, lattice_constant=4.17e-10):
     # if alignement == 0:
     #     spin_dir = np.array([1, -2, 1])
         
@@ -90,7 +90,7 @@ def NiO_supercell(config: Config, J=1, a=1):
     
     return DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=J, a=a, S1=1, S2=-1, spin_dir=np.array([0,0,1]), alignements=alignements)
 
-def NiO_2_atom_cell(config:Config ,J=12,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,1])):
+def NiO_2_atom_cell(config:Config ,J=12,a=1, S1=1, S2=-1, spin_dir=np.array([0,0,1]), lattice_constant=4.17e-10):
     alignements = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
     # alignements = [np.array([1, 1, -2])]
     
@@ -106,7 +106,7 @@ def NiO_2_atom_cell(config:Config ,J=12,a=1, S1=1, S2=-1, spin_dir=np.array([0,0
     
     tau = np.array([0, 0, 0])  # commensurate
     material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name="NiO 2 atom cell",
-                        extension=1, S_domains=alignements , crystallographic_lv=crystallographic_lv)
+                        extension=1, S_domains=alignements , crystallographic_lv=crystallographic_lv, lattice_constant=lattice_constant)
 
     # Create atoms with specific bonds
     atoms: List["Atom"] = []
@@ -170,7 +170,7 @@ def NiO_2_atom_cell(config:Config ,J=12,a=1, S1=1, S2=-1, spin_dir=np.array([0,0
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1])):
+def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), lattice_constant=4.17e-10):
     S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2])]
     # alignements = [np.array([1, 1, -2])]
     T_domains = [np.array([1, 1, 1]), np.array([1, 1, -1]), np.array([1, -1, 1]), np.array([-1, 1, 1])]
@@ -275,7 +275,7 @@ def NiO_2NNN_6NN_atom_cell_NN_and_NNN(config:Config ,J_NN=0,J_super_exchange=1,a
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = ""):
+def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = "", lattice_constant=4.17e-10):
     #J_NN=-2.3,J_super_exchange=12,
     #J_NN=-1.4,J_super_exchange=19,
     
@@ -320,7 +320,7 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     
     tau = np.array([0, 0, 0])  # commensurate
     material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"NiO 2 atom cell NN_NNN T_domain_{T_domain_idx}_{title_suffix}",
-                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
+                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv, lattice_constant=lattice_constant)
     X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)#the absolute X,Y,Z vectors in lattice units
     
     # Create atoms with specific bonds
@@ -385,7 +385,7 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = ""):
+def NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = "", lattice_constant=4.17e-10):  # lattice constant in m
     #J_NN=-2.3,J_super_exchange=12,
     #J_NN=-1.4,J_super_exchange=19,
     
@@ -430,7 +430,7 @@ def NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config:Config ,J_NN=-1.4,J_super
     
     tau = np.array([0, 0, 0])  # commensurate
     material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"NiO 2 atom cell NN_NNN T_domain_{T_domain_idx}_{title_suffix}",
-                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv)
+                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv, lattice_constant=lattice_constant)
     X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)#the absolute X,Y,Z vectors in lattice units
     
     # Create atoms with specific bonds
