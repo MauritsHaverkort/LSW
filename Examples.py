@@ -586,7 +586,7 @@ def RNiO_3(config:Config ,J_1=6.3/2,J_2=4.1, J_4=8.3,
             assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
             bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j_value))
     
-    easy_axis_list = [np.array([1,1,1]),np.array([1,-1,-1])]
+    easy_axis_list = [np.array([1,1,1]),np.array([2,-1,-1])]
     #second one is the directions of the sublattice B spin_direction#[np.array([1,1,1]),np.array([-1,1,1]),np.array([1,-1,1]),np.array([1,1,-1])]
     # for easy_axis in easy_axis_list:
     #     anisotropy_tensor = anisotropy_K * np.einsum('i,j->ij', easy_axis, easy_axis)/np.linalg.norm(easy_axis)**2 #easy axis * easy_axis^T normalized
@@ -601,6 +601,7 @@ def RNiO_3(config:Config ,J_1=6.3/2,J_2=4.1, J_4=8.3,
     
     
     material.transform_from_cryst_basis_to_lv_basis(lv[0], False, True)
+    # material.transform_from_cryst_basis_to_lv_basis(easy_axis_list[1], reciprocal=False, transform_coefficients=True, backtranform=False)
     
     material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
     
@@ -624,7 +625,7 @@ def RNiO_3(config:Config ,J_1=6.3/2,J_2=4.1, J_4=8.3,
 #     print(a1.position+u1)
 #     print(a2.position+u2)
 #     print("")
-    # all_atoms.append(atoms[0])
+#     all_atoms.append(atoms[0])
     
     return material
 

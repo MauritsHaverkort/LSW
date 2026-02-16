@@ -1647,7 +1647,7 @@ def plot_BZ_from_lv(ax, reciprocal_vectors, color='lightgreen', starting_depth=3
             if include_negative:
                 plot_from_origin(origin - vec, depth - 1)
     plot_from_origin(origin, depth=starting_depth)
-def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None, axis_labels=("kx", "ky", "kz"), view_elev=20, view_azim=45, view_roll=0):
+def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_path=None, fig=None, ax=None, axis_labels=("kx", "ky", "kz"), view_elev=20, view_azim=45, view_roll=0, origins=None):
             """
             Plots any number of vectors in a 3D space.
 
@@ -1663,12 +1663,12 @@ def plot_vectors_3d(vectors, colors=None, labels=None, title="3D Vectors", save_
             ax = ax or fig.add_subplot(111, projection='3d')
             ax.set_title(title)
 
-            origin = np.zeros(3)  # Origin point for all vectors
+            origins = [np.zeros(3)]*len(vectors) if origins is None else origins  # Origin point for all vectors
             colors = colors or ['b'] * len(vectors)
             labels = labels or [f"Vector {i+1}" for i in range(len(vectors))]
 
-            for vector, color, label in zip(vectors, colors, labels):
-                ax.quiver(*origin, *vector, color=color, label=label)
+            for origin_point, vector, color, label in zip(origins, vectors, colors, labels):
+                ax.quiver(*origin_point, *vector, color=color, label=label)
 
             max_len = max(np.linalg.norm(v) for v in vectors)
             ax.set_xlim([-max_len, max_len])

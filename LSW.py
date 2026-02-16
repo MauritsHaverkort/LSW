@@ -4110,7 +4110,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     xlabel=title_x,
                     ylabel=title_y,
                     gaussian_filter_along_w=True,
-                )
+                ),
+                # comparison of two magnon to one magnon contribution of prefactor
+                plot_mean_rixs_2_to_rixs_4_ratio_vs_w_in()
             ]
         figs = [
             fig for fig in figs if fig is not None

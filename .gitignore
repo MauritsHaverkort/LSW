@@ -11,6 +11,7 @@ Configurations.py
 debug_timing_log.txt
 temp.py
 storage.py
+plot_results.py
 outputs_interesting/
 texts/
 intermediate_arrays/

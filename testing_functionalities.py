@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from typing import List  # Import List for type hints
+import Examples
 import funtions as functions
 from funtions import *
 import einsum_RAM as einsum_RAM
@@ -802,8 +803,124 @@ def test_finding_angles_for_q():
     phi, alpha, theta = functions.from_q_points_to_angles(q_points= np.array([a*q for a in np.linspace(0, 1, 100)]))
     print("")
 
+def derive_classical_energy():
+    import sympy as sp
+    import Examples
+    import Configurations
 
+    material = Examples.RNiO_3(config=Configurations.config_experimental())
+    N = material.N
 
+    # spin components
+    Sx = sp.symbols(f"Sx0:{N}", real=True)
+    Sy = sp.symbols(f"Sy0:{N}", real=True)
+    Sz = sp.symbols(f"Sz0:{N}", real=True)
+
+    # Lagrange multipliers to enforce |S_i|^2 = const
+    lam = sp.symbols(f"lam0:{N}", real=True)
+
+    # (choose your spin length; or make it site-dependent)
+    S0 = sp.Symbol("S0", positive=True, real=True)
+    S0 = 1
+    E = 0
+    for bond in material.bonds:
+        i, j = bond.atom0.index, bond.atom1.index
+        J = sp.Matrix(bond.j)  # 3x3 numeric -> sympy matrix
+
+        Si = sp.Matrix([Sx[i], Sy[i], Sz[i]])
+        Sj = sp.Matrix([Sx[j], Sy[j], Sz[j]])
+
+        # full bilinear form Si^T J Sj
+        E += (Si.T * J * Sj)[0]
+
+    # Lagrangian: E + sum_i lam_i (|S_i|^2 - S0^2)
+    L = E + sum(lam[i] * (Sx[i]**2 + Sy[i]**2 + Sz[i]**2 - S0**2) for i in range(N))
+
+    # stationarity equations
+    eqs = []
+    for i in range(N):
+        eqs += [sp.diff(L, Sx[i]), sp.diff(L, Sy[i]), sp.diff(L, Sz[i])]
+        eqs += [sp.diff(L, lam[i])]  # the constraint itself
+
+    vars_ = list(Sx) + list(Sy) + list(Sz) + list(lam)
+
+    sol = sp.solve(eqs, vars_, dict=True, simplify=True)
+    return sol
+
+import numpy as np
+from scipy.optimize import minimize
+
+def spins_from_angles(x, N, S=1.0):
+    """
+    x = [theta0..thetaN-1, phi0..phiN-1]
+    returns array Svec shape (N,3) with |S_i|=S
+    """
+    theta = x[:N]
+    phi   = x[N:2*N]
+    st = np.sin(theta)
+    return np.einsum("i,ij->ij",S ,np.column_stack([st*np.cos(phi), st*np.sin(phi), np.cos(theta)]))
+
+def angles_from_spins(Svec):
+    """
+    Svec shape (N,3)
+    returns x = [theta0..thetaN-1, phi0..phiN-1]
+    """
+    Sx, Sy, Sz = Svec[:,0], Svec[:,1], Svec[:,2]
+    theta = np.arccos(Sz/np.linalg.norm(Svec, axis=1))
+    phi   = np.arctan2(Sy, Sx)
+    return np.concatenate([theta, phi])
+
+def classical_energy(material, Svec):
+    """
+    E = sum_{bonds} S_i^T J_ij S_j
+    material.bonds: bond.atom0.index, bond.atom1.index, bond.j (3x3)
+    """
+    E = 0.0
+    for bond in material.bonds:
+        i, j = bond.atom0.index, bond.atom1.index
+        J = np.asarray(bond.j, dtype=float)
+        E += Svec[i] @ J @ Svec[j]
+    return E
+
+def minimize_classical_energy(material, S=1.0, x0=None, seed=0):
+    N = material.N
+    rng = np.random.default_rng(seed)
+    S = np.array([material.atoms[i][0].S for i in range(N)], dtype=float)
+    if x0 is None:
+        # random initial angles
+        theta0 = np.arccos(rng.uniform(-1, 1, size=N))     # theta in [0,pi]
+        phi0   = rng.uniform(-np.pi, np.pi, size=N)        # phi in [-pi,pi]
+        x0 = np.concatenate([theta0, phi0])
+    # steps = 10
+    # x_grid = np.array([[np.linspace(0, np.pi, 10), np.linspace(-np.pi, np.pi, 10)] for _ in range(N)]).reshape(2*N, steps)
+    # axes  = [x_grid[i] for i in range(2*N)]
+    # X = np.meshgrid(*axes, indexing="ij")
+    def obj(x):
+        Svec = spins_from_angles(x, N, S=S)
+        return classical_energy(material, Svec)
+
+    # L-BFGS-B handles bounds well; put theta in [0,pi], phi in [-pi,pi]
+    bounds = [(0.0, np.pi)] * N + [(-np.pi, np.pi)] * N
+    
+    res = minimize(obj, x0, method="L-BFGS-B", bounds=bounds)
+    min_energy_from_expected_configuration = obj(angles_from_spins(np.array([material.atoms[i][0].spin_dir for i in range(N)])))
+    print(f"Minimized energy: {res.fun:.6f}, from expected config: {min_energy_from_expected_configuration:.6f}")
+    Sopt = spins_from_angles(res.x, N, S=S)
+    return res.fun, Sopt, res
+
+def run_over_seeds_minimise_energies(material:Material):
+    best = None
+    N=material.N
+    for seed in range(30):
+        E, Sopt, res = minimize_classical_energy(material, seed=seed)
+        if best is None or E < best[0]:
+            best = (E, Sopt, res)
+    
+    
+    Ebest, Sbest, resbest = best
+    functions.plot_vectors_3d(Sbest, title="Optimized Spin Configuration", colors=["r", "g", "b", "c", "m", "y", "k"][:N], origins=np.array([np.array([0,0,0.2])* _ for _ in range(N)]))
+    print(f"Best energy found: {Ebest:.6f}")
+    plt.show()
 
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
@@ -828,4 +945,7 @@ if __name__ == "__main__":
     # normalisation_test_calc_fractions()
     # normalisation_plotting()
     # test_einsum_two_random_arrays()
-    test_finding_angles_for_q()
+    # test_finding_angles_for_q()
+    # derive_classical_energy()
+    run_over_seeds_minimise_energies(material = Examples.RNiO_3(config=Configurations.config_experimental(), anisotropy_K=-1.3, J_1 = 3.15,))
+    # minimize_classical_energy(material = Examples.NiO_2_atom_cell_NN_and_NNN(config=Configurations.config_experimental()))
