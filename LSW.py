@@ -2743,16 +2743,14 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         VALUES_TO_SAVE):
     """this function defines all subplot routines for plotting the RIXS spectra, then it defines which are called"""
     #plot config
-    draw_sym_class_a_ad = False
-    # draw_sym_class_a_ad = True
-    
-    draw_xyz_spectra = False
-    draw_xyz_spectra = True
-    
-    draw_energies_3D = False
+    draw_sym_class_a_ad = config.rixs_config.draw_sym_class_a_ad
+
+    draw_xyz_spectra = config.rixs_config.draw_xyz_spectra
+
+    draw_energies_3D = config.rixs_config.draw_energies_3D
     # draw_energies_3D = True
     
-    draw_total_sigma_prefactor_contributions = False
+    draw_total_sigma_prefactor_contributions = config.rixs_config.draw_total_sigma_prefactor_contributions
     # draw_total_sigma_prefactor_contributions = True
     
     
