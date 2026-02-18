@@ -305,14 +305,19 @@ class Material:
             # inverse positions
             r1 = bonds[i].unit_cell_of_atom_0
             r0 = bonds[i].unit_cell_of_atom_1
-
+            
+            #check if self interaction
+            if atom0 == atom1 and np.all(r0 == r1):
+                continue # skip adding reverse pair for self interaction
             # -------- treat the symmetric and anti-symmetric parts separately --------
             # TODO: understand how this works (just copied from the comparison project)
+            # 
             j_mat = bonds[i].j
             j_mat_T = np.transpose(j_mat)
             j_mat_sym = (j_mat + j_mat_T) / 2
             j_mat_asym = (j_mat - j_mat_T) / 2
-            j = j_mat_sym - j_mat_asym
+            j = j_mat_sym - j_mat_asym #=j_mat_ji^T(-d)
+            
             # --------------------------------------------------------------------------
             bonds.append(Bond(self, atom0, atom1, r0, r1, j))
         self.bonds = bonds

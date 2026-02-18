@@ -947,5 +947,5 @@ if __name__ == "__main__":
     # test_einsum_two_random_arrays()
     # test_finding_angles_for_q()
     # derive_classical_energy()
-    run_over_seeds_minimise_energies(material = Examples.RNiO_3(config=Configurations.config_experimental(), anisotropy_K=-1.3, J_1 = 3.15,))
+    run_over_seeds_minimise_energies(material = Examples.RNiO_3(config=Configurations.config_experimental()))
     # minimize_classical_energy(material = Examples.NiO_2_atom_cell_NN_and_NNN(config=Configurations.config_experimental()))

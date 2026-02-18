@@ -145,7 +145,7 @@ def call_main_with_material_config():
             # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             
             #NiO with NN and NNN
-            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
@@ -156,7 +156,7 @@ def call_main_with_material_config():
             # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #Nickelates
-            Examples.RNiO_3(config)
+            # Examples.RNiO_3(config, anisotropy_K=-50)
             
             # AFM sc
             # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
@@ -319,7 +319,7 @@ def main(
             )
 
             config.debug_timer.print_difference(
-                "done with computing sqw_4 and sqw_2", config.debug_timing
+                "done with calculate_sqw_spectra", config.debug_timing
             )
         
         # calculate RIXS spectrum for all domains (as materials) but without plotting
@@ -539,7 +539,8 @@ def general_Hamiltonian(
     assert np.allclose(
         H, herm_conj(H, (-1, -2)), atol=1e-8
     ), "The Hamiltonian is not hermitian!"
-
+    #check positve definiteness of the Hamiltonian
+    
     # print(H)
 
     # if config.plots_to_show_print["Hamiltonian_parts_plot"][0] and len(k_.shape)>2: #securing this this is not just one slice but the grid calculations
@@ -618,8 +619,21 @@ def diagonalising_Hamiltonian(config, H, shape_k_parts, N, use_eigvecs_correctio
     momentum_shape = H.shape[:-2]  # handles (kx,), (kx, ky), or (kx, ky, kz)
 
     # solving the Hamiltonian
+    with open ("debug_additional_output.txt", "a") as f:
+                f.write(
+                    f"The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue\n"
+                )
     for k_index in np.ndindex(momentum_shape):
         H_ = H[*k_index, :, :]
+        temp_eigvals = np.linalg.eigvalsh(H_)
+        if temp_eigvals[0] < -1e-8:
+            config.warnings.add(
+                f"The Hamiltonian is not positive semi-definite at some k-index {k_index}!"
+            )
+            with open ("debug_additional_output.txt", "a") as f:
+                f.write(
+                    f"{k_index}: {temp_eigvals[0]}\n"
+                )
         eigvals, eigvecs = Bogoliubov_diagonalisation_and_normalisation(
             config, H_, N, Gamma, use_eigvecs_correction=use_eigvecs_correction
         )
@@ -1230,30 +1244,16 @@ def sqw_prime_from_a_ad_to_xyz(
 
 
 def flip_sqw_prime_ad_a(sqw_prime_a_ad, order_of_operator, material, config):
-    if order_of_operator == 2:
-        # config.warnings.add("!!!flipping the sqw coefficients or swq'")
-        # sqw_xyz_coeff_of_ad_a = material.transform_basis_i_order_i_to_n1_n2(sqw_xyz_coeff_of_ad_a, 2)
-        # sqw_xyz_coeff_of_ad_a_swapped = sqw_xyz_coeff_of_ad_a.copy()
-        # for i in range(2*material.N):
-        #     sqw_xyz_coeff_of_ad_a_swapped[:,:,i,:]=sqw_xyz_coeff_of_ad_a[:,:,(i+(material.N))%(2*material.N),:]
-        #     print((i+(material.N))%(2*material.N))
-        # sqw_xyz_coeff_of_ad_a = material.transform_basis_i_order_i_to_n1_n2(sqw_xyz_coeff_of_ad_a_swapped, 2 , backtransform=True)
-        # #sqw_xyz_coeff_of_ad_a = sqw_xyz_coeff_of_ad_a_swapped
-
-        # flipping the sqw' instead of the coefficients
-
-        # sqw_prime_a_ad = material.transform_basis_i_order_i_to_n1_n2(sqw_prime_a_ad, 1)
-        sqw_prime_a_ad_temp_swapped = sqw_prime_a_ad.copy()
-        for i in range(2 * material.N):
-            sqw_prime_a_ad_temp_swapped[:, i] = sqw_prime_a_ad[
-                :, (i + (material.N)) % (2 * material.N)
-            ]
-            # print((i+(material.N))%(2*material.N))
-        # sqw_prime_a_ad = material.transform_basis_i_order_i_to_n1_n2(sqw_prime_a_ad_temp_swapped, 1 , backtransform=True)
-    else:
-        assert False, "flipping only implemented for order_of_operator=2"
-    return sqw_prime_a_ad_temp_swapped
-
+    assert order_of_operator == 2, "flipping only implemented for order_of_operator=2"
+    
+    # sqw_prime_a_ad_temp_swapped = sqw_prime_a_ad.copy()
+    # for i in range(2 * material.N):
+    #     sqw_prime_a_ad_temp_swapped[:, i] = sqw_prime_a_ad[
+    #         :, (i + (material.N)) % (2 * material.N)
+    #     ]
+    #checked equivalent to np.roll below
+    
+    return np.roll(sqw_prime_a_ad, shift=material.N, axis= 1)
 
 def calc_H_T_w_on_grid(
     config: Config,
@@ -1767,24 +1767,24 @@ def calculate_sqw_spectra(
         material=material,
         config=config,
     )
+  
+
 
     # constructing my four particle dependent Sqw'
-    residues_prime_4_ad_a = np.zeros(
-        (
-            config.amount_tau_values,
-            material.N,
-            4,
-            material.N,
-            4,
-            2 * config.amount_w_values,
-            *k_shape,
-        ),
-        dtype=config.dtype_complex,
-    )
+    # residues_prime_4_ad_a = np.zeros(
+    #     (
+    #         config.amount_tau_values,
+    #         material.N,
+    #         4,
+    #         material.N,
+    #         4,
+    #         2 * config.amount_w_values,
+    #         *k_shape,
+    #     ),
+    #     dtype=config.dtype_complex,
+    # )
     
-    config.debug_timer.print_difference(
-        "done constructing sqw'_ad_a", config.debug_timing
-    )
+    
 
     # I am only calculating here all the convolutions that might be needed later so all convolutions from any i factor of a_i (a^+_i) to a_j (a^+_j)
     orders_ad_a = material.return_order_of_a_ad_operator_indices(
@@ -1943,12 +1943,18 @@ def calculate_sqw_spectra(
     material = material,
     config = config,
     ) 
+    config.debug_timer.print_difference(
+        "done a ad to xyz to HP", config.debug_timing
+    )
     
     sqw_prime_from_a_ad_to_xyz(
     sqw_prime_a_ad= None,
     order_of_a_operator=4,
     material = material,
     config = config,
+    )
+    config.debug_timer.print_difference(
+        "done a ad to xyz four HP", config.debug_timing
     )
     
 
@@ -2192,7 +2198,9 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
 
         # just for plotting and debugging
         k_in = np.array(
-            [np.cos(alpha) * np.sin(phi), np.cos(alpha) * np.cos(phi), -np.sin(alpha)]
+            [np.cos(alpha) * np.sin(phi), 
+             np.cos(alpha) * np.cos(phi), 
+             -np.sin(alpha)]
         )
         k_out = np.array(
             [
@@ -2748,10 +2756,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
     draw_xyz_spectra = config.rixs_config.draw_xyz_spectra
 
     draw_energies_3D = config.rixs_config.draw_energies_3D
-    # draw_energies_3D = True
-    
+
     draw_total_sigma_prefactor_contributions = config.rixs_config.draw_total_sigma_prefactor_contributions
-    # draw_total_sigma_prefactor_contributions = True
+
     
     
     ########################################################################################################################
@@ -3681,31 +3688,35 @@ def plotting_rixs_spectra(material: Material, config: Config,
         )
         print_normalisation(config=config, sqw_2=sqw_2_xyz, sqw_4=sqw_4_xyz)
 
-    def plot_at_peak_transferred_energy():
-        plt.figure("sqw_4 at peak transferred energy")
-        for alpha in range(spectrum_4_summed_R.shape[3]):
-            spectrum_slice = spectrum_4_summed_R[0, :, :, alpha, 0, 0]
+    def plot_at_peak_transferred_energy(spectrum, plot_only_sigma_in=True, title_suffix=""):
+        
+        plt.figure(f"sqw at peak transferred energy {title_suffix}")
+        
+        assert spectrum.ndim == 6, "spectrum should have 6 dimensions p,v,w,a,b,c"
+        for alpha in range(spectrum.shape[3]):
+            spectrum_slice = spectrum[2, :, :, alpha, 0, 0] + spectrum[3, :, :, alpha, 0, 0] if plot_only_sigma_in else spectrum[:, :, :, alpha, 0, 0].sum(axis=0)
             idx_max = np.where(spectrum_slice == np.max(spectrum_slice))
             plt.plot(
-                spectrum_4_summed_R[0, :, idx_max[1], alpha, 0, 0],
+                config.rixs_config.incident_energies,
+                spectrum_slice[:, idx_max[1][0], alpha, 0, 0],
                 label=f"alpha index {alpha}",
             )
         plt.legend()
-        plt.xlabel("energy loss")
+        plt.xlabel("incident energy")
         plt.ylabel("intensity")
 
-        functions.plot_tensor_at_certain_axis(
-            material.rixs_spectrum_4, axis_to_plot_individ=1
-        )
-        spectrum_4_test = np.einsum(
-            "Rvpabcxy->pvabc", spectrum_4_coeff, optimize="optimal"
-        )
-        spectrum_2_test = np.einsum(
-            "Rvpabcx, xwvabc->pvwabc",
-            spectrum_2_coeff,
-            sqw_2_along_path,
-            optimize="optimal",
-        ).astype(config.dtype_complex)
+        # functions.plot_tensor_at_certain_axis(
+        #     material.rixs_spectrum_4, axis_to_plot_individ=1
+        # )
+        # spectrum_4_test = np.einsum(
+        #     "Rvpabcxy->pvabc", spectrum_4_coeff, optimize="optimal"
+        # )
+        # spectrum_2_test = np.einsum(
+        #     "Rvpabcx, xwvabc->pvwabc",
+        #     spectrum_2_coeff,
+        #     sqw_2_along_path,
+        #     optimize="optimal",
+        # ).astype(config.dtype_complex)
 
     def plot_spectrum_of_transferred_incident_energy(
         spectrum,
@@ -3798,39 +3809,45 @@ def plotting_rixs_spectra(material: Material, config: Config,
             "Rvpabcxy->vpabc", spectrum_4_coeff, optimize="optimal"
         )
 
-        plt.figure(
-            "sqw_4 of transferred energy normalised all sym class set to 1"
-        )
-        plt.title(
-            "sqw_4 of transferred energy normalised all sym class set to 1"
-        )
+        # plt.figure(
+        #     "sqw_4 of transferred energy normalised all sym class set to 1"
+        # )
+        
         offset = 1
         colors = plt.cm.viridis(
             np.linspace(0, 1, spectrum_4_coeff_summed_sym_class.shape[2])
         )
 
         # w_in = np.array([w_in]*spectrum_4_coeff_summed_sym_class.shape[1]).flatten()
-        for alpha_idx in range(spectrum_4_coeff_summed_sym_class.shape[2]):
-            for p in range(spectrum_4_coeff_summed_sym_class.shape[1]):
+        figs = []
+        for p in range(spectrum_4_coeff_summed_sym_class.shape[1]):
+            figs.append(plt.figure( f"sqw_4 of transferred energy normalised all sym class set to 1 pol:{p}"))
+            plt.title(
+                    f"sqw_4 of transferred energy normalised all sym class set to 1 pol:{p}"
+                )
+            for alpha_idx in range(spectrum_4_coeff_summed_sym_class.shape[2]):
+            
+               
                 data = spectrum_4_coeff_summed_sym_class[
                     :, p, alpha_idx, 0, 0
                 ].flatten()
                 data = data / np.max(data)
                 plt.plot(
                     w_in,
-                    data + v * offset,
+                    data +  offset,
                     label=f"alpha index {alpha_idx}, p index {p}",
                     color=colors[alpha_idx],
                 )
-        plt.xlabel("incident energy")
-        plt.ylabel("normalised intensity")
-        plt.legend()
+            plt.xlabel("incident energy")
+            plt.ylabel("normalised intensity")
+            plt.legend()
 
         plt.figure("q_grid_points")
         for i in range(3):
             plt.plot(q_grid_points_lv[:, i], label=f"q component {i}")
         plt.legend()
 
+        return figs
     def compare_one_magnon_to_two_magnon_contribution_of_prefactor():
         # spectrum_4_coeff = opt_einsum.contract(
         #         "xytioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcxy",
@@ -4080,8 +4097,13 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     plot_all_angles=False,
                     plot_2_4_all=1,
                 )if draw_total_sigma_prefactor_contributions else None
-                # summed polarisation of sigma in and sigma and pi out
+                
                 ,
+                plot_at_peak_transferred_energy(material.rixs_spectrum_2.sum(axis=0), plot_only_sigma_in=True, title_suffix="one magnon")
+                ,
+                plot_at_peak_transferred_energy(material.rixs_spectrum_4.sum(axis=0), plot_only_sigma_in=True, title_suffix="two magnon")
+                ,
+                # summed polarisation of sigma in and sigma and pi out
                 functions.plot_2_1_d_grid(
                     data_rixs[1],
                     k_values_scalar=x_labels_plot,
