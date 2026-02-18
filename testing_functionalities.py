@@ -922,6 +922,15 @@ def run_over_seeds_minimise_energies(material:Material):
     print(f"Best energy found: {Ebest:.6f}")
     plt.show()
 
+def test_icommensurate():
+    import Examples
+    import Configurations
+    import LSW
+    config = Configurations.config_experimental()
+    material = Examples.D1_spin_spiral_inversion_sym_breaking_90_degree(config=config)
+    temp = LSW.sqw_components_calc_general_tau(material=material, config=config, amount_tau_values=5)
+    print("")
+
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -947,5 +956,6 @@ if __name__ == "__main__":
     # test_einsum_two_random_arrays()
     # test_finding_angles_for_q()
     # derive_classical_energy()
-    run_over_seeds_minimise_energies(material = Examples.RNiO_3(config=Configurations.config_experimental()))
+    # run_over_seeds_minimise_energies(material = Examples.RNiO_3(config=Configurations.config_experimental()))
     # minimize_classical_energy(material = Examples.NiO_2_atom_cell_NN_and_NNN(config=Configurations.config_experimental()))
+    test_icommensurate()

@@ -153,7 +153,7 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
     # plt.show()
 if __name__ == "__main__":
     # plot_alpha_dependence()
-    plot_phi_dependence()
-    # plot_phi_dependence(path = "inputs/NiO_azi_sp_th120.txt")
+    # plot_phi_dependence()
+    plot_phi_dependence(path = "inputs/NiO_azi_sp_th120.txt")
     
     plt.show()

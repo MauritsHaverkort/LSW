@@ -145,10 +145,10 @@ def call_main_with_material_config():
             # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             
             #NiO with NN and NNN
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
-            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
             
             # ,Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=2)
             
@@ -842,16 +842,16 @@ def sqw_components_calc_general_tau(
         sqw_prime_components = material.return_sqw_prime_components(2)
     elif amount_tau_values == 5:
         # Define index labels
-        labels = ["x", "y", "z"]
+        labels = ["x", "y", "z", "1"]
 
         # Create the 4D symbolic tensor
-        sqw_prime_tensor = np.empty((3, 3, 3, 3), dtype=object)
+        sqw_prime_tensor = np.empty((config.amount_spatial_S_operator, config.amount_spatial_S_operator, config.amount_spatial_S_operator, config.amount_spatial_S_operator), dtype=object)
         sqw_prime_components = material.return_sqw_prime_components(4)
 
-        for a in range(3):
-            for b in range(3):
-                for k in range(3):
-                    for l in range(3):
+        for a in range(config.amount_spatial_S_operator):
+            for b in range(config.amount_spatial_S_operator):
+                for k in range(config.amount_spatial_S_operator):
+                    for l in range(config.amount_spatial_S_operator):
                         name = labels[a] + labels[b] + labels[k] + labels[l]
                         sqw_prime_tensor[a, b, k, l] = sp.Symbol(name)
 
@@ -860,10 +860,11 @@ def sqw_components_calc_general_tau(
     )
 
     for sqw_prime_comp in sqw_prime_components:
-        tau_idx, a_2, b_2 = sqw_prime_comp
+        tau_idx = sqw_prime_comp[0]
+        idc_spatial = sqw_prime_comp[1:]
         # this creates a matrix of of the form of sqw_prime_array but only with the dimensions that are used rest remains zero
 
-        sqw_prime_tau[tau_idx, a_2, b_2] = sqw_prime_tensor[a_2, b_2]
+        sqw_prime_tau[tau_idx, *idc_spatial] = sqw_prime_tensor[*idc_spatial]
 
     sqw_components_coeff = []
     # here there is no rotation happening since it is a FM or magnetic supercell
@@ -888,11 +889,22 @@ def sqw_components_calc_general_tau(
             sqw_components_coeff.append(sqw_component_coeff)
         # self.sqw_components = sqw_components
 
-    else:  # AFM
+    else:  # incommensurate
         sqw = np.zeros_like(sqw_prime_tau)
         R1 = material.mat_R1
         R2 = material.mat_R2
+        
+        
+        if config.amount_spatial_S_operator == 4: #adding the unit operator for the 5 tau case
+            R1_4 = np.eye(4, dtype=config.dtype_complex)
+            R2_4 = np.eye(4, dtype=config.dtype_complex)
+            R1_4[:3,:3] = R1
+            R2_4[:3,:3] = R2
+            R1 = R1_4
+            R2 = R2_4
+           
         R1_conj = np.conj(R1)
+            
 
         if amount_tau_values == 3:
             sqw[0] = sqw_prime_tau[0] @ R2
@@ -2138,7 +2150,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
         idx_energy_debug_plots = np.argmin(np.abs(w_in - energy_debug_plots))
         return w_in, prefactor_dict_all_w, idx_energy_debug_plots
     
-    w_in, prefactor_dict_all_w, idx_energy_debug_plots = load_fundamental_xray_absorption_spectra(config.rixs_config.incident_energies, config.rixs_config.energy_for_debug_plots)
+    w_in, prefactor_dict_all_w, idx_energy_debug_plots = load_fundamental_xray_absorption_spectra(config.rixs_config.incident_energies, config.rixs_config.energy_for_momentum_plots)
     
     
     config.debug_timer.print_difference(
@@ -3688,13 +3700,13 @@ def plotting_rixs_spectra(material: Material, config: Config,
         )
         print_normalisation(config=config, sqw_2=sqw_2_xyz, sqw_4=sqw_4_xyz)
 
-    def plot_at_peak_transferred_energy(spectrum, plot_only_sigma_in=True, title_suffix=""):
+    def plot_at_peak_transferred_energy(spectrum, sum_polarisation_from_config=True, title_suffix=""):
         
         plt.figure(f"sqw at peak transferred energy {title_suffix}")
         
         assert spectrum.ndim == 6, "spectrum should have 6 dimensions p,v,w,a,b,c"
         for alpha in range(spectrum.shape[3]):
-            spectrum_slice = spectrum[2, :, :, alpha, 0, 0] + spectrum[3, :, :, alpha, 0, 0] if plot_only_sigma_in else spectrum[:, :, :, alpha, 0, 0].sum(axis=0)
+            spectrum_slice = spectrum[config.rixs_config.polarisations_to_sum, :, :, alpha, 0, 0].sum(axis=0) if sum_polarisation_from_config else spectrum[:, :, :, alpha, 0, 0].sum(axis=0)
             idx_max = np.where(spectrum_slice == np.max(spectrum_slice))
             plt.plot(
                 config.rixs_config.incident_energies,
@@ -3721,12 +3733,12 @@ def plotting_rixs_spectra(material: Material, config: Config,
     def plot_spectrum_of_transferred_incident_energy(
         spectrum,
         title="spectrum of transferred and incident energy",
-        plot_only_sigma_in=True,
+        sum_polarisations=True,
     ):
         assert (
             spectrum.ndim == 6
         ), "spectrum should have 6 dimensions p,v,w,a,b,c"
-        if plot_only_sigma_in:
+        if sum_polarisations:
             title += " (at sigma polarisation)"
 
         fig0 = plt.figure(title)
@@ -3736,9 +3748,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
             for alpha_idx in range(spectrum.shape[3]):
                 data = (
                     spectrum[:, v, :, alpha_idx, 0, 0].flatten()
-                    if not plot_only_sigma_in
-                    else spectrum[2, v, :, alpha_idx, 0, 0]
-                    + spectrum[3, v, :, alpha_idx, 0, 0]
+                    if not sum_polarisations
+                    else spectrum[config.rixs_config.polarisations_to_sum, v, :, alpha_idx, 0, 0].sum(axis=0)
                 )
                 plt.plot(
                     data + v * offset,
@@ -3747,12 +3758,12 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 )
         # (spectrum.shape[1]-0.01)*offset --> to make sure I have exactly spectrum.shape[1] ticks
         y_steps_ticks = int(np.ceil(len(w_in) / 10)) # I want roughly 10 ticks
-        x_steps_ticks = int(np.ceil(len(material.w_values) / 10)) if plot_only_sigma_in else 1
+        x_steps_ticks = int(np.ceil(len(material.w_values) / 10)) if sum_polarisations else 1
         plt.yticks(
             ticks=np.arange(0, (spectrum.shape[1] - 0.01) * offset, offset*y_steps_ticks),
             labels=[f"{w:.1f}" for w in w_in[::y_steps_ticks]],
         )
-        if plot_only_sigma_in:
+        if sum_polarisations:
             plt.xticks(
                 ticks=np.arange(0, (spectrum.shape[2]), x_steps_ticks),
                 labels=[
@@ -3774,9 +3785,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
             for alpha in range(spectrum.shape[3]):
                 data = (
                     spectrum[:, v, :, alpha, 0, 0].flatten()
-                    if not plot_only_sigma_in
-                    else spectrum[2, v, :, alpha, 0, 0]
-                    + spectrum[3, v, :, alpha, 0, 0]
+                    if not sum_polarisations
+                    else spectrum[config.rixs_config.polarisations_to_sum, v, :, alpha, 0, 0].sum(axis=0)
+                    
                 )
                 plt.plot(
                     data / norm + v * offset,
@@ -3787,7 +3798,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
             ticks=np.arange(0, (spectrum.shape[1] - 0.01) * offset, offset),
             labels=[f"{w:.1f}" for w in w_in],
         )
-        if plot_only_sigma_in:
+        if sum_polarisations:
             plt.xticks(
                 ticks=np.arange(0, (spectrum.shape[2])),
                 labels=[
@@ -3895,6 +3906,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.xlabel("Energy (eV)")
         plt.ylabel("Prefactor")
         plt.legend()
+        plt.axvline(x=v_index)
         
         fig2 = plt.figure("Prefactors vs w_in_index")
         plt.plot(np.real(prefactor_dict_all_w["eg"]), label="Re(eg)")
@@ -3908,12 +3920,13 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.xlabel("Energy (eV)")
         plt.ylabel("Prefactor")
         plt.legend()
+        plt.axvline(x=v_index)
         
         fig_abs_sqrd = plt.figure("Abs squared of prefactors vs w_in_index")
-        plt.plot(np.abs(prefactor_dict_all_w["eg"])**2, label="||eg||^2")
-        plt.plot(np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2")
-        plt.plot(np.abs(prefactor_dict_all_w["t1u"])**2, label="||t1u||^2")
-        plt.plot(np.abs(prefactor_dict_all_w["t2g"])**2, label="||t2g||^2")
+        plt.plot(w_in, np.abs(prefactor_dict_all_w["eg"])**2, label="||eg||^2")
+        plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2")
+        plt.plot(w_in, np.abs(prefactor_dict_all_w["t1u"])**2, label="||t1u||^2")
+        plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label="||t2g||^2")
         plt.xlabel("Energy (eV)")
         plt.ylabel("Prefactor abs squared")
         plt.legend()
@@ -3981,16 +3994,22 @@ def plotting_rixs_spectra(material: Material, config: Config,
     title_y = "Energy loss (meV)"
 
     #the RIXS spectra
+    
     data_rixs = [
+        #this is first summing all alignments than indexing over all angles that should be calculated and the summing over all polarisation combinations.
+        
         #one magnon spectrum
-        (material.rixs_spectrum_2.sum(axis=0)[2, v_index, :, *indices_shape_angles]
-                + material.rixs_spectrum_2.sum(axis=0)[3, v_index, :, *indices_shape_angles]).T,
-        #two magnon spectrum
-        (material.rixs_spectrum_4.sum(axis=0)[3, v_index, :, *indices_shape_angles]
-        + material.rixs_spectrum_4.sum(axis=0)[2, v_index, :, *indices_shape_angles]).T,
-        #complete spectrum
-        (material.rixs_spectrum.sum(axis=0)[3, v_index, :, *indices_shape_angles]
-         + material.rixs_spectrum.sum(axis=0)[2, v_index, :, *indices_shape_angles]).T,
+        (material.rixs_spectrum_2.sum(axis=0)[:, v_index, :, *indices_shape_angles][:,config.rixs_config.polarisations_to_sum].sum(axis=1)).T,
+        
+        # #two magnon spectrum
+        (material.rixs_spectrum_4.sum(axis=0)[:, v_index, :, *indices_shape_angles][:,config.rixs_config.polarisations_to_sum].sum(axis=1)).T,
+        
+        # (material.rixs_spectrum_4.sum(axis=0)[3, v_index, :, *indices_shape_angles]
+        # + material.rixs_spectrum_4.sum(axis=0)[2, v_index, :, *indices_shape_angles]).T,
+        # #complete spectrum
+        (material.rixs_spectrum.sum(axis=0)[:, v_index, :, *indices_shape_angles][:,config.rixs_config.polarisations_to_sum].sum(axis=1)).T,
+        # (material.rixs_spectrum.sum(axis=0)[3, v_index, :, *indices_shape_angles]
+        #  + material.rixs_spectrum.sum(axis=0)[2, v_index, :, *indices_shape_angles]).T,
     ]
     
     
@@ -4037,7 +4056,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 plot_also_imaginary_part=False,
                 use_intensity_k=True,
                 useLogNorm=config.use_Log_Norm,
-                title=f"RIXS one magnon {title_suffix_angle} summed S domains \n sigma in sigma+pi out",
+                title=f"RIXS one magnon {title_suffix_angle} summed S domains",
                 xlabel=title_x,
                 ylabel=title_y,
             ),
@@ -4099,9 +4118,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 )if draw_total_sigma_prefactor_contributions else None
                 
                 ,
-                plot_at_peak_transferred_energy(material.rixs_spectrum_2.sum(axis=0), plot_only_sigma_in=True, title_suffix="one magnon")
+                plot_at_peak_transferred_energy(material.rixs_spectrum_2.sum(axis=0), sum_polarisation_from_config=True, title_suffix="one magnon")
                 ,
-                plot_at_peak_transferred_energy(material.rixs_spectrum_4.sum(axis=0), plot_only_sigma_in=True, title_suffix="two magnon")
+                plot_at_peak_transferred_energy(material.rixs_spectrum_4.sum(axis=0), sum_polarisation_from_config=True, title_suffix="two magnon")
                 ,
                 # summed polarisation of sigma in and sigma and pi out
                 functions.plot_2_1_d_grid(
