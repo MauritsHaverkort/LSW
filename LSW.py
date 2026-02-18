@@ -3710,7 +3710,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
             idx_max = np.where(spectrum_slice == np.max(spectrum_slice))
             plt.plot(
                 config.rixs_config.incident_energies,
-                spectrum_slice[:, idx_max[1][0], alpha, 0, 0],
+                spectrum_slice[:, idx_max[1][0]],
                 label=f"alpha index {alpha}",
             )
         plt.legend()
@@ -3906,7 +3906,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.xlabel("Energy (eV)")
         plt.ylabel("Prefactor")
         plt.legend()
-        plt.axvline(x=v_index)
+        plt.axvline(x=w_in[v_index])
         
         fig2 = plt.figure("Prefactors vs w_in_index")
         plt.plot(np.real(prefactor_dict_all_w["eg"]), label="Re(eg)")
@@ -3931,7 +3931,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.ylabel("Prefactor abs squared")
         plt.legend()
         
-        plt.axvline(x=v_index)
+        plt.axvline(x=w_in[v_index])
         return fig1, fig2, fig_abs_sqrd
         # plt.figure("energy dependence summed all equivalence classes")
         # for p in range(4):
