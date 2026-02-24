@@ -69,9 +69,10 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
         engine="python"
     )
     data =np.array(data)
-    Emin = 0.02 #leave out the elastic peak and low-energy phonon contributions
-    E_split_one_two_magnon = 0.15
-    Emax = 0.25
+    #in meV
+    Emin = 20 #leave out the elastic peak and low-energy phonon contributions
+    E_split_one_two_magnon = 150
+    Emax = 280
     
     figs = []
     
@@ -82,7 +83,7 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
         phi = np.array([-180.000, -165.000, -150.001, -134.999, -120.000, -105.001, -89.999, -75.000, -60.001, -44.999, -30.000, -15.000, -0.001, 15.001, 30.000, 44.999, 60.001, 75.000, 89.999, 105.001, 120.000, 135.000, 150.001, 165.000])
     else:
         raise ValueError("unknown path")
-    E_loss = np.array([data[:,2*i] for i in range(data.shape[1]//2)])
+    E_loss = np.array([data[:,2*i] for i in range(data.shape[1]//2)])*1000 # convert to meV
     cts = np.array([data[:,2*i+1] for i in range(data.shape[1]//2)])
     
     Emin_idx = np.where(E_loss[0,:]>Emin)[0][0]
@@ -112,21 +113,21 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
     figs.append(plt.figure("energy peaks vs phi"))
     plt.plot(phi, energy_peaks_one_magnon, label="one-magnon")
     plt.plot(phi, energy_peaks_two_magnon, label="two-magnon")
-    plt.xlabel("phi (degrees)")
+    plt.xlabel(r'$\phi$ (deg)')
     plt.ylabel("energy loss at max intensity (meV)")
     plt.legend()
     
     figs.append(plt.figure("mean intensities vs phi"))
     plt.plot(phi, [np.mean(cts[i,Emin_idx:E_split_idx]) for i in range(len(phi))], label="one-magnon")
     plt.plot(phi, [np.mean(cts[i,E_split_idx:Emax_idx]) for i in range(len(phi))], label="two-magnon")
-    plt.xlabel("phi (degrees)")
+    plt.xlabel(r'$\phi$ (deg)')
     plt.ylabel("mean intensity (cts/s)")
     plt.legend()
     
     figs.append(plt.figure("max intensities vs phi"))
     plt.plot(phi, [fit_results_one_magnon[i][0][0] for i in range(len(phi))], label="one-magnon")
     plt.plot(phi, [fit_results_two_magnon[i][0][0] for i in range(len(phi))], label="two-magnon")
-    plt.xlabel("phi (degrees)")
+    plt.xlabel(r'$\phi$ (deg)')
     plt.ylabel("max intensity (cts/s)")
     plt.legend()
     
@@ -136,7 +137,7 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
     figs.append(plt.figure("phi dependence (diff from interpolation)"))
     plt.pcolormesh(phi[:], E_loss[0,Emin_idx:Emax_idx], (cts-cts_interp)[:-1,Emin_idx:Emax_idx-1].T, cmap="terrain")
     plt.colorbar()
-    functions.plot_2_1_d_grid(grid = cts_interp[:,Emin_idx:Emax_idx].T, k_values_scalar=phi[:], w_values=  E_loss[0,Emin_idx:Emax_idx], title="interpolated counts", config=Configurations.config_experimental(), use_dos=True, useLogNorm=False, use_intensity_k=True)
+    functions.plot_2_1_d_grid(grid = cts_interp[:,Emin_idx:Emax_idx].T, k_values_scalar=phi[:], w_values=  E_loss[0,Emin_idx:Emax_idx], title="interpolated counts", config=Configurations.config_experimental(), use_dos=True, useLogNorm=False, use_intensity_k=True, xlabel=r'$\phi$ (deg)', ylabel="Energy loss (meV)", intensity_label="cts/s")
     
     # functions.save_figures_as_images_to_pdf( config=Configurations.config_experimental(),figures=figs, filename="outputs/phi_dependence.pdf")
     # cts = cts.T

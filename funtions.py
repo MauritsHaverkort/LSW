@@ -754,7 +754,7 @@ def first_order_perturbation_degenerate_paraunitary(dH, E, U, Gamma, deg_tol=1e-
         L(λ) = Gamma @ H(λ) = L0 + λ * (Gamma @ dH).
 
     The *left* eigenvectors are the Γ-duals of the right eigenvectors:
-        W^\dagger = S^{-1} U^\dagger Gamma,   where S = U^\dagger Gamma U (Gram in Γ-metric).
+        W^dagger = S^{-1} U^dagger Gamma,   where S = U^dagger Gamma U (Gram in Γ-metric).
     With the common bosonic normalization we target S = diag(s_n), s_n = ±1.
 
     Inputs
@@ -779,23 +779,23 @@ def first_order_perturbation_degenerate_paraunitary(dH, E, U, Gamma, deg_tol=1e-
     • First-order shifts use the left–right biorthogonal pairing in the Γ-metric:
           dE_n = <w_n | (Gamma dH) | v_n> / <w_n|v_n>.
       With the Γ-dual choice above and Gamma^2 = I, this equals
-          dE_n = (v_n^\dagger dH v_n) / s_n, where s_n = v_n^\dagger Gamma v_n = ±1.
+          dE_n = (v_n^dagger dH v_n) / s_n, where s_n = v_n^dagger Gamma v_n = ±1.
 
     • Degenerate blocks (indices B) are handled by the generalized eigenproblem
           W c = ΔE G c,
-      where G = U_B^\dagger Gamma U_B  (Gram in Γ-metric)
-            W = U_B^\dagger dH   U_B   (note: Γ dH sandwiched with Γ-duals collapses to dH).
+      where G = U_B^dagger Gamma U_B  (Gram in Γ-metric)
+            W = U_B^dagger dH   U_B   (note: Γ dH sandwiched with Γ-duals collapses to dH).
       We then rotate U within the block by C whose columns solve the problem. We also
-      re-G-normalize C so that (C^\dagger G C) = G_target (diagonal sign matrix of the block).
+      re-G-normalize C so that (C^dagger G C) = G_target (diagonal sign matrix of the block).
 
     • Off-block eigenvector derivatives use
           |δv_n> = sum_{m∉block} |v_m>  [ <w_m| (Gamma dH) |v_n> / (E_n - E_m) ].
       In matrix form, with S = diag(s), this becomes
-          K_{m n} = ( (U^\dagger dH U)_{m n} / s_m ) / (E_n - E_m).
+          K_{m n} = ( (U^dagger dH U)_{m n} / s_m ) / (E_n - E_m).
       That is: divide the numerator by the sign s_m of the *left* state.
 
     • We assume the input U is already reasonably Γ-orthogonal (no Jordan blocks).
-      We gently re-normalize columns to have v_n^\dagger Γ v_n = ±1 (and record s_n).
+      We gently re-normalize columns to have v_n^dagger Γ v_n = ±1 (and record s_n).
     """
 
     dH = np.asarray(dH)
@@ -849,21 +849,21 @@ def first_order_perturbation_degenerate_paraunitary(dH, E, U, Gamma, deg_tol=1e-
         # (SciPy eig handles generalized problems.)
         wvals, C = la.eig(W, G)
 
-        # G-orthonormalize C so that C^\dagger G C = G_target = diag(signs of the original block)
-        # First build G_C = C^\dagger G C, then whiten it to the block's sign-diagonal.
+        # G-orthonormalize C so that C^dagger G C = G_target = diag(signs of the original block)
+        # First build G_C = C^dagger G C, then whiten it to the block's sign-diagonal.
         G_C = C.conj().T @ G @ C
         # Target signature (take the signs from the original G diagonal):
         s_blk = np.sign(np.real(np.diag(G)))
         G_target = np.diag(s_blk)
-        # Map G_C -> G_target via right-side transform R so that C' = C R and (C')^\dagger G C' = G_target.
+        # Map G_C -> G_target via right-side transform R so that C' = C R and (C')^dagger G C' = G_target.
         # One way: compute H = G^{-1/2} G_C G^{-1/2} in the metric induced by G_target; but here G is close to diag(s).
-        # A robust, simple fix is: R = (G_C)^{-1/2} followed by a rephase to match signs -> yields C'^\dagger G C' ≈ I.
+        # A robust, simple fix is: R = (G_C)^{-1/2} followed by a rephase to match signs -> yields C'^dagger G C' ≈ I.
         # Then we left-multiply by a diagonal Sqrt(G_target) if you want ±1 explicitly. Since G_target^2=I, it's just signs.
         # We'll do: R = invsqrt(G_C), then "sign-correct" columns to enforce the desired s_blk.
         # (la.sqrtm is fine at this small g; for speed, eigh on Hermitian would be nicer.)
         R = la.inv(la.sqrtm(G_C))
         C_fix = C @ R
-        # After this, C_fix^\dagger G C_fix ≈ I. To imprint ±1, we just rescale columns by sqrt(|s_blk|)=1 and flip phases if needed.
+        # After this, C_fix^dagger G C_fix ≈ I. To imprint ±1, we just rescale columns by sqrt(|s_blk|)=1 and flip phases if needed.
         # (s_blk are ±1 already; if you want exactly G_target, you could multiply columns with (-1) where s_blk=-1; not necessary for correctness.)
 
         # Rotate basis in the block:
@@ -874,8 +874,8 @@ def first_order_perturbation_degenerate_paraunitary(dH, E, U, Gamma, deg_tol=1e-
     # --- 3) Precompute projected matrices in the rotated basis -----------------
     # NOTE: for all matrix elements <w_m| (Gamma dH) |v_n> we use:
     #        <w_m| = (1/s_m) <v_m| Gamma
-    #  =>    <w_m| (Gamma dH) |v_n> = (1/s_m) (v_m^\dagger dH v_n)
-    # Hence we only need U_rot^\dagger dH U_rot and the sign vector s.
+    #  =>    <w_m| (Gamma dH) |v_n> = (1/s_m) (v_m^dagger dH v_n)
+    # Hence we only need U_rot^dagger dH U_rot and the sign vector s.
     Hp_dH = U_rot.conj().T @ dH @ U_rot         # (M,M)
     S_rot = np.real(np.diag(U_rot.conj().T @ Gamma @ U_rot))  # should still be ±1 per column
     s_rot = np.sign(S_rot)
@@ -1163,7 +1163,7 @@ def plot_3d_grid_slider(grid,
 
 
 def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity_label="Intensity (a.u.)", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
-              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = False, prevent_reusing_fig=False, plot_also_imaginary_part=True,
+              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = True, prevent_reusing_fig=False, plot_also_imaginary_part=False,
               gaussian_filter_along_w = True, sigma_w = 1):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
     grid = np.array(grid)
@@ -2239,6 +2239,7 @@ def save_figures_as_images_to_pdf(
     material:Material = material  # type hint
     
     material_description = f"{material.name}" if material is not None else "Material Description Not Provided"
+    figures = flatten_axes
     for fig in figures:
         try:
             fig.axes[0].set_title(f"{fig.canvas.manager.get_window_title()}")

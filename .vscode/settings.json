@@ -4,5 +4,7 @@
         "pseudocodec": "c",
         "pseudocode_material_c": "cpp",
         "pseudocode_classes": "c"
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }

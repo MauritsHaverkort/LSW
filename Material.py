@@ -30,6 +30,7 @@ class Material:
         crystallographic_lv: np.ndarray = [],
         additional_domain_materials: List["Material"] = [],
         lattice_constant = 1.0, #lattice constant in m
+        fund_xray_prefactors_filename = None
     ):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
@@ -56,6 +57,7 @@ class Material:
         self.from_cryst_to_lv_basis = np.array(lattice_vectors) @ la.inv(
             np.array(self.crystallographic_lv)
         )
+        self.fund_xray_prefactors_filename = fund_xray_prefactors_filename
 
         if relative_grid_points_path is not None:
             self.relative_grid_points_path = relative_grid_points_path
