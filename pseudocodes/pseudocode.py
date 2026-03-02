@@ -538,7 +538,7 @@ def calculate_sqw_spectra(
                                     t, i, order_idx, j, order_idx2
                                 ] = norm * (temp_1 + temp_2)
 
-        material.coeff_sym_classes_tioju_4 = coeff_sym_classes_tioju_4
+        material.coeff_equiv_classes_tioju_4 = coeff_sym_classes_tioju_4
 
 
     

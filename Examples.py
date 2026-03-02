@@ -385,6 +385,62 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     # all_atoms.append(atoms[0])
     return material
 
+def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), lattice_constant=4.17e-10):
+
+    A,B,C = np.array([a, a, 0]), np.array([-a, a, 0]), np.array([0, 0, 50*a])
+    #TODO: make this nicer and more general
+    # A,B,C = A*T_domains[T_domain_idx], B*T_domains[T_domain_idx], C*T_domains[T_domain_idx]
+    
+    lv = [A,B,C]
+    
+    crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, 50*a])]   
+    
+    normal_vector = np.array([-1,1,0]) #arbitrary since commensurate case
+    
+    tau = np.array([0, 0, 0])  # commensurate
+    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=2, name=f"K2NiF4", crystallographic_lv=crystallographic_lv, lattice_constant=lattice_constant)
+    X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)
+    # Create atoms with specific bonds
+    atoms: List["Atom"] = []
+    atoms = [
+        Atom(np.array([0, 0, 0]),  S=S, spin_dir=spin_dir),
+        Atom(X,  S=S, spin_dir=-spin_dir)
+    ]
+
+
+    J_values = [J1]
+    # J_values= [J_super_exchange]
+    #this is not reliably working since I dont account for double counting correctly
+    bonds = []
+    combinations, distances = material.return_combinations_up_to_distance(atoms, 2*a)
+    for i,j_value in enumerate(J_values):
+        for combs in combinations[i]:
+            atom1, uc1, atom2, uc2 = combs
+            assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
+            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j_value))
+   
+# for c in combinations[0]:
+#     a1,u1,a2,u2 = c
+#     print(np.array(lv).T@(a1.position+u1))
+#     print(np.array(lv).T@(a2.position+u2))
+#     print(a1.position+u1)
+#     print(a2.position+u2)
+#     print("")
+
+    material.transform_from_cryst_basis_to_lv_basis(lv[0], False, True)
+    
+    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
+    # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2*X, 1/2*(X+Y), 1/2*(X+Y+Z), np.array([0,0,0])]
+    # Kx,Ky,Kz = np.array([1,0,1])/2,  np.array([1,1,0])/2, np.array([0,1,1])/2
+    # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2* np.array([1,0,1]), 1/2* np.array([0,1,1]), 1/2* np.array([0,0,0])]
+    
+    #give in euclidean basis for better readability
+    relative_grid_points_path = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]), np.array([0,0,0])]
+    #transform to lattice vector basis
+    material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/2*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
+    
+    return material
+
 def NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = "", lattice_constant=4.17e-10):  # lattice constant in m
     #J_NN=-2.3,J_super_exchange=12,
     #J_NN=-1.4,J_super_exchange=19,

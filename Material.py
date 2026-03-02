@@ -11,6 +11,8 @@ import rotation
 import Configurations as Config
 import funtions as functions
 import rotation as rotation
+from dataclasses import dataclass
+
 
 
 class Material:
@@ -30,7 +32,8 @@ class Material:
         crystallographic_lv: np.ndarray = [],
         additional_domain_materials: List["Material"] = [],
         lattice_constant = 1.0, #lattice constant in m
-        fund_xray_prefactors_filename = None
+        fund_xray_prefactors_filename = None,
+        symmetry_class = "Oh" # "Oh", "D4h" implemented so far
     ):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
@@ -58,6 +61,8 @@ class Material:
             np.array(self.crystallographic_lv)
         )
         self.fund_xray_prefactors_filename = fund_xray_prefactors_filename
+        
+        self.symmetry_class = symmetry_class
 
         if relative_grid_points_path is not None:
             self.relative_grid_points_path = relative_grid_points_path
@@ -100,7 +105,7 @@ class Material:
         self.sqw_2_ad_a_equiv_class: np.ndarray = None
         self.conv_sqw_2_ad_a_sym_classes: np.ndarray = None
 
-        self.coeff_sym_classes_tioju_4: np.ndarray = None
+        self.coeff_equiv_classes_tioju_4: np.ndarray = None
         self.coeff_equiv_classes_tioju_2: np.ndarray = None
 
         self.coeff_tioju_xyz_2: np.ndarray = None
@@ -334,10 +339,10 @@ class Material:
     def get_sym_classes_to_xyz(self):
         """calculate the symmetry classes of the xyz spectra if it wasnt calculated before"""
         if self.sym_classes_to_xyz_4 is None or self.sym_classes_to_xyz_2 is None:
-            if self.coeff_sym_classes_tioju_4 is not None and self.coeff_tioju_xyz_4 is not None:
+            if self.coeff_equiv_classes_tioju_4 is not None and self.coeff_tioju_xyz_4 is not None:
                 self.sym_classes_to_xyz_4 = np.einsum(
                     "xytioju,OUMNioju->OUMNxy",
-                    self.coeff_sym_classes_tioju_4,
+                    self.coeff_equiv_classes_tioju_4,
                     self.coeff_tioju_xyz_4,
                     optimize="optimal",
                 )

@@ -1166,16 +1166,24 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
               xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = True, prevent_reusing_fig=False, plot_also_imaginary_part=False,
               gaussian_filter_along_w = True, sigma_w = 1):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
+    
     grid = np.array(grid)
+    
+    #check if the grid is complex so in the case of "plot_also_imaginary_part" imag part is plotted (if not negligible) and if not, a warning is given and the imag part is discarded
+    imag_fig = None
     if np.iscomplexobj(grid):
-        if plot_also_imaginary_part:
+        if plot_also_imaginary_part and np.max(np.abs(np.imag(grid))) > 1e-3*np.max(np.abs(np.real(grid))): #plot only imag values when they are non zero
             #recall the function to plot the imaginary part
-            plot_2_1_d_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity_label=intensity_label, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
+            imag_fig = plot_2_1_d_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity_label=intensity_label, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
                       xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False)
+            if np.max(np.abs(np.imag(grid))) > 1e+3*np.max(np.abs(np.real(grid))): # if the imaginary part is much larger than the real part, we return only the imaginary part
+                return imag_fig
         else:
             print("Warning: Grid contains complex values. Discarding imaginary part.")
+            if config is not None:
+                config.warnings.add("Some plotted grid contained non negligible complex values that are not plotted.")
         grid = np.real(grid)
-    title = title +"\n" # make more space between title and plot
+    title = title #+"\n" # make more space between title and plot
     if prevent_reusing_fig:
         fig = plt.figure( figsize=(10, 6))
         fig.canvas.manager.set_window_title(title)
@@ -1350,8 +1358,10 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
 
     if save_path:
         plt.savefig(save_path, bbox_inches='tight')
-    
-    return fig
+    if imag_fig is None:
+        return fig
+    else:
+        return fig, imag_fig
 
 
 def plot_iso_surface(values, surface_count=4,isomax_percentage_of_max=1, title="Isosurface Plot", xlabel="X-axis", ylabel="Y-axis", zlabel="Z-axis", save_path=None):
@@ -2239,7 +2249,6 @@ def save_figures_as_images_to_pdf(
     material:Material = material  # type hint
     
     material_description = f"{material.name}" if material is not None else "Material Description Not Provided"
-    figures = flatten_axes
     for fig in figures:
         try:
             fig.axes[0].set_title(f"{fig.canvas.manager.get_window_title()}")
@@ -2265,14 +2274,17 @@ def save_figures_as_images_to_pdf(
                 fig.text(0.5, 0.95, f"{warning_str}", ha='center', va='top', fontsize=10, color='gray')
 
             for ax, fig_src in zip(axs, figs_subset):
-                buf = io.BytesIO()
-                fig_src.savefig(buf, format='png', dpi=dpi)
-                buf.seek(0)
+                try:
+                    buf = io.BytesIO()
+                    fig_src.savefig(buf, format='png', dpi=dpi)
+                    buf.seek(0)
 
-                img = plt.imread(buf)
-                ax.imshow(img)
-                ax.axis('off')  # Hide axes around image
-                buf.close()
+                    img = plt.imread(buf)
+                    ax.imshow(img)
+                    ax.axis('off')  # Hide axes around image
+                    buf.close()
+                except Exception as e:
+                    config.warnings.add(f"Failed to add figure to PDF: {e}")
 
             plt.tight_layout(rect=[0, 0, 1, 0.95])
             pdf.savefig(fig)

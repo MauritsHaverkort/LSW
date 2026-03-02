@@ -1403,3 +1403,138 @@ The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
 The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
 The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
 The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+(0, 0, 0): -77.44
+(0, 1, 0): -75.54490831094834
+(0, 2, 0): -70.04513802219796
+(0, 3, 0): -61.4790449687646
+(0, 4, 0): -50.685138022197954
+(0, 5, 0): -38.720000000000006
+(0, 6, 0): -50.68513802219799
+(0, 7, 0): -61.47904496876457
+(0, 8, 0): -70.04513802219797
+(0, 9, 0): -75.54490831094839
+(1, 0, 0): -75.54490831094834
+(1, 1, 0): -73.74256901109898
+(1, 2, 0): -68.51197663985647
+(1, 3, 0): -60.365138022197954
+(1, 4, 0): -50.09952248438227
+(1, 5, 0): -38.72000000000003
+(1, 6, 0): -50.09952248438229
+(1, 7, 0): -60.365138022197975
+(1, 8, 0): -68.51197663985646
+(1, 9, 0): -73.742569011099
+(2, 0, 0): -70.04513802219796
+(2, 1, 0): -68.51197663985647
+(2, 2, 0): -64.06256901109899
+(2, 3, 0): -57.132454155474164
+(2, 4, 0): -48.400000000000006
+(2, 5, 0): -38.720000000000006
+(2, 6, 0): -48.400000000000006
+(2, 7, 0): -57.13245415547418
+(2, 8, 0): -64.06256901109899
+(2, 9, 0): -68.51197663985646
+(3, 0, 0): -61.4790449687646
+(3, 1, 0): -60.365138022197954
+(3, 2, 0): -57.132454155474164
+(3, 3, 0): -52.09743098890101
+(3, 4, 0): -45.752931671091886
+(3, 5, 0): -38.72000000000003
+(3, 6, 0): -45.752931671091915
+(3, 7, 0): -52.097430988901024
+(3, 8, 0): -57.13245415547417
+(3, 9, 0): -60.365138022197954
+(4, 0, 0): -50.685138022197954
+(4, 1, 0): -50.09952248438227
+(4, 2, 0): -48.40000000000002
+(4, 3, 0): -45.752931671091886
+(4, 4, 0): -42.41743098890101
+(4, 5, 0): -38.72
+(4, 6, 0): -42.41743098890102
+(4, 7, 0): -45.75293167109189
+(4, 8, 0): -48.39999999999999
+(4, 9, 0): -50.09952248438227
+(5, 0, 0): -38.720000000000006
+(5, 1, 0): -38.72000000000003
+(5, 2, 0): -38.720000000000006
+(5, 3, 0): -38.72000000000005
+(5, 4, 0): -38.72
+(5, 5, 0): -38.72
+(5, 6, 0): -38.720000000000006
+(5, 7, 0): -38.720000000000006
+(5, 8, 0): -38.720000000000006
+(5, 9, 0): -38.720000000000006
+(6, 0, 0): -50.68513802219799
+(6, 1, 0): -50.09952248438229
+(6, 2, 0): -48.400000000000006
+(6, 3, 0): -45.752931671091915
+(6, 4, 0): -42.41743098890102
+(6, 5, 0): -38.720000000000006
+(6, 6, 0): -42.417430988901025
+(6, 7, 0): -45.75293167109192
+(6, 8, 0): -48.40000000000001
+(6, 9, 0): -50.09952248438229
+(7, 0, 0): -61.47904496876457
+(7, 1, 0): -60.365138022197975
+(7, 2, 0): -57.13245415547418
+(7, 3, 0): -52.097430988901024
+(7, 4, 0): -45.752931671091886
+(7, 5, 0): -38.720000000000006
+(7, 6, 0): -45.75293167109192
+(7, 7, 0): -52.09743098890103
+(7, 8, 0): -57.13245415547419
+(7, 9, 0): -60.36513802219797
+(8, 0, 0): -70.04513802219797
+(8, 1, 0): -68.51197663985646
+(8, 2, 0): -64.06256901109899
+(8, 3, 0): -57.13245415547417
+(8, 4, 0): -48.4
+(8, 5, 0): -38.720000000000034
+(8, 6, 0): -48.40000000000001
+(8, 7, 0): -57.13245415547419
+(8, 8, 0): -64.06256901109899
+(8, 9, 0): -68.51197663985647
+(9, 0, 0): -75.54490831094839
+(9, 1, 0): -73.74256901109901
+(9, 2, 0): -68.51197663985646
+(9, 3, 0): -60.36513802219798
+(9, 4, 0): -50.09952248438227
+(9, 5, 0): -38.720000000000006
+(9, 6, 0): -50.09952248438229
+(9, 7, 0): -60.365138022197975
+(9, 8, 0): -68.51197663985647
+(9, 9, 0): -73.742569011099
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
