@@ -19,6 +19,7 @@ from scipy.ndimage import gaussian_filter1d
 from funtions import np
 import sympy as sp
 
+
 #plot fonts control
 import matplotlib as mpl
 fontsize = 18
@@ -1808,9 +1809,9 @@ def path_through_grid_interpolated(grid, relative_grid_points:np.ndarray, steps,
 
     # Create vectorized interpolator
     # interp = RegularGridInterpolator((x, y, z), grid_for_interp, method="linear", )
-    config.debug_timer.print_difference("before allocating vals for interpolation")
+    # config.debug_timer.print_difference("before allocating vals for interpolation")
     vals = np.empty((batch, path_coords.shape[0]), dtype=np.complex128) 
-    config.debug_timer.print_difference("after allocating vals for interpolation")
+    # config.debug_timer.print_difference("after allocating vals for interpolation")
     
     for b in range(batch):
         #use map_coordinates to have wrapping around the grid
@@ -2292,21 +2293,24 @@ def save_figures_as_images_to_pdf(
         info_str = "additonal information:\n"
             
         if config.use_explicit_calc_of_sqw and config.calc_two_magnon_spectra:
-            info_str += "sqw 4 symmetries \n"
+            info_str += "sqw 4 symmetries (a ad) (less then 10 entries)\n"
             for sym in material.sqw_4_symmetries:
-                info_str += f"{sym}\n"
+                if len(sym) < 10: #only add symmetries with less than 10 entries to avoid cluttering the pdf
+                    info_str += f"{sym}\n"
             
         if material.sym_classes_to_xyz_4 is not None:
-            info_str += "sqw 4 symmetries \n"
+            info_str += "sqw 4 symmetries (xyz) (less then 10 entries)\n"
             temp = give_symmetries_of_tensors(material.sym_classes_to_xyz_4,4, give_mean_abs_value=True, compare_only_a_sample = False)
             for sym in temp[0]:
-                info_str += f"{sym}\n"
+                if len(sym) < 10: #only add symmetries with less than 10 entries to avoid cluttering the pdf
+                    info_str += f"{sym}\n"
         
         if material.sym_classes_to_xyz_2 is not None:
-            info_str += "sqw 2 symmetries \n"
+            info_str += "sqw 2 symmetries (xyz)(less then 10 entries)\n"
             temp = give_symmetries_of_tensors(material.sym_classes_to_xyz_2,4, give_mean_abs_value=True, compare_only_a_sample = False)
             for sym in temp[0]:
-                info_str += f"{sym}\n"
+                if len(sym) < 10: #only add symmetries with less than 10 entries to avoid cluttering the pdf
+                    info_str += f"{sym}\n"
         fig_text = plt.figure(figsize=(8.5, 11), dpi=dpi)
         fig_text.clf()
         fig_text.text(0.5, 0.5, info_str, ha="center", va="center", wrap=True, fontsize=12)
@@ -2522,30 +2526,87 @@ def integrate_nd(f, grid_points, dimension):
         res = sign_correction * np.trapezoid(res, grid_points[grid_slice], axis=ax) # the grid points might be decreasing instead increasing in some axis --> the sign correction corrects that by explicit checking
     return res
 
-def give_refined_grid_around_point(grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
-    point = grid[*point_idx]
-    neigbour_index = point_idx+np.array((-1,)*(dimension)+(0,)*(3-dimension))
-                        # (1,)+(-1,)*(dimension-1)+(0,)(3-dimension),
-                        # (-1,)+(1,)+(-1,)*(dimension-2)+(0,)(3-dimension),
-                        # (-1,)*2+(1,)]
-    #prevent being outside of the grid
-    if np.any(np.array(neigbour_index)<0):
-        neigbour_point = grid[*(-neigbour_index)]
-    else:
-        neigbour_point = grid[*neigbour_index]
-        
-    d= point+(neigbour_point-point)*fraction_to_neighbour_to_include #vector pointing from the point to the corner neighbour
-    box_corner_point = point+d
-    # spacings_per_d = [np.linspace(box_corner_point[axis], box_corner_point[axis]-2*d[axis], refinement_factor) for axis in range(dimension)]
-    spacings_per_d = [decreasing_step_spacing(start=np.array([box_corner_point[axis]]), end=np.array([point[axis]]), num_points=refinement_factor, decrease_ratio=decrease_ratio) for axis in range(dimension)]
-    spacings_per_d += [np.array([0]) for _ in range(3-dimension)]
-    X, Y, Z = np.meshgrid(*spacings_per_d, indexing='ij')
-    grid_points = np.stack([X, Y, Z], axis=-1)
+# def give_refined_grid_around_point(grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
+#     point = grid[*point_idx]
+#     neigbour_index = point_idx+np.array((-1,)*(dimension)+(0,)*(3-dimension))
+#                         # (1,)+(-1,)*(dimension-1)+(0,)(3-dimension),
+#                         # (-1,)+(1,)+(-1,)*(dimension-2)+(0,)(3-dimension),
+#                         # (-1,)*2+(1,)]
     
-    grid_volume = 1
-    for axs in range(dimension):
-        grid_volume *= (2 * abs(d[axs]))
-    return grid_points, grid_volume
+#     neighbor_idcs = [point_idx+np.array([-1,0,0]),point_idx+np.array([0,-1,0]), point_idx+np.array([0,0,-1])]
+#     neighbor_idcs = neighbor_idcs[:dimension]
+    
+#     #prevent being outside the grid
+#     for i in range(len(neighbor_idcs)):
+#         if np.any(neighbor_idcs[i]<0):
+#             neighbor_idcs[i] = -neighbor_idcs[i]
+            
+    
+#     neigbour_points = [grid[*neighbor_idx] for neighbor_idx in neighbor_idcs]
+        
+#     d= [point+(neigbour_point-point)*fraction_to_neighbour_to_include for neigbour_point in neigbour_points] #vector pointing from the point to the corner neighbour
+#     box_corner_points = [point + di for di in d]
+#     # spacings_per_d = [np.linspace(box_corner_point[axis], box_corner_point[axis]-2*d[axis], refinement_factor) for axis in range(dimension)]
+#     spacings_per_d = [decreasing_step_spacing(start=np.array(la.norm(d[axs])), end=np.array([point[axis]]), num_points=refinement_factor, decrease_ratio=decrease_ratio) for axis in range(dimension)]
+    
+#     spacings_per_d += [np.array([0]) for _ in range(3-dimension)]
+#     X, Y, Z = np.meshgrid(*spacings_per_d, indexing='ij')
+#     grid_points = np.stack([X, Y, Z], axis=-1)
+    
+#     grid_volume = 1
+#     for axs in range(dimension):
+#         grid_volume *= (2 * abs(d[axs]))
+#     return grid_points, grid_volume
+
+def give_refined_grid_around_point(material, grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
+    from Material import Material
+    material:Material = material  # type hint
+    point = grid[*point_idx]
+    
+    # spacings_per_d = [np.linspace(box_corner_point[axis], box_corner_point[axis]-2*d[axis], refinement_factor) for axis in range(dimension)]
+    spacing = decreasing_step_spacing_float(start=fraction_to_neighbour_to_include, end=0, num_points=refinement_factor, decrease_ratio=decrease_ratio) 
+    
+    
+    spacings_per_d = [np.array(spacing) for _ in range(dimension)]
+    spacings_per_d += [np.array([0]) for _ in range(3-dimension)]
+    
+    X, Y, Z = np.meshgrid(*spacings_per_d, indexing='ij')
+    grid_float_idcs = np.stack([X, Y, Z], axis=-1)
+    grid_float_idcs = grid_float_idcs[:,:,:,:dimension] #only take the dimensions that are defined in the mateial
+    lv_scaled = np.array([material.get_reciprocal_lattice_vectors()[axs]/grid.shape[:3][axs] for axs in range(dimension)])
+    
+    grid_refined = np.einsum('...v,vl->...l', grid_float_idcs, lv_scaled)+ point 
+    
+    scale = np.max(spacing) 
+    match dimension:
+        case 1:
+            grid_volume = lv_scaled[0] *scale
+        case 2:
+            grid_volume = la.norm(la.cross(lv_scaled[0], lv_scaled[1])) * scale**2
+        case 3:
+            grid_volume = la.dot(la.cross(lv_scaled[0], lv_scaled[1]), lv_scaled[2]) * scale**3
+            
+    return grid_refined, grid_volume
+
+def decreasing_step_spacing_float(start: float, end: float, num_points: int, decrease_ratio: float, use_approach_from_both_sides: bool = True) -> np.ndarray:
+    if num_points < 2:
+        raise ValueError("num_points must be at least 2 to create a spacing.")
+    if decrease_ratio <= 0 or decrease_ratio > 1:
+        raise ValueError("decrease_ratio must be positive and less than or equal to 1.")
+    if decrease_ratio == 1:
+        return np.linspace(start, end, num_points)
+
+
+    r = decrease_ratio
+
+    # Generate the geometric series
+    series_factors = np.array([1-r ** i for i in range(num_points)])
+    result = (end-start) * series_factors + start
+    new_start = start + 2* (end - start)
+    result_opposite = (end-new_start) * (series_factors) + new_start
+    result = np.concatenate((result, np.flip(result_opposite)), axis=0)
+    
+    return result
 
 def decreasing_step_spacing(start: np.ndarray, end: np.ndarray, num_points: int, decrease_ratio: float, use_approach_from_both_sides: bool = True) -> np.ndarray:
     """Generates a sequence of points between start and end (never reaches end) with spacing that is always reduced by geometric_ratio for each step."""

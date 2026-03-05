@@ -341,7 +341,7 @@ def calculate_sqw_spectra(
     )
 
     # deal with divergencies
-    if config.cut_diverging_spectral_weights:
+    if config.treat_divergencies:
         sqw_prime_of_a_ad_without_phase_factor = deal_with_divergencies(
             residues=sqw_prime_of_a_ad_without_phase_factor,
             config=config,

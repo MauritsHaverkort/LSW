@@ -110,6 +110,9 @@ class Material:
 
         self.coeff_tioju_xyz_2: np.ndarray = None
         self.coeff_tioju_xyz_4: np.ndarray = None
+        
+        self.coeff_sqw_prime_to_sqw: np.ndarray = None
+        self.coeff_sqw_prime_to_sqw_4: np.ndarray = None
 
         self.coeff_prime_to_lab_2: np.ndarray = None
         self.coeff_prime_to_lab_4: np.ndarray = None

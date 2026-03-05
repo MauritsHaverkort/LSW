@@ -455,8 +455,10 @@ def test_integration():
     def function_to_integrate(k):
         magnitude_k = np.linalg.norm(k, axis=-1)
         return 1/magnitude_k**n#**2 #k[:,:,:,0] #only in one direction 
+    
+    material = Examples.K2NiF4(config=Configurations.config_experimental())
     q_values = functions.create_q_grid(
-        functions.give_reciprocal_lv(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))[:dimension], amount_BZ=1, steps=[*(50,)*dimension]
+        material.get_reciprocal_lattice_vectors()[:dimension], amount_BZ=1, steps=[*(50,)*dimension]
     )
     refinement_factors = np.arange(10, 100, 10)
     decrease_ratios = [1/np.sqrt(10), 1/np.sqrt(5), 1/np.sqrt(2), 1/1.1]
@@ -466,7 +468,7 @@ def test_integration():
     if indices_divergencies.shape[0] > 0:
         for i, refinement_factor in enumerate(refinement_factors):
             for j, decrease_ratio in enumerate(decrease_ratios):
-                refined_grid, grid_volume = give_refined_grid_around_point(q_values, point_idx= indices_divergencies
+                refined_grid, grid_volume = give_refined_grid_around_point(material,q_values, point_idx= indices_divergencies
                                                                     , decrease_ratio=decrease_ratio
                                                                     ,dimension=dimension,
                                                                         refinement_factor=refinement_factor, 
@@ -927,10 +929,14 @@ def test_icommensurate():
     import Configurations
     import LSW
     config = Configurations.config_experimental()
-    material = Examples.D1_spin_spiral_inversion_sym_breaking_90_degree(config=config)
-    temp = LSW.sqw_components_calc_general_tau(material=material, config=config, amount_tau_values=5)
+    material = Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config=config)
+    # temp = LSW.sqw_components_calc_general_tau(material=material, config=config, amount_tau_values=5)
+    
+    LSW.symmetrisation_tensor(None, material, config)
     print("")
 
+def test_empty():
+    print("")
 if __name__ == "__main__":
     #test_RIXS_prefactor_calculations()
     #test_RIXS_prefactor_calculations_experimental_non_squared()
@@ -958,4 +964,6 @@ if __name__ == "__main__":
     # derive_classical_energy()
     # run_over_seeds_minimise_energies(material = Examples.RNiO_3(config=Configurations.config_experimental()))
     # minimize_classical_energy(material = Examples.NiO_2_atom_cell_NN_and_NNN(config=Configurations.config_experimental()))
-    test_icommensurate()
+    # test_icommensurate()
+    # test_empty()
+    test_integration()
