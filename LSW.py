@@ -1847,14 +1847,16 @@ def calculate_sqw_spectra(
 
     # deal with divergencies
     if config.treat_divergencies:
-        residues_ad_a = deal_with_divergencies(
+        residues_ad_a = treat_divergencies(
             residues=residues_ad_a,
             config=config,
             material=material,
             q_values=q_values_grid,
             use_averaging_TdT=config.use_averaging_TdT,
         )
-       
+    material.residues = residues_ad_a
+    if config.plots_to_show_print["intensities_sqw"][1]:
+        VALUES_TO_SAVE["figs_for_pdf"].append(functions.plot_sqw_ad_a_intensities(material, config, residues_ad_a.sum(axis=-1), q_values_grid, VALUES_TO_SAVE))
 
     # normalise to intensity per k-point (so that sum over all intensities is independent of the amount of grid points)
     if config.use_intensity_normalisation:
@@ -4977,7 +4979,7 @@ def herm_conj(U, axis: tuple = None):
     return np.swapaxes(np.conjugate(U), axis[0], axis[1])
 
 
-def deal_with_divergencies(
+def treat_divergencies(
     residues,
     q_values,
     material: Material,
@@ -4990,7 +4992,7 @@ def deal_with_divergencies(
 
     if use_averaging_TdT:  # TODO:averaging idea still needs testing
         decrease_ratio = 1 / 1.1
-        refinement_steps = 30
+        refinement_steps = 40
         fraction_to_neighbour_to_include = 0.5
         assert len(residues.shape) == 7  # t i j K l
         assert (
@@ -5043,6 +5045,7 @@ def deal_with_divergencies(
                                 )
                             
                             )
+                # print(residues[0,0,0,0,0,0])
 
                 # debug plots
                 if False:

@@ -1567,10 +1567,11 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
                 ax.set_xticklabels(xticks_labels)
                 ax.legend(fontsize=7)
         fig_grid.tight_layout(rect=[0, 0.03, 1, 0.95])
-        if config.plots_to_show_print["intensities_sqw"][1]:
-            VALUES_TO_SAVE["figs_for_pdf"].append(fig_grid)
+        
     except NameError:
         config.warnings.add("try to plot sqw but not defined")
+
+    return fig_grid
 
 def plot_path_through_grid(path, q_grid=None, material=None):
     """
@@ -2526,37 +2527,30 @@ def integrate_nd(f, grid_points, dimension):
         res = sign_correction * np.trapezoid(res, grid_points[grid_slice], axis=ax) # the grid points might be decreasing instead increasing in some axis --> the sign correction corrects that by explicit checking
     return res
 
-# def give_refined_grid_around_point(grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
-#     point = grid[*point_idx]
-#     neigbour_index = point_idx+np.array((-1,)*(dimension)+(0,)*(3-dimension))
-#                         # (1,)+(-1,)*(dimension-1)+(0,)(3-dimension),
-#                         # (-1,)+(1,)+(-1,)*(dimension-2)+(0,)(3-dimension),
-#                         # (-1,)*2+(1,)]
-    
-#     neighbor_idcs = [point_idx+np.array([-1,0,0]),point_idx+np.array([0,-1,0]), point_idx+np.array([0,0,-1])]
-#     neighbor_idcs = neighbor_idcs[:dimension]
-    
-#     #prevent being outside the grid
-#     for i in range(len(neighbor_idcs)):
-#         if np.any(neighbor_idcs[i]<0):
-#             neighbor_idcs[i] = -neighbor_idcs[i]
-            
-    
-#     neigbour_points = [grid[*neighbor_idx] for neighbor_idx in neighbor_idcs]
+def give_refined_grid_around_point_old(grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
+    point = grid[*point_idx]
+    neigbour_index = point_idx+np.array((-1,)*(dimension)+(0,)*(3-dimension))
+                        # (1,)+(-1,)*(dimension-1)+(0,)(3-dimension),
+                        # (-1,)+(1,)+(-1,)*(dimension-2)+(0,)(3-dimension),
+                        # (-1,)*2+(1,)]
+    #prevent being outside of the grid
+    if np.any(np.array(neigbour_index)<0):
+        neigbour_point = grid[*(-neigbour_index)]
+    else:
+        neigbour_point = grid[*neigbour_index]
         
-#     d= [point+(neigbour_point-point)*fraction_to_neighbour_to_include for neigbour_point in neigbour_points] #vector pointing from the point to the corner neighbour
-#     box_corner_points = [point + di for di in d]
-#     # spacings_per_d = [np.linspace(box_corner_point[axis], box_corner_point[axis]-2*d[axis], refinement_factor) for axis in range(dimension)]
-#     spacings_per_d = [decreasing_step_spacing(start=np.array(la.norm(d[axs])), end=np.array([point[axis]]), num_points=refinement_factor, decrease_ratio=decrease_ratio) for axis in range(dimension)]
+    d= point+(neigbour_point-point)*fraction_to_neighbour_to_include #vector pointing from the point to the corner neighbour
+    box_corner_point = point+d
+    # spacings_per_d = [np.linspace(box_corner_point[axis], box_corner_point[axis]-2*d[axis], refinement_factor) for axis in range(dimension)]
+    spacings_per_d = [decreasing_step_spacing(start=np.array([box_corner_point[axis]]), end=np.array([point[axis]]), num_points=refinement_factor, decrease_ratio=decrease_ratio) for axis in range(dimension)]
+    spacings_per_d += [np.array([0]) for _ in range(3-dimension)]
+    X, Y, Z = np.meshgrid(*spacings_per_d, indexing='ij')
+    grid_points = np.stack([X, Y, Z], axis=-1)
     
-#     spacings_per_d += [np.array([0]) for _ in range(3-dimension)]
-#     X, Y, Z = np.meshgrid(*spacings_per_d, indexing='ij')
-#     grid_points = np.stack([X, Y, Z], axis=-1)
-    
-#     grid_volume = 1
-#     for axs in range(dimension):
-#         grid_volume *= (2 * abs(d[axs]))
-#     return grid_points, grid_volume
+    grid_volume = 1
+    for axs in range(dimension):
+        grid_volume *= (2 * abs(d[axs]))
+    return grid_points, grid_volume
 
 def give_refined_grid_around_point(material, grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
     from Material import Material
@@ -2580,11 +2574,11 @@ def give_refined_grid_around_point(material, grid, point_idx, dimension, refinem
     scale = np.max(spacing) 
     match dimension:
         case 1:
-            grid_volume = lv_scaled[0] *scale
+            grid_volume = np.abs(la.norm(lv_scaled[0]) *scale)*2
         case 2:
-            grid_volume = la.norm(la.cross(lv_scaled[0], lv_scaled[1])) * scale**2
+            grid_volume = np.abs(la.norm(la.cross(lv_scaled[0], lv_scaled[1])) * scale**2)*4 #takes only "positive quarter" of the box thus times 4 
         case 3:
-            grid_volume = la.dot(la.cross(lv_scaled[0], lv_scaled[1]), lv_scaled[2]) * scale**3
+            grid_volume = np.abs(la.dot(la.cross(lv_scaled[0], lv_scaled[1]), lv_scaled[2]) * scale**3) *8
             
     return grid_refined, grid_volume
 

@@ -457,27 +457,38 @@ def test_integration():
         return 1/magnitude_k**n#**2 #k[:,:,:,0] #only in one direction 
     
     material = Examples.K2NiF4(config=Configurations.config_experimental())
+    material.lattice_vectors = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    
+
     q_values = functions.create_q_grid(
         material.get_reciprocal_lattice_vectors()[:dimension], amount_BZ=1, steps=[*(50,)*dimension]
     )
-    refinement_factors = np.arange(10, 100, 10)
+    # q_values = functions.create_q_grid(give_reciprocal_lv(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))[:dimension], amount_BZ=1, steps=[*(50,)*dimension])
+    refinement_factors = np.arange(10, 200, 10)
     decrease_ratios = [1/np.sqrt(10), 1/np.sqrt(5), 1/np.sqrt(2), 1/1.1]
 
     results = np.zeros((len(refinement_factors),len(decrease_ratios)))
+    results_integral = np.zeros_like(results)
     indices_divergencies = np.array([0,0,0])
     if indices_divergencies.shape[0] > 0:
         for i, refinement_factor in enumerate(refinement_factors):
             for j, decrease_ratio in enumerate(decrease_ratios):
-                refined_grid, grid_volume = give_refined_grid_around_point(material,q_values, point_idx= indices_divergencies
+                refined_grid, grid_volume = give_refined_grid_around_point_old(q_values, point_idx= indices_divergencies
                                                                     , decrease_ratio=decrease_ratio
                                                                     ,dimension=dimension,
                                                                         refinement_factor=refinement_factor, 
                                                                         fraction_to_neighbour_to_include=0.5)
+                # refined_grid, grid_volume = give_refined_grid_around_point(material,q_values, point_idx= indices_divergencies
+                #                                                     , decrease_ratio=decrease_ratio
+                #                                                     ,dimension=dimension,
+                #                                                         refinement_factor=refinement_factor, 
+                #                                                         fraction_to_neighbour_to_include=0.5)
                 if np.any(refined_grid[0,0,0]>refined_grid[-1,0,0]): #necessary in the orginal case I assume that the grid is periodic but here it is not
                     refined_grid = -refined_grid
                 function_of_k = function_to_integrate(refined_grid)
-                integration_result = functions.integrate_nd(function_of_k, refined_grid, dimension=dimension)
+                integration_result = 1/grid_volume*functions.integrate_nd(function_of_k, refined_grid, dimension=dimension)
                 results[i, j] = integration_result
+                results_integral[i, j] = integration_result * grid_volume
     plt.figure()
     for i in range(len(decrease_ratios)):
         plt.plot(refinement_factors, results[:, i], label=f"decrease ratio: {decrease_ratios[i]:.3f}")
@@ -494,9 +505,10 @@ def test_integration():
 
     plt.figure()
     plt.plot([function_of_k[*((i,)*dimension+(0,)*(3-dimension))] for i in range(function_of_k.shape[0])])
-
-
     test_integration_2d_divergent(a,n)
+    functions.plot_points_3D(refined_grid.reshape(4*refinement_factors[-1]*refinement_factors[-1],3))
+
+    
     
     plt.show()
     return results
@@ -527,7 +539,7 @@ def test_integration_2d_divergent(a,n):
     
     val, err = integrate.dblquad(f, 0.0, a, lambda x: 0.0, lambda x: a)
     print(4*val, err)  # should be close to 2*a*np.arcsinh(1)
-    print("Expected:", 4*2*a*np.arcsinh(1))
+    print("Expected for n=1:", 4*2*a*np.arcsinh(1))
 
 def normalisation_plotting():
     import re
@@ -924,7 +936,7 @@ def run_over_seeds_minimise_energies(material:Material):
     print(f"Best energy found: {Ebest:.6f}")
     plt.show()
 
-def test_icommensurate():
+def test_incommensurate():
     import Examples
     import Configurations
     import LSW
