@@ -497,7 +497,7 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     # all_atoms.append(atoms[0])
     return material
 
-def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), lattice_constant=4.17e-10):
+def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), lattice_constant=4.103e-10): #bond length: https://journals.iucr.org/paper?S0108768193003246
 
     A,B,C = np.array([a, a, 0]), np.array([-a, a, 0]), np.array([0, 0, 50*a])
     #TODO: make this nicer and more general

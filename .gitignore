@@ -18,6 +18,7 @@ intermediate_arrays/
 
 # Ignore all .dat files
 *.npz
+*LaptopPaul*
 
 grid.npz
 total_integral_intensities.txt

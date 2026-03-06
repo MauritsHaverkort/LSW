@@ -3314,19 +3314,21 @@ def plotting_rixs_spectra(material: Material, config: Config,
         return fig
 
     
-    def draw_xyz_equiv_contribution_for_azim_angle():
+    def draw_xyz_equiv_contribution_for_indices_path(indices_path_angles_, only_draw_non_zero = True, xlabels_plot_ = None):
        
         #this plots the contributions of each equivalence class to the total RIXS spectrum along the path. 
         # temp = np.einsum("ROUMNsrpabk, OUMNwk->srpawk", material.coeff_xyz_rixs, spectrum_2_xyz_along_path, optimize="optimal")
         sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.get_sym_classes_to_xyz()
         sym_class_2 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_2,4, give_mean_abs_value=False, compare_only_a_sample = False)
         sym_class_4 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_4,4, give_mean_abs_value=False, compare_only_a_sample = False)
-            
+        if xlabels_plot_ is None:
+            xlabels_plot_ = x_labels_plot
+        coeff_rixs_along_path = material.coeff_xyz_rixs[:,:,:,:,:,:,:,:,*indices_path_angles_] #ROUMNsrpabk -> ROUMNsrpk
         figs = []
         OUMNx = np.zeros(sym_class_2[1].shape+(int(np.max(sym_class_2[1])+1),))
         for idx in np.ndindex(sym_class_2[1].shape):
             OUMNx[*idx,sym_class_2[1][*idx]]=1
-        equiv_contribution_2 = np.einsum("ROUMNsrpabk, OUMNx->xsrpak", material.coeff_xyz_rixs, OUMNx, optimize="optimal")
+        equiv_contribution_2 = np.einsum("ROUMNsrpk, OUMNx->xsrpk", coeff_rixs_along_path, OUMNx, optimize="optimal")
         
         #to see certain fund x-ray mixed terms vanish (or not vanish)
         # plt.figure()
@@ -3338,7 +3340,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         
         for x in range(equiv_contribution_2.shape[0]):
             #summing all fund x-ray and polarisations from config
-            plt.plot(equiv_contribution_2[x,:,:,config.rixs_config.polarisations_to_sum,0,:].sum(axis=(0,1,2)), label=f"equiv class: {sym_class_2[0][x][1]}", lw = equiv_contribution_2.shape[0]+2-x) #equiv class with higher number gets lower line width (just for better visibility)
+            plt.plot(xlabels_plot_,equiv_contribution_2[x,:,:,config.rixs_config.polarisations_to_sum,:].sum(axis=(0,1,2)), label=f"equiv class: {sym_class_2[0][x][1]}", lw = equiv_contribution_2.shape[0]+2-x) #equiv class with higher number gets lower line width (just for better visibility)
         plt.legend()
         
          
@@ -3347,7 +3349,11 @@ def plotting_rixs_spectra(material: Material, config: Config,
             #summing all fund x-ray and polarisations from config
             for s in range(1,equiv_contribution_2.shape[1]):
                 for r in range(1,equiv_contribution_2.shape[2]):
-                    plt.plot(equiv_contribution_2[x,s,r,config.rixs_config.polarisations_to_sum,0,:].sum(axis=0), label=f"equiv class: {sym_class_2[0][x][1]}, conj({prefactor_list[s]})*{prefactor_list[r]}")
+                    term = equiv_contribution_2[x,s,r,config.rixs_config.polarisations_to_sum,:].sum(axis=0)
+                    if np.all(np.abs(term)<1e-2):
+                        if only_draw_non_zero:
+                            continue
+                    plt.plot(xlabels_plot_,equiv_contribution_2[x,s,r,config.rixs_config.polarisations_to_sum,:].sum(axis=0), label=f"equiv class: {sym_class_2[0][x][1]}, conj({prefactor_list[s]})*{prefactor_list[r]}")
             plt.legend()
         
         #two magnon
@@ -3860,6 +3866,17 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label="||t2g||^2")
             plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label="Im(conj(t2g)*Re(t1u))")
             plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label="Re(conj(t2g)*Re(t1u))")
+            plt.xlabel("Energy (eV)")
+            plt.ylabel("Prefactor abs squared")
+            plt.legend()
+        
+            plt.axvline(x=w_in[v_index])
+        elif material.symmetry_class == "D4h":
+            fig_interesting = plt.figure("interesting combinations of prefactors vs w_in_index")
+            plt.plot(w_in, np.abs(prefactor_dict_all_w["eg2"])**2, label="||eg2||^2")
+            plt.plot(w_in, np.abs(prefactor_dict_all_w["eu1"])**2, label="||eu1||^2")
+
+            plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label="Im(conj(eu1)*(eg2))")
             plt.xlabel("Energy (eV)")
             plt.ylabel("Prefactor abs squared")
             plt.legend()
@@ -4465,7 +4482,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
     if not config.test_normalisation:
         figs = [
             
-                draw_xyz_equiv_contribution_for_azim_angle(),
+                draw_xyz_equiv_contribution_for_indices_path(),
                 (
                 draw_xyz_a_ad_spectra__energies__along_path(
                     relative_grid_points_lv_basis.reshape(
@@ -4993,7 +5010,7 @@ def treat_divergencies(
     if use_averaging_TdT:  # TODO:averaging idea still needs testing
         decrease_ratio = 1 / 1.1
         refinement_steps = 40
-        fraction_to_neighbour_to_include = 0.5
+        fraction_to_neighbour_to_include = 0.9
         assert len(residues.shape) == 7  # t i j K l
         assert (
             material.is_incommensurate() == False
