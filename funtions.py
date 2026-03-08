@@ -1550,16 +1550,20 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
         for a in range(M):
             for b in range(M):
                 ax = axs_grid[a, b] if M!=1 else axs_grid
-                
-                intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
-                    config,
-                    material=material,
-                    relative_grid_points=material.get_extended_relative_grid_points_path(),
-                    dimension=material.dimension,
-                    grid=sqw_intensities[0,a, b, :, :, :],
-                    q_grid=q_values_grid,
-                    no_w_values=True,
-                )
+                # TODO: this is a old function that might make problems at certain grid sizes (thus try)
+                try:
+                    intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
+                        config,
+                        material=material,
+                        relative_grid_points=material.get_extended_relative_grid_points_path(),
+                        dimension=material.dimension,
+                        grid=sqw_intensities[0,a, b, :, :, :],
+                        q_grid=q_values_grid,
+                        no_w_values=True,
+                    )
+                except Exception as e:
+                    config.warnings.add(f"Error in path_through_k_grid: {e}")
+                    continue
                 #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
                 ax.plot(np.real(intensities_k_along_path), label=f"I_i{a}_j{b}", linewidth=2)
                 ax.set_title(f"i={a}, j={b}")
@@ -2490,7 +2494,7 @@ def create_Gamma(half_size):
     return Gamma
 
 
-def integrate_nd(f, grid_points, dimension):
+def integrate_nd(f, grid_points, spacing,dimension):
     """
     Piecewise-linear (trapezoidal) integration over 1–3 axes.
 
@@ -2521,11 +2525,17 @@ def integrate_nd(f, grid_points, dimension):
     res = f[(slice(None),)*dimension + (0,)*(3-dimension)]  # only include the axis that I want to integrate over
     # integrate from last axis down so axis indices stay valid
     for ax in reversed(range(dimension)):
-        grid_slice = (slice(None),) * (ax+1) + (0,)*(2-ax) + (ax,)
+        # grid_slice = (slice(None),) * (ax+1) + (0,)*(2-ax) + (ax,)
         slice_only_ax = (0,)*(ax) + (slice(None),) + (0,)*(2-ax) + (ax,)
+        # slice_only_ax_vec = (0,)*(ax) + (slice(None),) + (0,)*(2-ax) 
+        # grid_vec_along_ax = grid_points[slice_only_ax_vec]
+        # delta_g_ax = np.array([0]+[la.norm(np.array(grid_vec_along_ax[i+1] - grid_vec_along_ax[i])) for i in range(len(grid_vec_along_ax)-1)])
+        
         sign_correction = 1 if grid_points[slice_only_ax][-1] > grid_points[slice_only_ax][0] else -1
-        res = sign_correction * np.trapezoid(res, grid_points[grid_slice], axis=ax) # the grid points might be decreasing instead increasing in some axis --> the sign correction corrects that by explicit checking
+        res = sign_correction * np.trapezoid(res, spacing) # the grid points might be decreasing instead increasing in some axis --> the sign correction corrects that by explicit checking
     return res
+
+
 
 def give_refined_grid_around_point_old(grid, point_idx, dimension, refinement_factor=100, fraction_to_neighbour_to_include=1/2, decrease_ratio=1/2):
     point = grid[*point_idx]
@@ -2567,20 +2577,26 @@ def give_refined_grid_around_point(material, grid, point_idx, dimension, refinem
     X, Y, Z = np.meshgrid(*spacings_per_d, indexing='ij')
     grid_float_idcs = np.stack([X, Y, Z], axis=-1)
     grid_float_idcs = grid_float_idcs[:,:,:,:dimension] #only take the dimensions that are defined in the mateial
-    lv_scaled = np.array([material.get_reciprocal_lattice_vectors()[axs]/grid.shape[:3][axs] for axs in range(dimension)])
+    lv_recip_scaled = np.array([material.get_reciprocal_lattice_vectors()[axs]/grid.shape[:3][axs] for axs in range(dimension)])
     
-    grid_refined = np.einsum('...v,vl->...l', grid_float_idcs, lv_scaled)+ point 
+    grid_refined = np.einsum('...v,vl->...l', grid_float_idcs, lv_recip_scaled)+ point 
     
-    scale = np.max(spacing) 
-    match dimension:
-        case 1:
-            grid_volume = np.abs(la.norm(lv_scaled[0]) *scale)*2
-        case 2:
-            grid_volume = np.abs(la.norm(la.cross(lv_scaled[0], lv_scaled[1])) * scale**2)*4 #takes only "positive quarter" of the box thus times 4 
-        case 3:
-            grid_volume = np.abs(la.dot(la.cross(lv_scaled[0], lv_scaled[1]), lv_scaled[2]) * scale**3) *8
-            
-    return grid_refined, grid_volume
+    scale = fraction_to_neighbour_to_include*2
+    
+    #I dont think I need this the volume element can be taken out, (I might not have the correct statistics since for non euclidean vectors certain directions might be overrepresented but the scaling should remain correct)
+    if False: 
+        match dimension:
+            case 1:
+                euclidean_volume = np.abs(la.norm(lv_recip_scaled[0]))  
+                spacing_volume = np.abs(la.norm(lv_recip_scaled[0])/euclidean_volume *scale) #this takes into account that the volume element for non euclidean lattice vectors will not be the same as for euclidean ones, 
+            case 2:
+                euclidean_volume = np.abs(la.norm(lv_recip_scaled[0]) * la.norm(lv_recip_scaled[1])) 
+                spacing_volume = np.abs(la.norm(la.cross(lv_recip_scaled[0], lv_recip_scaled[1]))/euclidean_volume * scale**2) #takes only "positive quarter" of the box thus times 4 
+            case 3:
+                euclidean_volume = np.abs(la.norm(lv_recip_scaled[0]) * la.norm(lv_recip_scaled[1]) * la.norm(lv_recip_scaled[2]))
+                spacing_volume = np.abs(la.dot(la.cross(lv_recip_scaled[0], lv_recip_scaled[1]), lv_recip_scaled[2])/euclidean_volume * scale**3) 
+                
+    return grid_refined, spacing
 
 def decreasing_step_spacing_float(start: float, end: float, num_points: int, decrease_ratio: float, use_approach_from_both_sides: bool = True) -> np.ndarray:
     if num_points < 2:

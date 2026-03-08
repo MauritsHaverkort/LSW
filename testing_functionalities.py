@@ -454,6 +454,7 @@ def test_integration():
     n=1
     def function_to_integrate(k):
         magnitude_k = np.linalg.norm(k, axis=-1)
+        return np.cosh(magnitude_k)/np.sinh(magnitude_k)
         return 1/magnitude_k**n#**2 #k[:,:,:,0] #only in one direction 
     
     material = Examples.K2NiF4(config=Configurations.config_experimental())
@@ -466,41 +467,43 @@ def test_integration():
     # q_values = functions.create_q_grid(give_reciprocal_lv(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))[:dimension], amount_BZ=1, steps=[*(50,)*dimension])
     refinement_factors = np.arange(10, 200, 10)
     decrease_ratios = [1/np.sqrt(10), 1/np.sqrt(5), 1/np.sqrt(2), 1/1.1]
-
+    fraction_to_neighbour_to_include = [0.5,0.7,0.9]
     results = np.zeros((len(refinement_factors),len(decrease_ratios)))
     results_integral = np.zeros_like(results)
     indices_divergencies = np.array([0,0,0])
     if indices_divergencies.shape[0] > 0:
-        for i, refinement_factor in enumerate(refinement_factors):
-            for j, decrease_ratio in enumerate(decrease_ratios):
-                refined_grid, grid_volume = give_refined_grid_around_point_old(q_values, point_idx= indices_divergencies
-                                                                    , decrease_ratio=decrease_ratio
-                                                                    ,dimension=dimension,
-                                                                        refinement_factor=refinement_factor, 
-                                                                        fraction_to_neighbour_to_include=0.5)
-                # refined_grid, grid_volume = give_refined_grid_around_point(material,q_values, point_idx= indices_divergencies
-                #                                                     , decrease_ratio=decrease_ratio
-                #                                                     ,dimension=dimension,
-                #                                                         refinement_factor=refinement_factor, 
-                #                                                         fraction_to_neighbour_to_include=0.5)
-                if np.any(refined_grid[0,0,0]>refined_grid[-1,0,0]): #necessary in the orginal case I assume that the grid is periodic but here it is not
-                    refined_grid = -refined_grid
-                function_of_k = function_to_integrate(refined_grid)
-                integration_result = 1/grid_volume*functions.integrate_nd(function_of_k, refined_grid, dimension=dimension)
-                results[i, j] = integration_result
-                results_integral[i, j] = integration_result * grid_volume
-    plt.figure()
-    for i in range(len(decrease_ratios)):
-        plt.plot(refinement_factors, results[:, i], label=f"decrease ratio: {decrease_ratios[i]:.3f}")
-    plt.xlabel("Refinement Factor")
-    plt.ylabel("Integration Result")
-    plt.title("Integration Results for Different Refinement Factors and Decrease Ratios")
-    plt.legend()
+        for r in fraction_to_neighbour_to_include:
+            for i, refinement_factor in enumerate(refinement_factors):
+                for j, decrease_ratio in enumerate(decrease_ratios):
+                    # refined_grid, spacing = give_refined_grid_around_point_old(q_values, point_idx= indices_divergencies
+                    #                                                     , decrease_ratio=decrease_ratio
+                    #                                                     ,dimension=dimension,
+                    #                                                         refinement_factor=refinement_factor, 
+                #                                                         fraction_to_neighbour_to_include=fraction_to_neighbour_to_include)
+                    refined_grid, spacing = give_refined_grid_around_point(material,q_values, point_idx= indices_divergencies
+                                                                        , decrease_ratio=decrease_ratio
+                                                                        ,dimension=dimension,
+                                                                            refinement_factor=refinement_factor, 
+                                                                            fraction_to_neighbour_to_include=r)
+                    if np.any(refined_grid[0,0,0]>refined_grid[-1,0,0]): #necessary in the orginal case I assume that the grid is periodic but here it is not
+                        refined_grid = -refined_grid
+                    function_of_k = function_to_integrate(refined_grid)
+                    spacing_volume = (2*r)**material.dimension
+                    integration_result = 1/spacing_volume*functions.integrate_nd(function_of_k, refined_grid, spacing=spacing, dimension=dimension)
+                    results[i, j] = integration_result
+                    results_integral[i, j] = integration_result * spacing_volume
+            plt.figure(f"fraction to neighbour included: {r}")
+            for i in range(len(decrease_ratios)):
+                plt.plot(refinement_factors, results[:, i], label=f"decrease ratio: {decrease_ratios[i]:.3f}")
+            plt.xlabel("Refinement Factor")
+            plt.ylabel("Integration Result")
+            plt.title("Integration Results for Different Refinement Factors and Decrease Ratios")
+            plt.legend()
 
-    a=np.max(refined_grid)
+        a=np.max(refined_grid)
     
     #print(2/(1-n)*a**(1-n))
-    print(grid_volume)
+    # print(grid_volume)
     print(a)
 
     plt.figure()

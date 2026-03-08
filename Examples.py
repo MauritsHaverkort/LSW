@@ -290,7 +290,7 @@ def NiO_incomm_1_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=
     # alignements = [np.array([1, 1, -2])]
     
     #still fcc
-    A,B,C = np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])
+    A,B,C = 1/2*np.array([a, a, 0]), 1/2*np.array([0, a, a]), 1/2*np.array([a, 0, a])
   
     lv = [A,B,C]
     
@@ -371,7 +371,7 @@ def NiO_incomm_1_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=
     # material.relative_grid_points_path = [ np.array([0,0,0]), 1/2* np.array([1,0,1]), 1/2* np.array([0,1,1]), 1/2* np.array([0,0,0])]
     
     #give in euclidean basis for better readability
-    relative_grid_points_path = [np.array([0,0,0]), np.array([0.5,0,0]), 0.5*np.array([1,1,0]), 0.5*np.array([1,1,1]), np.array([0,0,0])]
+    relative_grid_points_path = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]), np.array([1,1,1]), np.array([0,0,0])]
     #transform to lattice vector basis
     material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/2*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
     

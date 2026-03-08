@@ -114,6 +114,7 @@ class Material:
         
         self.coeff_sqw_prime_to_sqw: np.ndarray = None
         self.coeff_sqw_prime_to_sqw_4: np.ndarray = None
+        self.sqw_symmetrisation_tensor: np.ndarray = None
 
         self.coeff_prime_to_lab_2: np.ndarray = None
         self.coeff_prime_to_lab_4: np.ndarray = None
@@ -340,24 +341,47 @@ class Material:
     def __repr__(self):
         return f"Material(atoms={self.atoms}, bonds={self.bonds})"
 
-    def get_sym_classes_to_xyz(self):
+    def calc_sym_classes_to_xyz(self):
         """calculate the symmetry classes of the xyz spectra if it wasnt calculated before"""
         if self.sym_classes_to_xyz_4 is None or self.sym_classes_to_xyz_2 is None:
-            if self.coeff_equiv_classes_tioju_4 is not None and self.coeff_tioju_xyz_4 is not None:
-                self.sym_classes_to_xyz_4 = np.einsum(
-                    "xytioju,OUMNioju->OUMNxy",
-                    self.coeff_equiv_classes_tioju_4,
-                    self.coeff_tioju_xyz_4,
-                    optimize="optimal",
-                )
-            if self.coeff_equiv_classes_tioju_2 is not None and self.coeff_tioju_xyz_2 is not None:
-                
-                self.sym_classes_to_xyz_2 = np.einsum(
-                    "xtioju,OUMNioju->OUMNx",
-                    self.coeff_equiv_classes_tioju_2,
-                    self.coeff_tioju_xyz_2,
-                    optimize="optimal",
-                )
+            if self.is_incommensurate():
+                if self.coeff_equiv_classes_tioju_4 is not None and self.coeff_tioju_xyz_4 is not None:
+                    self.sym_classes_to_xyz_4 = np.einsum(
+                        "xytioju,OUmnioju,tMNmn,ABCDOUMN->ABCDxy",
+                        self.coeff_equiv_classes_tioju_4,
+                        self.coeff_tioju_xyz_4,
+                        self.coeff_sqw_prime_to_sqw,
+                        self.sqw_symmetrisation_tensor,
+                        optimize="optimal",
+                    )
+                    
+               
+                if self.coeff_equiv_classes_tioju_2 is not None and self.coeff_tioju_xyz_2 is not None:
+                    
+                    self.sym_classes_to_xyz_2 = np.einsum(
+                        "xtioju,OUmnioju, tMNmn, ABCDOUMN->ABCDx",
+                        self.coeff_equiv_classes_tioju_2,
+                        self.coeff_tioju_xyz_2,
+                        self.coeff_sqw_prime_to_sqw,
+                        self.sqw_symmetrisation_tensor,
+                        optimize="optimal",
+                    )
+            else:   
+                if self.coeff_equiv_classes_tioju_4 is not None and self.coeff_tioju_xyz_4 is not None:
+                    self.sym_classes_to_xyz_4 = np.einsum(
+                        "xytioju,OUMNioju->OUMNxy",
+                        self.coeff_equiv_classes_tioju_4,
+                        self.coeff_tioju_xyz_4,
+                        optimize="optimal",
+                    )
+                if self.coeff_equiv_classes_tioju_2 is not None and self.coeff_tioju_xyz_2 is not None:
+                    
+                    self.sym_classes_to_xyz_2 = np.einsum(
+                        "xtioju,OUMNioju->OUMNx",
+                        self.coeff_equiv_classes_tioju_2,
+                        self.coeff_tioju_xyz_2,
+                        optimize="optimal",
+                    )
         return self.sym_classes_to_xyz_2, self.sym_classes_to_xyz_4
     
     def transform_basis_i_order_i_to_n1_n2(

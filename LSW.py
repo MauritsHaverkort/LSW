@@ -145,7 +145,7 @@ def call_main_with_material_config():
             # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             
             #NiO with NN and NNN
-            # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
+            Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
@@ -157,7 +157,7 @@ def call_main_with_material_config():
             # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #K2NiF4
-            Examples.K2NiF4(config)
+            # Examples.K2NiF4(config)
             #Nickelates
             # Examples.RNiO_3(config, anisotropy_K=-50)
             
@@ -1020,12 +1020,13 @@ def sqw_components_calc_general_tau(
     # sqw_components_coeff is an array that tells for every compoent of S[a,b](q,w) which components with coefficients of S'[t,a,b](q,w) are used to construct it
     return sqw_components, sqw_components_coeff
 
-def calc_symmetrisation_tensor( material, config):
+def calc_symmetrisation_tensor(material:Material, config:Config):
     # assert sqw.shape[:4] == (4, 4, 4, 4), "Expected sqw tensor to have spin operator at first 4 dimansions" #OUMN...
     # symmetrising the result (eq 38)
     # ------------------------------------------------------------------------------------------------------------------------------
     # check if commensurate or otherwise symmetrisations are needed
-    
+    if material.sqw_symmetrisation_tensor is not None:
+        return material.sqw_symmetrisation_tensor
     if material.is_incommensurate():
 
         phi = []
@@ -1076,6 +1077,7 @@ def calc_symmetrisation_tensor( material, config):
                 optimize="optimal",
             )
         )
+        material.sqw_symmetrisation_tensor = sqw_symmetrisation_tensor
     else:
         assert False, "shouldnt be called if material is commensurate since the no symmetrisation is needed in this case"
         # sqw_symmetrisation_tensor = sqw  # no symmetrisation needed, just use the original sqw
@@ -1110,39 +1112,47 @@ def sqw_components_calc_general_tau_optimised(
         
     R1_conj = np.conj(R1)
     
-    # if amount_tau_values == 3:
+    #TODO: not working yet
+    if amount_tau_values == 3:
+        # Y_tdd' mapping from sqw' to sqw
+        Y = np.zeros((amount_tau_values, config.amount_spatial_S_operator, config.amount_spatial_S_operator,config.amount_spatial_S_operator, config.amount_spatial_S_operator), dtype=config.dtype_complex)
+        Y[0] = R2
+        Y[1] = R1
+        Y[2] = R1_conj
+        material.coeff_sqw_prime_to_sqw = Y
+        return Y
     if amount_tau_values == 5:
         # Y_tgdg'd' mapping from sqw' to sqw
         Y = np.zeros((amount_tau_values, config.amount_spatial_S_operator, config.amount_spatial_S_operator,config.amount_spatial_S_operator, config.amount_spatial_S_operator), dtype=config.dtype_complex)
         Y[0] = (
                 np.einsum(
-                    "Gg,Dd->GgDd",
+                    "Gg,Dd->GDgd",
                     R1,
                     R1_conj,
                     optimize="optimal",
                 )
                 + np.einsum(
-                    "Gg,Dd->GgDd",
+                    "Gg,Dd->GDgd",
                     R1_conj,
                     R1,
                     optimize="optimal",
                 )
                 + np.einsum(
-                    "Gg,Dd->GgDd", R2, R2, optimize="optimal"
+                    "Gg,Dd->GDgd", R2, R2, optimize="optimal"
                 )
             )
         Y[1] = np.einsum(
-            "Gg,Dd->GgDd", R1, R2, optimize="optimal"
+            "Gg,Dd->GDgd", R1, R2, optimize="optimal"
         ) + np.einsum(
-            "Gg,Dd->GgDd", R2, R1, optimize="optimal"
+            "Gg,Dd->GDgd", R2, R1, optimize="optimal"
         )
         Y[2] = np.einsum(
-            "Gg,Dd->GgDd", R1_conj, R2, optimize="optimal"
+            "Gg,Dd->GDgd", R1_conj, R2, optimize="optimal"
         ) + np.einsum(
-            "Gg,Dd->GgDd", R2, R1_conj, optimize="optimal"
+            "Gg,Dd->GDgd", R2, R1_conj, optimize="optimal"
         )
         Y[3] = np.einsum(
-            "Gg,Dd->GgDd", R1, R1, optimize="optimal"
+            "Gg,Dd->GDgd", R1, R1, optimize="optimal"
         )
         Y[3] = np.einsum(
             "Gg,Dd->GgDd",
@@ -2779,10 +2789,10 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     sigma_prefactors = compute_sigma_prefactors()
 
     if material.is_incommensurate():
-        #compute the icommensurate mapping from sqw' to sqw
+        #compute the icommensurate mapping from sqw' to sqw (saved as material.Y)
         temp = sqw_components_calc_general_tau_optimised(material, config, config.amount_tau_values)
         
-        symmetrisation_tensor = calc_symmetrisation_tensor(material, config) # we have to symmetrise the final coeff for all rotations of the first unit cell that are possible
+        calc_symmetrisation_tensor(material, config) # we have to symmetrise the final coeff for all rotations of the first unit cell that are possible
     
     # ---------------------------- putting everything together to get the RIXS spectrum ---------------------------- 
     if config.use_explicit_calc_of_sqw:
@@ -2822,7 +2832,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 "xytioju,vabcij,ABCDOUMN,OUmnioju,tMNmn,RABCDsrpabc,srv->Rvpabcxy", #ABCD stands here for the symmetrised OUMN --> in the following again referenced as OUMN for better readability --> so in one step here: rotation from sqw' to sqw and symmetrisation of the OUMN coefficients
                 material.coeff_equiv_classes_tioju_4,
                 phase_factor_along_path,
-                symmetrisation_tensor,
+                material.sqw_symmetrisation_tensor,
                 material.coeff_tioju_xyz_4,
                 material.coeff_sqw_prime_to_sqw,
                 material.coeff_xyz_rixs,
@@ -2870,7 +2880,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 "xtioju,vabcij,ABCDOUMN,OUmnioju,tMNmn,RABCDsrpabc,srv->Rvpabcx", #ABCD stands here for the symmetrised OUMN --> in the following again referenced as OUMN for better readability --> so in one step here: rotation from sqw' to sqw and symmetrisation of the OUMN coefficients
                 material.coeff_equiv_classes_tioju_2,
                 phase_factor_along_path,
-                symmetrisation_tensor,
+                material.sqw_symmetrisation_tensor,
                 material.coeff_tioju_xyz_2,
                 material.coeff_sqw_prime_to_sqw,
                 material.coeff_xyz_rixs,
@@ -3318,7 +3328,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
        
         #this plots the contributions of each equivalence class to the total RIXS spectrum along the path. 
         # temp = np.einsum("ROUMNsrpabk, OUMNwk->srpawk", material.coeff_xyz_rixs, spectrum_2_xyz_along_path, optimize="optimal")
-        sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.get_sym_classes_to_xyz()
+        sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.calc_sym_classes_to_xyz()
         sym_class_2 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_2,4, give_mean_abs_value=False, compare_only_a_sample = False)
         sym_class_4 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_4,4, give_mean_abs_value=False, compare_only_a_sample = False)
         if xlabels_plot_ is None:
@@ -3390,7 +3400,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         relative_grid_points = np.real(relative_grid_points)
 
         if draw_every_sym_class_once:
-            sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.get_sym_classes_to_xyz()
+            sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.calc_sym_classes_to_xyz()
             sym_class_2 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_2,4, give_mean_abs_value=False, compare_only_a_sample = False)
             sym_class_4 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_4,4, give_mean_abs_value=False, compare_only_a_sample = False)
             
@@ -3514,7 +3524,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
             spectrum_2_xyz_along_path.shape[:4]
         ):
             if (
-                np.abs(np.abs(spectrum_2_xyz_along_path[*equiv_class_idx])).max()
+                np.abs(spectrum_2_xyz_along_path[*equiv_class_idx]).max()
                 > fraction_of_max_to_plot * np.abs(np.abs(spectrum_2_xyz_along_path)).max()
             ):
 
@@ -4026,7 +4036,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
     # relation equivalence class to xyz ----------------------------------------
 
     def print_sym_class_xyz_relation():
-        sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.get_sym_classes_to_xyz()
+        sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.calc_sym_classes_to_xyz()
         print(
             "--------------------------------------------------two magnon--------------------------------------------------"
         )
@@ -4482,7 +4492,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
     if not config.test_normalisation:
         figs = [
             
-                draw_xyz_equiv_contribution_for_indices_path(),
+                draw_xyz_equiv_contribution_for_indices_path(indices_path_angles),
                 (
                 draw_xyz_a_ad_spectra__energies__along_path(
                     relative_grid_points_lv_basis.reshape(
@@ -5006,7 +5016,13 @@ def treat_divergencies(
 ):
 
     max_value = max_value * 1 / config.number_k_points
+    
+    indices_divergencies = np.array(np.where(np.abs(residues) > max_value))
 
+    indices_divergencies = np.unique(
+        np.array(indices_divergencies).T[:, 3:-1], axis=0
+    )  # returns only the k_indices each one only once
+    
     if use_averaging_TdT:  # TODO:averaging idea still needs testing
         decrease_ratio = 1 / 1.1
         refinement_steps = 40
@@ -5016,13 +5032,9 @@ def treat_divergencies(
             material.is_incommensurate() == False
         ), "refining grid only implemented for commensurate materials yet"
 
-        indices_divergencies = np.array(np.where(np.abs(residues) > max_value))
-        indices_divergencies = np.unique(
-            np.array(indices_divergencies).T[:, 3:-1], axis=0
-        )  # returns only the k_indices each one only once
         for index_div in indices_divergencies:
             if indices_divergencies.shape[0] > 0:
-                refined_grid, grid_volume = give_refined_grid_around_point(
+                refined_grid, spacing = give_refined_grid_around_point(
                     material,
                     q_values,
                     point_idx=index_div,
@@ -5046,7 +5058,7 @@ def treat_divergencies(
                     "starting numerical integration", config.debug_timing
                 )
                 # eigvecs_refined_int = np.zeros((2*material.N, 2*material.N), dtype=config.dtype_complex)
-
+                spacing_volume = (2*fraction_to_neighbour_to_include)**material.dimension # the spacing runs from -fraction_to_neighbour_to_include to +fraction_to_neighbour_to_include in each direction so this is to account for the acaling diffrence
                 for i in range(2 * material.N):
                     for j in range(2 * material.N):
                         for l in range(2 * material.N):
@@ -5054,10 +5066,11 @@ def treat_divergencies(
                             assert material.is_incommensurate() == False, "refining grid only implemented for commensurate materials yet"
                             residues[0, i, j, *index_div, l] = (
                                 1
-                                / (grid_volume)
+                                / (spacing_volume)
                                 * functions.integrate_nd(
                                     residues_refined[i, j, :, :, :, l],
                                     refined_grid,
+                                    spacing,
                                     dimension=material.dimension,
                                 )
                             
@@ -5098,7 +5111,26 @@ def treat_divergencies(
                 )
         # eigvecs_refined = eigvecs_refined.mean(axis=(0, 1, 2))  # averaging over the refined grid
     else:
-        residues[np.abs(residues) > max_value] = 0
+        residues[np.abs(residues) > max_value] = max_value * np.sign(residues[np.abs(residues) > max_value]) # set the values that are above the threshold to the threshold value with the same sign
+        config.warnings.add("divergencies are treated not correctl but set to threshold")
+        #assuming a 1/x dependency and interpolate from first dimension
+        # def divergence(x, a, b, n):
+        #     return a*1/x**n+b 
+        
+        # for index_div in indices_divergencies:
+        #     if indices_divergencies.shape[0] > 0:
+        #         for i in range(2 * material.N):
+        #             for j in range(2 * material.N):
+        #                 for l in range(2 * material.N):
+        #                     for t in range(residues.shape[0]):
+        #                         divergence_at_zero = True
+        #                         if index_div[0] >= q_values.shape[0] / 2:
+        #                             divergence_at_zero = False
+        #                             slice_x =  np.array(range(0, index_div[0]))
+        #                         else:
+        #                             slice_x = np.array(range(index_div[0]+1, q_values.shape[0]))
+        #                         res = scipy.optimize.curve_fit(divergence, slice_x, residues[t, i, j, slice_x, index_div[1], index_div[2], l ],  p0=[1, 1, 0])
+        #                         residues[t, i, j, *index_div, l] = divergence(0, *res[0]) if divergence_at_zero else divergence(slice_x[-1], *res[0]) # if the divergence is at zero we want to know the value at zero, if it is at the end of the grid we want to know the value at the end of the grid
     return residues
 
 
