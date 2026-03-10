@@ -4829,7 +4829,8 @@ def symmetry_checks(config: Config, material: Material):
     print("")
 
 
-def sqw_prime_to_sqw(config: Config, sqw_prime: np.ndarray, material: Material):
+def sqw_prime_to_sqw(config: Config, sqw_prime: np.ndarray, material: Material): 
+    assert False, "outdated function"
     if not material.is_incommensurate():
         if sqw_prime is None:
             return None, None
