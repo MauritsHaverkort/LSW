@@ -103,15 +103,20 @@ class Material:
         self.q_values: np.ndarray = None
         self.w_values: np.ndarray = None
 
-        self.sqw_2_ad_a_equiv_class: np.ndarray = None
-        self.conv_sqw_2_ad_a_sym_classes: np.ndarray = None
+        #S_x
+        self.sqw_2_ad_a_equiv_class: np.ndarray = None 
+        #S_xy
+        self.conv_sqw_2_ad_a_equiv_classes: np.ndarray = None
 
-        self.coeff_equiv_classes_tioju_4: np.ndarray = None
+        #X
+        self.coeff_equiv_classes_tioju_4: np.ndarray = None #
         self.coeff_equiv_classes_tioju_2: np.ndarray = None
 
+        #M
         self.coeff_tioju_xyz_2: np.ndarray = None
         self.coeff_tioju_xyz_4: np.ndarray = None
         
+        #Y
         self.coeff_sqw_prime_to_sqw: np.ndarray = None
         self.coeff_sqw_prime_to_sqw_4: np.ndarray = None
         self.sqw_symmetrisation_tensor: np.ndarray = None
@@ -119,6 +124,7 @@ class Material:
         self.coeff_prime_to_lab_2: np.ndarray = None
         self.coeff_prime_to_lab_4: np.ndarray = None
 
+        #S^{RIXS}
         self.rixs_spectrum_4: np.ndarray = None
         self.rixs_spectrum_2: np.ndarray = None
         self.rixs_spectrum: np.ndarray = None
@@ -238,8 +244,12 @@ class Material:
 
     def is_incommensurate(self):
         """Check if the material is incommensurate based on its tau values."""
-        return np.any(self.tau != np.array([0, 0, 0]))
-
+        temp = np.any(self.tau != np.array([0, 0, 0]))
+        if temp:
+            self.config.warnings.add(
+                f"incommensurate is used but doesnt work yet --> roation is still wrong"
+            )
+        return temp
     def return_combinations_up_to_distance(self, atoms, max_distance):
         """return all combinations of unique atom pairs and unit cells for every distance up to max_distance"""
         max_extension = int(

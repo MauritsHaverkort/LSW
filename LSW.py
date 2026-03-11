@@ -145,8 +145,8 @@ def call_main_with_material_config():
             # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             
             #NiO with NN and NNN
-            Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
-            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
+            # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
@@ -1102,7 +1102,7 @@ def sqw_components_calc_general_tau_optimised(
     R2 = material.mat_R2
     
     
-    if config.amount_spatial_S_operator == 4: #adding the unit operator for the 5 tau case
+    if False and config.amount_spatial_S_operator == 4: #adding the unit operator for the 5 tau case
         R1_4 = np.eye(4, dtype=config.dtype_complex)
         R2_4 = np.eye(4, dtype=config.dtype_complex)
         R1_4[:3,:3] = R1
@@ -1112,19 +1112,16 @@ def sqw_components_calc_general_tau_optimised(
         
     R1_conj = np.conj(R1)
     
-    #TODO: not working yet
-    if amount_tau_values == 3:
-        # Y_tdd' mapping from sqw' to sqw
-        Y = np.zeros((amount_tau_values, config.amount_spatial_S_operator, config.amount_spatial_S_operator,config.amount_spatial_S_operator, config.amount_spatial_S_operator), dtype=config.dtype_complex)
-        Y[0] = R2
-        Y[1] = R1
-        Y[2] = R1_conj
-        material.coeff_sqw_prime_to_sqw = Y
-        return Y
+    #unit operator is transformed to unit operator while the one "actual" spin operator is rotated 
+    slice_1Spin_0 = (3,slice(0,3),3,slice(0,3))
+    slice_1Spin_1 = (slice(0,3),3,slice(0,3),3)
+    
+    slice_2Spin = (slice(0,3),slice(0,3),slice(0,3),slice(0,3))
     if amount_tau_values == 5:
         # Y_tgdg'd' mapping from sqw' to sqw
         Y = np.zeros((amount_tau_values, config.amount_spatial_S_operator, config.amount_spatial_S_operator,config.amount_spatial_S_operator, config.amount_spatial_S_operator), dtype=config.dtype_complex)
-        Y[0] = (
+        #two spin operator at the right side (at least one of the right operators is the unit operator)
+        Y[0][slice_2Spin] = (
                 np.einsum(
                     "Gg,Dd->GDgd",
                     R1,
@@ -1141,25 +1138,37 @@ def sqw_components_calc_general_tau_optimised(
                     "Gg,Dd->GDgd", R2, R2, optimize="optimal"
                 )
             )
-        Y[1] = np.einsum(
+        Y[1][slice_2Spin] = np.einsum(
             "Gg,Dd->GDgd", R1, R2, optimize="optimal"
         ) + np.einsum(
             "Gg,Dd->GDgd", R2, R1, optimize="optimal"
         )
-        Y[2] = np.einsum(
+        Y[2][slice_2Spin] = np.einsum(
             "Gg,Dd->GDgd", R1_conj, R2, optimize="optimal"
         ) + np.einsum(
             "Gg,Dd->GDgd", R2, R1_conj, optimize="optimal"
         )
-        Y[3] = np.einsum(
+        Y[3][slice_2Spin] = np.einsum(
             "Gg,Dd->GDgd", R1, R1, optimize="optimal"
         )
-        Y[3] = np.einsum(
-            "Gg,Dd->GgDd",
+        Y[4][slice_2Spin] = np.einsum(
+            "Gg,Dd->GDgd",
             R1_conj,
             R1_conj,
             optimize="optimal",
         )
+        #one spin operator at the right side (at least one of the right operators is the unit operator)
+        
+        Y[0, *slice_1Spin_0] = R2
+        Y[1, *slice_1Spin_0] = R1
+        Y[2, *slice_1Spin_0] = R1_conj
+        Y[0, *slice_1Spin_1] = R2
+        Y[1, *slice_1Spin_1] = R1
+        Y[2, *slice_1Spin_1] = R1_conj
+        
+        #Finally the unit operator is just mapped to the unit operator
+        Y[:, 3, 3, 3, 3] = np.ones(amount_tau_values, dtype=config.dtype_complex)
+        
     material.coeff_sqw_prime_to_sqw = Y
     return Y
     
@@ -2024,7 +2033,7 @@ def calculate_sqw_spectra(
                 if config.use_intensity_normalisation
                 else 1
             )  # only 1/Nk
-        material.conv_sqw_2_ad_a_sym_classes = norm * np.array(
+        material.conv_sqw_2_ad_a_equiv_classes = norm * np.array(
             convoluted_grids_equivalence_classes
         )
 
@@ -2616,6 +2625,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
         alignment_rotation_of_complete_material_operator[:, 0:3, 0:3] = (
             alignment_rotation_of_complete_material
         )
+        #R^T * RIXS * R
         rixs_coeff_arr_numerical_4 = np.einsum(
             "RMO,ABMNs,RNU->RABOUs",
             alignment_rotation_of_complete_material_operator,
@@ -2653,13 +2663,14 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     # a alpha index
     # b two theta index
     # c phi index
+    
+    # first R_eff transposed in spin operator: <R_eff^+ G_m R_eff>_OUNN := <S_U^+ S_O^+ G_m S_M S_N>
     coeff_array_spectrum_4 = np.einsum(
-        "ROUspabc,RMNrpabc->ROUMNsrpabc",
+        "RUOspabc,RMNrpabc->ROUMNsrpabc",
         np.conj(coeff_arr_numerical_4_p_angles),
         coeff_arr_numerical_4_p_angles,
         optimize="optimal",
     )
-
     if save_RIXS_spectra_to_material:
         material.coeff_xyz_rixs = coeff_array_spectrum_4
 
@@ -2750,7 +2761,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     )
     if config.calc_two_magnon_spectra:
         sqw_4_along_path = functions.path_through_grid_interpolated(
-            config= config, grid=material.conv_sqw_2_ad_a_sym_classes,
+            config= config, grid=material.conv_sqw_2_ad_a_equiv_classes,
             relative_grid_points=relative_grid_points_lv_basis,
             steps=1,
         )
@@ -3415,7 +3426,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         if config.calc_two_magnon_spectra:
             sqw_4_along_path = functions.path_through_grid_interpolated(
                 config= config,
-                grid=material.conv_sqw_2_ad_a_sym_classes,
+                grid=material.conv_sqw_2_ad_a_equiv_classes,
                 relative_grid_points=np.array(relative_grid_points),
                 steps=steps_between_points,
             )
@@ -3628,7 +3639,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     #     break
         
             if draw_sym_class_a_ad:
-                for equiv_class_idx in np.ndindex(material.conv_sqw_2_ad_a_sym_classes.shape[:2]):
+                for equiv_class_idx in np.ndindex(material.conv_sqw_2_ad_a_equiv_classes.shape[:2]):
                     grid_to_plot = np.real(
                             sqw_4_along_path[*equiv_class_idx]
                         )
@@ -3692,7 +3703,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
             total_k_points=material.q_values,
             sqw_2_of_total_k_points=material.sqw_2_ad_a_equiv_class,
             sqw_4_of_total_k_points=(
-                material.conv_sqw_2_ad_a_sym_classes
+                material.conv_sqw_2_ad_a_equiv_classes
                 if config.calc_two_magnon_spectra
                 else None
             ),
@@ -4113,7 +4124,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         if config.calc_two_magnon_spectra:
             sqw_4_along_path = functions.path_through_grid_interpolated(
                 config= config,
-                grid=material.conv_sqw_2_ad_a_sym_classes,
+                grid=material.conv_sqw_2_ad_a_equiv_classes,
                 relative_grid_points=np.array(relative_grid_points),
                 steps=steps_between_points,
             )
@@ -4804,7 +4815,7 @@ def load_material_data(material: Material, filename="results_coeff2025-11-21_14-
     material.T = data["T"]
     material.phase_factor = data["phase_factor"]
     material.sqw_2_ad_a_equiv_class = data["sqw_2_ad_a_sym_class"]
-    material.conv_sqw_2_ad_a_sym_classes = data["conv_sqw_2_ad_a_sym_classes"]
+    material.conv_sqw_2_ad_a_equiv_classes = data["conv_sqw_2_ad_a_sym_classes"]
     material.coeff_equiv_classes_tioju_4 = data["coeff_sym_classes_tioju_4"]
     material.coeff_equiv_classes_tioju_2 = data["coeff_sym_class_tioju_2"]
     material.coeff_tioju_xyz_2 = data["coeff_tioju_xyz_2"]

@@ -473,7 +473,7 @@ def calculate_sqw_spectra(
             if config.use_intensity_normalisation
             else 1
         )  # only 1/Nk
-        material.conv_sqw_2_ad_a_sym_classes = norm * np.array(
+        material.conv_sqw_2_ad_a_equiv_classes = norm * np.array(
             convoluted_grids_symmetry_classes
         )
 
