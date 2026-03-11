@@ -950,6 +950,10 @@ def test_incommensurate():
     LSW.symmetrisation_tensor(None, material, config)
     print("")
 
+def print_png():
+    test = plt.figure()
+    functions.save_figures_to_png([test])
+
 def test_empty():
     print("")
 if __name__ == "__main__":
@@ -981,4 +985,5 @@ if __name__ == "__main__":
     # minimize_classical_energy(material = Examples.NiO_2_atom_cell_NN_and_NNN(config=Configurations.config_experimental()))
     # test_icommensurate()
     # test_empty()
-    test_integration()
+    # test_integration()
+    # print_png()

@@ -2239,6 +2239,23 @@ def load_grid_from_file(filename="grid.npz"):
         i += 1
     return grid, coords
 
+def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
+    """
+    Save a list of matplotlib figures to PNG files in a specified output folder.
+
+    Parameters:
+        figures (list of matplotlib.figure.Figure): List of figures to save.
+        out_put_folder (str): Folder where the PNG files will be saved.
+        dpi (int): Dots per inch for the saved images.
+    """
+    if not os.path.exists(out_put_folder):
+        os.makedirs(out_put_folder)
+    for i, fig in enumerate(figures):
+        title = fig.canvas.manager.get_window_title() if fig.canvas.manager is not None else f"Figure {i}"
+        try:
+            fig.savefig(f"{out_put_folder}/{title}.png", dpi=dpi)
+        except Exception as e:
+            print(f"Failed to save figure {title} as PNG: {e}")
 
 def save_figures_as_images_to_pdf(
     config:Config,

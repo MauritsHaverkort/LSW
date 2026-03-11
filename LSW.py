@@ -207,6 +207,10 @@ def call_main_with_material_config():
                 filename=f"outputs/{material.name}_{config.name}_{config.timestamp}.pdf",
                 material=material,
             )
+            if config.save_figures_as_png:
+                functions.save_figures_to_png(
+                    VALUES_TO_SAVE["figs"],
+                    )
             # plt.show(block = True)
             config.debug_timer.print_difference(
                 "done with all plotting \n--------------DONE------------------",
