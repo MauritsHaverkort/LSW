@@ -21,6 +21,7 @@ class Debug_timing:
         time_diff = new_timestamp - self.start_timestamp
         
         with open("debug_timing_log.txt", "a", encoding="utf-8") as log_file:
+            print(f"Total time since start: {time_diff}ms")
             log_file.write(f"Total time: {time_diff}ms \n")
     def print_difference(self, debug_info, do_print=True):
         new_timestamp = int(time.time() * 1000)

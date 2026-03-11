@@ -209,7 +209,7 @@ def call_main_with_material_config():
             )
             if config.save_figures_as_png:
                 functions.save_figures_to_png(
-                    VALUES_TO_SAVE["figs"],
+                    VALUES_TO_SAVE["figs_for_pdf"],
                     )
             # plt.show(block = True)
             config.debug_timer.print_difference(
