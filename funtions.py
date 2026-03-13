@@ -362,12 +362,16 @@ def plot_tensor_at_certain_axis(tensor, axis_to_plot_individ, logscale=False):
 
 def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=None, 
                                use_median_relative_difference=True, 
+                               use_allclose = True,
                                threshold_multiplier = 1e-2, 
                                rounding_decimals = 2, 
                                return_conjugated_symmetries=False, 
                                give_mean_abs_value=False, 
                                compare_only_a_sample = True):
-    """given a tensor this returns a list of lists of indices that are the same"""
+    """given a tensor this returns a list of lists of indices that are the same
+    
+    when using median relative difference: only the median difference is looked at to be stable against single numerical outliners dankgerous if one wants to check for exyct same
+    """
     assert number_axis_to_include != None, "number_axis_to_include must be provided"
     if np.any(tensor.shape[number_axis_to_include:]) > 15:
         reduction = 5
@@ -414,19 +418,25 @@ def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=None,
             continue
         #check if the current indices belong to an already known symmetry batch
         for sym_idx,sym in enumerate(symmetries):
-            is_similar = is_similar_max_diff(tensor[indices], tensor[sym[0]], threshold)
-            if is_similar:
-                new_symmetry = False
-                sym.append(indices)
-                break
-            elif conjugated_is_similar(tensor[indices], tensor[sym[0]], threshold) and return_conjugated_symmetries:
-                new_symmetry = False
-                conj_symmetries[sym_idx].append(indices)
-                break
-            elif is_similar_median_relative_diff(tensor[indices], tensor[sym[0]], threshold) and use_median_relative_difference:
-                new_symmetry = False
-                sym.append(indices)
-                break
+            if use_allclose:
+                if np.allclose(tensor[indices], tensor[sym[0]]):
+                    new_symmetry = False
+                    sym.append(indices)
+                    break
+            else:
+                is_similar = is_similar_max_diff(tensor[indices], tensor[sym[0]], threshold)
+                if is_similar:
+                    new_symmetry = False
+                    sym.append(indices)
+                    break
+                elif conjugated_is_similar(tensor[indices], tensor[sym[0]], threshold) and return_conjugated_symmetries:
+                    new_symmetry = False
+                    conj_symmetries[sym_idx].append(indices)
+                    break
+                elif is_similar_median_relative_diff(tensor[indices], tensor[sym[0]], threshold) and use_median_relative_difference:
+                    new_symmetry = False
+                    sym.append(indices)
+                    break
         #if not create a new symmetry batch
         if new_symmetry:
             symmetries.append([indices])
@@ -2251,7 +2261,10 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
     if not os.path.exists(out_put_folder):
         os.makedirs(out_put_folder)
     for i, fig in enumerate(figures):
-        title = fig.canvas.manager.get_window_title() if fig.canvas.manager is not None else f"Figure {i}"
+        try:
+            title = fig.canvas.manager.get_window_title()
+        except Exception as e:
+            title = f"Figure {i}"
         try:
             fig.savefig(f"{out_put_folder}/{title}.png", dpi=dpi)
         except Exception as e:

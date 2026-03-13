@@ -947,13 +947,21 @@ def test_incommensurate():
     material = Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config=config)
     # temp = LSW.sqw_components_calc_general_tau(material=material, config=config, amount_tau_values=5)
     
-    LSW.symmetrisation_tensor(None, material, config)
+    temp = LSW.calc_symmetrisation_tensor(material, config)
     print("")
 
 def print_png():
     test = plt.figure()
     functions.save_figures_to_png([test])
 
+def test_find_symmetries():
+    random_tensor = np.random.rand(3, 3, 3)
+    one_changed = random_tensor.copy()
+    one_changed[0,0,0] = 0
+    test_tensor = np.array([random_tensor,4*random_tensor, one_changed, random_tensor])
+    symm = functions.give_symmetries_of_tensors(test_tensor,1)
+    
+    print("")
 def test_empty():
     print("")
 if __name__ == "__main__":
@@ -983,7 +991,8 @@ if __name__ == "__main__":
     # derive_classical_energy()
     # run_over_seeds_minimise_energies(material = Examples.RNiO_3(config=Configurations.config_experimental()))
     # minimize_classical_energy(material = Examples.NiO_2_atom_cell_NN_and_NNN(config=Configurations.config_experimental()))
-    # test_icommensurate()
+    # test_incommensurate()
     # test_empty()
     # test_integration()
     # print_png()
+    test_find_symmetries()
