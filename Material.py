@@ -529,7 +529,7 @@ class Material:
         return np.round(rotation.rot_vec(phi, self.normal_vector_to_rotation_plane), 3)
 
     
-    def index_convention_to_string_xyz(index):
+    def index_convention_to_string_xyz(self,index):
         """returns the string representation of the index convention for the given index"""
         
         mapping = {0: "Sx", 1: "Sy", 2: "Sz", 3: ""}
