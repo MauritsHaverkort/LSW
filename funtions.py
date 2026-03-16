@@ -1099,6 +1099,7 @@ def flatten_axes(arr: np.ndarray, axes_to_flatten):
 ########################################################################################################################
 ########################################################################################################################
 
+
 def plot_3d_grid_slider(grid, 
                         title="3D Grid Viewer", 
                         xlabel="X", ylabel="Y", intensity="Intensity", 
@@ -2249,27 +2250,41 @@ def load_grid_from_file(filename="grid.npz"):
         i += 1
     return grid, coords
 
+
+
 def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
     """
     Save a list of matplotlib figures to PNG files in a specified output folder.
-
-    Parameters:
-        figures (list of matplotlib.figure.Figure): List of figures to save.
-        out_put_folder (str): Folder where the PNG files will be saved.
-        dpi (int): Dots per inch for the saved images.
     """
+    import os
+
     if not os.path.exists(out_put_folder):
         os.makedirs(out_put_folder)
+
     for i, fig in enumerate(figures):
         try:
             title = fig.canvas.manager.get_window_title()
-        except Exception as e:
-            title = f"Figure {i}"
+        except Exception:
+            title = f"Figure_{i}"
+
+        # make filename safer
+        safe_title = "".join(c if c.isalnum() or c in "._- " else "_" for c in title)
+
         try:
-            fig.savefig(f"{out_put_folder}/{title}.png", dpi=dpi)
+            fig.tight_layout()
+        except Exception:
+            pass
+
+        try:
+            fig.savefig(
+                f"{out_put_folder}/{safe_title}.png",
+                dpi=dpi,
+                bbox_inches="tight",
+                pad_inches=0.1,
+            )
         except Exception as e:
             print(f"Failed to save figure {title} as PNG: {e}")
-
+            
 def save_figures_as_images_to_pdf(
     config:Config,
     figures,

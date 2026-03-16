@@ -397,6 +397,10 @@ class Material:
     def transform_basis_i_order_i_to_n1_n2(
         self, tensor, axis_to_skip=0, backtransform=False
     ):
+        """assumes tensor of shape (axis_to_skip, 2N,2N, ...) or (axis_to_skip, N,2,N,2, ...) and transforms the indices i, order_i, j, order_j to n1, n2 (or backtransform if backtransform=True)
+        n1 n2 := <a_n1 G a_n2> not <a_n1^+ G a_n2> 
+        
+        """
         if backtransform:
             assert tensor.shape[axis_to_skip : axis_to_skip + 2] == (
                 2 * self.N,
@@ -524,6 +528,16 @@ class Material:
         """returns the rotation matrix for the given angle phi"""
         return np.round(rotation.rot_vec(phi, self.normal_vector_to_rotation_plane), 3)
 
+    
+    def index_convention_to_string_xyz(index):
+        """returns the string representation of the index convention for the given index"""
+        
+        mapping = {0: "Sx", 1: "Sy", 2: "Sz", 3: ""}
+        out = "<" + mapping[index[0]] + mapping[index[1]] + "G" + mapping[index[2]] + mapping[index[3]] + ">"
+        
+        return out
+        
+    
     ###################################################################################################
     ###################################################################################################
     ###################################################################################################
