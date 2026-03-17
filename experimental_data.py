@@ -133,13 +133,14 @@ def plot_phi_dependence(path = "inputs_debug/NiO_azi_mp_th20.txt"):
     
     figs.append(plt.figure(r"Experiment $\phi$ dependence"))
     plt.pcolormesh(phi[:], E_loss[0,Emin_idx:Emax_idx], cts_interp[:-1,Emin_idx:Emax_idx-1].T, cmap="terrain")
-    plt.colorbar()
+    cb = plt.colorbar()
+    cb.set_label("cts/s")
     plt.xlabel(r'$\phi$ (deg)')
     plt.ylabel("Energy loss (meV)")
     
     figs.append(plt.figure(r"Experiment $\phi$ dependence (diff from interpolation)"))
-    plt.pcolormesh(phi[:], E_loss[0,Emin_idx:Emax_idx], (cts-cts_interp)[:-1,Emin_idx:Emax_idx-1].T, cmap="terrain")
-    cb = plt.colorbar()
+    image = plt.pcolormesh(phi[:], E_loss[0,Emin_idx:Emax_idx], (cts-cts_interp)[:-1,Emin_idx:Emax_idx-1].T, cmap="terrain")
+    cb = figs[-1].colorbar(image)
     cb.set_label("cts/s")
     plt.xlabel(r'$\phi$ (deg)')
     plt.ylabel("Energy loss (meV)")

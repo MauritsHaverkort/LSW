@@ -2267,7 +2267,7 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
         safe_title = "".join(c if c.isalnum() or c in "._- " else "_" for c in title)
 
         try:
-            fig.set_size_inches(16,9, forward=True) #bring it into "fullscreen" size
+            # fig.set_size_inches(16,9, forward=True) #bring it into "fullscreen" size
             
             fig.tight_layout() #make it look nicer and avoid cutting off labels, this is done after setting the size to avoid it being too small
             fig.savefig(
