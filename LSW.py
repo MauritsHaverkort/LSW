@@ -145,7 +145,7 @@ def call_main_with_material_config():
             # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
             
             #NiO with NN and NNN
-            Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
+            # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
             
             Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
@@ -2233,7 +2233,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             try:
                 prefactor_dict_all_w[pref_name] = np.array(loaded_data[f"Re {pref_name}"])+ 1j * np.array(loaded_data[f"Im {pref_name}"])
             except KeyError:
-                config.warnings.add(f"Prefactor {pref_name} not found in input file, set to 0")
+                config.warnings.add(f"XAS spectrum {pref_name} not found in input file, set to 0")
         
         idx_energy_debug_plots = np.argmin(np.abs(w_in - energy_debug_plots))
         return w_in, prefactor_dict_all_w, idx_energy_debug_plots
@@ -3706,7 +3706,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         plot_also_imaginary_part=False,
                         use_intensity_k=True,
                         useLogNorm=config.use_Log_Norm,
-                        title=f"RIXS two magnon v{w_in[v]}",
+                        title=f"RIXS two magnon at: {w_in[v]:.2f} eV",
                         xlabel=title_x,
                         ylabel=title_y,
                         gaussian_filter_along_w=True,
@@ -3714,33 +3714,33 @@ def plotting_rixs_spectra(material: Material, config: Config,
         return figs
     
     def draw_prefactors_vs_w_in():
-        fig1 = plt.figure("Prefactors vs w_in")
+        fig1 = plt.figure("XAS spectra")
         for key in prefactor_dict_all_w.keys():
             plt.plot(w_in, np.real(prefactor_dict_all_w[key]), label=f"Re({key})")
             plt.plot(w_in, np.imag(prefactor_dict_all_w[key]), label=f"Im({key})")
         plt.xlabel("Energy [eV]")
-        plt.ylabel("Prefactor")
+        plt.ylabel("XAS spectrum")
         plt.legend()
         plt.axvline(x=w_in[v_index])
         
-        fig2 = plt.figure("Prefactors vs w_in_index")
+        fig2 = plt.figure("XAS spectra ")
         for key in prefactor_dict_all_w.keys():
             plt.plot( np.real(prefactor_dict_all_w[key]), label=f"Re({key})")
             plt.plot( np.imag(prefactor_dict_all_w[key]), label=f"Im({key})")
         plt.xlabel("index")
-        plt.ylabel("Prefactor")
+        plt.ylabel("XAS spectrum")
         plt.legend()
         plt.axvline(x=v_index)
         fig_abs_sqrd = None
         fig_interesting = None
-        if material.symmetry_class == "0h":
-            fig_abs_sqrd = plt.figure("Abs squared of prefactors vs w_in_index")
+        if material.symmetry_class == "Oh":
+            fig_abs_sqrd = plt.figure("XAS spectra")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg"])**2, label="||eg||^2")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t1u"])**2, label="||t1u||^2")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label="||t2g||^2")
             plt.xlabel("Energy [eV]")
-            plt.ylabel("Prefactor abs squared")
+            plt.ylabel("XAS abs squared")
             plt.legend()
             plt.axvline(x=w_in[v_index])
             
@@ -3752,7 +3752,6 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label="Im(conj(t2g)*Re(t1u))")
             plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label="Re(conj(t2g)*Re(t1u))")
             plt.xlabel("Energy [eV]")
-            plt.ylabel("Prefactor abs squared")
             plt.legend()
         
             plt.axvline(x=w_in[v_index])
@@ -3763,7 +3762,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
 
             plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label="Im(conj(eu1)*(eg2))")
             plt.xlabel("Energy [eV]")
-            plt.ylabel("Prefactor abs squared")
+            plt.ylabel("XAS abs squared")
             plt.legend()
         
             plt.axvline(x=w_in[v_index])

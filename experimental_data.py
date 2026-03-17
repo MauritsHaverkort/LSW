@@ -6,7 +6,7 @@ import scipy as sp
 
 def plot_alpha_dependence():
     data =pandas.read_csv(
-        "inputs/NiO_th_dep.txt",
+        "inputs_debug/NiO_th_dep.txt",
         comment="#",
         sep=r"\s+",
         engine="python"
@@ -59,7 +59,7 @@ def fitting_spectrum_three_gaussian(E, A_elastic, E0_elastic, sigma_elastic, A_o
 def fitting_spectrum_one_gaussian(E, A, E0, sigma, background_constant):
     return A * np.exp(-(E - E0)**2 / (2 * sigma**2)) + background_constant
 
-def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
+def plot_phi_dependence(path = "inputs_debug/NiO_azi_mp_th20.txt"):
     import funtions as functions
     import Configurations as Configurations
     data =pandas.read_csv(
@@ -77,9 +77,9 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
     figs = []
     
    
-    if path == "inputs/NiO_azi_sp_th120.txt":
+    if path == "inputs_debug/NiO_azi_sp_th120.txt":
         phi = np.array([-165.000, -150.001, -134.999, -120.000, -105.001, -89.999, -75.000, -60.001, -44.999, -30.000, -15.001, 0.001, 15.000, 30.000, 44.999, 60.001, 75.000, 89.999, 105.001, 120.000, 134.999, 150.001, 165.000])
-    elif path == "inputs/NiO_azi_mp_th20.txt":
+    elif path == "inputs_debug/NiO_azi_mp_th20.txt":
         phi = np.array([-180.000, -165.000, -150.001, -134.999, -120.000, -105.001, -89.999, -75.000, -60.001, -44.999, -30.000, -15.000, -0.001, 15.001, 30.000, 44.999, 60.001, 75.000, 89.999, 105.001, 120.000, 135.000, 150.001, 165.000])
     else:
         raise ValueError("unknown path")
@@ -131,14 +131,22 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
     plt.ylabel("max intensity (cts/s)")
     plt.legend()
     
-    figs.append(plt.figure("phi dependence"))
+    figs.append(plt.figure(r"Experiment $\phi$ dependence"))
     plt.pcolormesh(phi[:], E_loss[0,Emin_idx:Emax_idx], cts_interp[:-1,Emin_idx:Emax_idx-1].T, cmap="terrain")
     plt.colorbar()
-    figs.append(plt.figure("phi dependence (diff from interpolation)"))
-    plt.pcolormesh(phi[:], E_loss[0,Emin_idx:Emax_idx], (cts-cts_interp)[:-1,Emin_idx:Emax_idx-1].T, cmap="terrain")
-    plt.colorbar()
-    functions.plot_2_1_d_grid(grid = cts_interp[:,Emin_idx:Emax_idx].T, k_values_scalar=phi[:], w_values=  E_loss[0,Emin_idx:Emax_idx], title="interpolated counts", config=Configurations.config_experimental(), use_dos=True, useLogNorm=False, use_intensity_k=True, xlabel=r'$\phi$ (deg)', ylabel="Energy loss (meV)", intensity_label="cts/s")
+    plt.xlabel(r'$\phi$ (deg)')
+    plt.ylabel("Energy loss (meV)")
     
+    figs.append(plt.figure(r"Experiment $\phi$ dependence (diff from interpolation)"))
+    plt.pcolormesh(phi[:], E_loss[0,Emin_idx:Emax_idx], (cts-cts_interp)[:-1,Emin_idx:Emax_idx-1].T, cmap="terrain")
+    cb = plt.colorbar()
+    cb.set_label("cts/s")
+    plt.xlabel(r'$\phi$ (deg)')
+    plt.ylabel("Energy loss (meV)")
+    
+    figs.append(functions.plot_2_1_d_grid(grid = cts_interp[:,Emin_idx:Emax_idx].T, k_values_scalar=phi[:], w_values=  E_loss[0,Emin_idx:Emax_idx], title="interpolated counts", config=Configurations.config_experimental(), use_dos=True, useLogNorm=False, use_intensity_k=True, xlabel=r'$\phi$ (deg)', ylabel="Energy loss (meV)", intensity_label="cts/s"))
+    
+    functions.save_figures_to_png(figures=figs, out_put_folder="outputs/figs_experiment")
     # functions.save_figures_as_images_to_pdf( config=Configurations.config_experimental(),figures=figs, filename="outputs/phi_dependence.pdf")
     # cts = cts.T
     # E_loss = E_loss.T
@@ -155,6 +163,6 @@ def plot_phi_dependence(path = "inputs/NiO_azi_mp_th20.txt"):
 if __name__ == "__main__":
     # plot_alpha_dependence()
     # plot_phi_dependence()
-    plot_phi_dependence(path = "inputs/NiO_azi_sp_th120.txt")
+    plot_phi_dependence(path = "inputs_debug/NiO_azi_sp_th120.txt")
     
-    plt.show()
+    # plt.show()

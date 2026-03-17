@@ -2253,9 +2253,6 @@ def load_grid_from_file(filename="grid.npz"):
 
 
 def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
-    """
-    Save a list of matplotlib figures to PNG files in a specified output folder.
-    """
     import os
 
     if not os.path.exists(out_put_folder):
@@ -2267,19 +2264,15 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
         except Exception:
             title = f"Figure_{i}"
 
-        # make filename safer
         safe_title = "".join(c if c.isalnum() or c in "._- " else "_" for c in title)
 
         try:
-            fig.tight_layout()
-        except Exception:
-            pass
-
-        try:
+            fig.set_size_inches(16,9, forward=True) #bring it into "fullscreen" size
+            
+            fig.tight_layout() #make it look nicer and avoid cutting off labels, this is done after setting the size to avoid it being too small
             fig.savefig(
                 f"{out_put_folder}/{safe_title}.png",
                 dpi=dpi,
-                bbox_inches="tight",
                 pad_inches=0.1,
             )
         except Exception as e:
