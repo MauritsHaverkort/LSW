@@ -552,6 +552,7 @@ def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), la
     relative_grid_points_path = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]), np.array([0,0,0])]
     #transform to lattice vector basis
     material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/2*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
+    material.relative_grid_points_names = [r"$\Gamma$", "X", "M", r"$\Gamma$"]
     
     return material
 

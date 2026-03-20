@@ -332,8 +332,8 @@ def main(
         # temp = sqw_components_calc_general_tau(material, config, 5)
 
         # In case One does not want the complete RIXS spectrum but only the xyz or ad a spectra along some path:
-        # plt.ioff()
-        # functions.save_figures_to_png(draw_xyz_a_ad_spectra__energies__along_path(current_material, config,current_material.relative_grid_points_path, steps_between_points=100), out_put_folder="outputs/figs_additional")
+        plt.ioff()
+        functions.save_figures_to_png(draw_xyz_a_ad_spectra__energies__along_path(current_material, config,current_material.relative_grid_points_path, steps_between_points=100), out_put_folder="outputs/figs_additional")
         
         # calculate RIXS spectrum for all domains (as materials) but without plotting
         if config.compute_RIXS_spectrum:
@@ -383,6 +383,8 @@ def create_folder_structure_for_outputs():
         os.makedirs("outputs/RIXS_plot_data")
     if not os.path.exists("outputs/material"):
         os.makedirs("outputs/material")
+    if not os.path.exists("outputs/figs_additional"):
+        os.makedirs("outputs/figs_additional")
 
 
 def general_Hamiltonian(
@@ -3785,7 +3787,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     functions.plot_2_1_d_grid(
                         grid_to_plot,
                         title=f"spectrum one magnon xyz{op_idx}_{title_suffix}",
-                        xlabel="Path Index",
+                        xlabel="Path through k-space",
                         ylabel="Energy Loss",
                         w_values=material.w_values,
                         use_intensity_k=True,
@@ -3827,7 +3829,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         functions.plot_2_1_d_grid(
                             grid_to_plot,
                             title=f"spectrum two magnon xyz{op_idx}_{title_suffix}",
-                            xlabel="Path Index",
+                            xlabel="Path through k-space",
                             ylabel="Energy Loss",
                             w_values=material.w_values,
                             use_intensity_k=True,
@@ -3852,7 +3854,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     label=f"index {idx} imag",
                 )
             plt.legend()
-            plt.xlabel("Path Index")
+            plt.xlabel("Path through k-space")
             plt.ylabel("Phase Factor")
 
         fig_phase = [fig_phase] if plot_phase_factor else []
@@ -4257,6 +4259,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     draw_sym_class_a_ad:bool = False,
     draw_equiv_contribution_for_azim: bool = False,
     fraction_of_max_to_plot: float = 0.01,
+    grid_point_names: List[str] | None = None,
 ):
     
     assert (
@@ -4380,7 +4383,9 @@ def draw_xyz_a_ad_spectra__energies__along_path(
 
     for i in range(energies_along_path.shape[1]):
         plt.plot(energies_along_path[0, i])
-        plt.xlabel("Path Index")
+        if material.relative_grid_points_names is not None:
+            plt.xticks(ticks=[i * steps_between_points for i in range(len(material.relative_grid_points_names))], labels=material.relative_grid_points_names)
+        plt.xlabel("Path through k-space")
         plt.ylabel("Energy Loss [meV]")
 
 
@@ -4403,8 +4408,10 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                 functions.plot_2_1_d_grid(
                     grid_to_plot,
                     title=f"One magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
-                    xlabel="Path Index",
+                    xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
+                    xticks_labels= material.relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))],
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4439,8 +4446,10 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                 functions.plot_2_1_d_grid(
                     grid_to_plot,
                     title=f"spectrum one magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
-                    xlabel="Path Index",
+                    xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
+                    xticks_labels= material.relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4456,8 +4465,10 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                 functions.plot_2_1_d_grid(
                     grid_to_plot,
                     title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
-                    xlabel="Path Index",
+                    xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
+                    xticks_labels= material.relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4481,8 +4492,10 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     functions.plot_2_1_d_grid(
                         grid_to_plot,
                         title=f"Two magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
-                        xlabel="Path Index",
+                        xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
+                        xticks_labels= material.relative_grid_points_names,
+                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
@@ -4503,8 +4516,10 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     functions.plot_2_1_d_grid(
                         grid_to_plot,
                         title=f"spectrum two magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
-                        xlabel="Path Index",
+                        xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
+                        xticks_labels= material.relative_grid_points_names,
+                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))],
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
@@ -4521,8 +4536,10 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     functions.plot_2_1_d_grid(
                         grid_to_plot,
                         title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
-                        xlabel="Path Index",
+                        xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
+                        xticks_labels= material.relative_grid_points_names,
+                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
@@ -4543,7 +4560,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                 label=f"index {idx} imag",
             )
         plt.legend()
-        plt.xlabel("Path Index")
+        plt.xlabel("Path through k-space")
         plt.ylabel("Phase Factor")
 
     fig_phase = [fig_phase] if plot_phase_factor else []

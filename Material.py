@@ -33,7 +33,8 @@ class Material:
         additional_domain_materials: List["Material"] = [],
         lattice_constant = 1.0, #lattice constant in m
         fund_xray_prefactors_filename = None,
-        symmetry_class = "Oh" # "Oh", "D4h" implemented so far
+        symmetry_class = "Oh", # "Oh", "D4h" implemented so far
+        relative_grid_points_names: List[str] = None
     ):
         """Initialize a Material object with a list of atoms and bonds.
         If no atoms or bonds are provided, empty lists are created."""
@@ -63,9 +64,10 @@ class Material:
         self.fund_xray_prefactors_filename = fund_xray_prefactors_filename
         
         self.symmetry_class = symmetry_class
-
+        self.relative_grid_points_names = relative_grid_points_names
         if relative_grid_points_path is not None:
             self.relative_grid_points_path = relative_grid_points_path
+        
         else:
             match dimension:
                 case 1:

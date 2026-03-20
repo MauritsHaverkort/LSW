@@ -1284,7 +1284,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
             #making the spacing correct
             k_values_scalar = [0]
             xticks_pos_new=[]
-            if xticks_labels and xticks_pos:
+            if isinstance(xticks_labels, np.ndarray) and xticks_pos: #In case the labels are given as array points in k space the scaling can be adjusted so that the distances between points match the actual distances in k space (instead of just being equally spaced)
                 for i in range(len(xticks_labels)):
                     #converting string back to array
                     x = xticks_labels[i]-xticks_labels[i-1] if i > 0 else xticks_labels[i]
