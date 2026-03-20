@@ -22,7 +22,7 @@ import sympy as sp
 
 #plot fonts control
 import matplotlib as mpl
-fontsize = 18
+fontsize = 10 #18 for presentations, 10 for thesis full size, 14 (?) for thesis half size
 mpl.rcParams.update({
     "font.size": fontsize,          # base font
     "axes.titlesize": fontsize,

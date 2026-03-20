@@ -73,6 +73,7 @@ def plot_phi_dependence(path = "inputs_debug/NiO_azi_mp_th20.txt"):
     Emin = 20 #leave out the elastic peak and low-energy phonon contributions
     E_split_one_two_magnon = 150
     Emax = 280
+    Emin_for_mean = 75 #for mean calculation leave out the low-energy part of the one-magnon contribution otherwise mean value is lowered
     
     figs = []
     
@@ -89,6 +90,7 @@ def plot_phi_dependence(path = "inputs_debug/NiO_azi_mp_th20.txt"):
     Emin_idx = np.where(E_loss[0,:]>Emin)[0][0]
     E_split_idx = np.where(E_loss[0,:]>E_split_one_two_magnon)[0][0]
     Emax_idx = np.where(E_loss[0,:]<Emax)[0][-1]
+    Emin_idx_mean = np.where(E_loss[0,:]>Emin_for_mean)[0][0]
     
     E_split_idx_offset = E_split_idx-Emin_idx # index of the split point between one-magnon and two-magnon contributions in the energy range of interest (after excluding low-energy part)
     
@@ -118,7 +120,7 @@ def plot_phi_dependence(path = "inputs_debug/NiO_azi_mp_th20.txt"):
     plt.legend()
     
     figs.append(plt.figure("mean intensities vs phi"))
-    plt.plot(phi, [np.mean(cts[i,Emin_idx:E_split_idx]) for i in range(len(phi))], label="one-magnon")
+    plt.plot(phi, [np.mean(cts[i,Emin_idx_mean:E_split_idx]) for i in range(len(phi))], label="one-magnon")
     plt.plot(phi, [np.mean(cts[i,E_split_idx:Emax_idx]) for i in range(len(phi))], label="two-magnon")
     plt.xlabel(r'$\phi$ (deg)')
     plt.ylabel("mean intensity (cts/s)")

@@ -52,7 +52,10 @@ def time_approximations():
     plt.title("Time Usage Approximation")
     # plt.show()
 if __name__ == "__main__":
-    ram_approximations()
-    time_approximations()
+    figs = []
+    figs.append(ram_approximations())
+    figs.append(time_approximations())
     
+    from funtions import save_figures_to_png
+    save_figures_to_png(figures=figs, out_put_folder="outputs/figs_additional")
     plt.show()

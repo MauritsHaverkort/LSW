@@ -1,0 +1,6 @@
+numpy
+matplotlib
+scipy
+sympy
+opt_einsum
+pandas

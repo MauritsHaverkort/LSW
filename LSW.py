@@ -147,7 +147,7 @@ def call_main_with_material_config():
             #NiO with NN and NNN
             # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
             
-            Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all domains"),
+            # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
@@ -159,7 +159,7 @@ def call_main_with_material_config():
             # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #K2NiF4
-            # Examples.K2NiF4(config)
+            Examples.K2NiF4(config)
             #Nickelates
             # Examples.RNiO_3(config, anisotropy_K=-50)
             
@@ -331,6 +331,10 @@ def main(
         
         # temp = sqw_components_calc_general_tau(material, config, 5)
 
+        # In case One does not want the complete RIXS spectrum but only the xyz or ad a spectra along some path:
+        # plt.ioff()
+        # functions.save_figures_to_png(draw_xyz_a_ad_spectra__energies__along_path(current_material, config,current_material.relative_grid_points_path, steps_between_points=100), out_put_folder="outputs/figs_additional")
+        
         # calculate RIXS spectrum for all domains (as materials) but without plotting
         if config.compute_RIXS_spectrum:
             if len(additional_domain_material) > 0:
@@ -2122,6 +2126,13 @@ def calculate_sqw_spectra(
     config.debug_timer.print_difference(
         "done a ad to xyz four HP", config.debug_timing
     )
+
+    if material.is_incommensurate():
+        #compute the icommensurate mapping from sqw' to sqw (Y in Latex)
+        sqw_components_calc_general_tau_optimised(material, config, config.amount_tau_values)
+        
+        calc_symmetrisation_tensor(material, config) # we have to symmetrise the final coeff for all rotations of the first unit cell that are possible
+    
     
     return 
 
@@ -2699,11 +2710,6 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     
     sigma_prefactors = compute_sigma_prefactors()
 
-    if material.is_incommensurate():
-        #compute the icommensurate mapping from sqw' to sqw (Y in Latex)
-        sqw_components_calc_general_tau_optimised(material, config, config.amount_tau_values)
-        
-        calc_symmetrisation_tensor(material, config) # we have to symmetrise the final coeff for all rotations of the first unit cell that are possible
     
     # ---------------------------- putting everything together to get the RIXS spectrum ---------------------------- 
     if config.use_explicit_calc_of_sqw:
@@ -2914,7 +2920,6 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         S_op_list,
                         prefactor_dict_all_w,
                         v_index,
-                        RIXS_config,
                         VALUES_TO_SAVE):
     """this function defines all subplot routines for plotting the RIXS spectra, then it defines which are called"""
     #plot config
@@ -2955,31 +2960,34 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.ylabel("RIXS 4 to RIXS 2 ratio")
         plt.legend()
         
-        fig = plt.figure("mean RIXS 4 to RIXS 2 ratio vs w_in")
+        fig2= plt.figure("mean RIXS 2 and 4 vs w_in")
         plt.plot(w_in,mean_4/mean_2)
         plt.axvline(x = config.rixs_config.energy_for_momentum_plots)
-        fig2= plt.figure("mean RIXS 2 and 4 vs w_in")
-        plt.plot(w_in, vabc_2.mean(axis=(1,2,3)),lw=5, label='mean RIXS 2')
-        plt.plot(w_in, vabc_4.mean(axis=(1,2,3)), lw=5, label='mean RIXS 4')
-        plt.plot(w_in, vabc_2.max(axis=(1,2,3)),linestyle = "--", label='max RIXS 2')
-        plt.plot(w_in, vabc_4.max(axis=(1,2,3)), linestyle = "--", label='max RIXS 4')
-        plt.plot(w_in, vabc_2.min(axis=(1,2,3)), linestyle = "--", label='min RIXS 2')
-        plt.plot(w_in, vabc_4.min(axis=(1,2,3)), linestyle = "--", label='min RIXS 4')
-        plt.plot(w_in, vabc_2.std(axis=(1,2,3)), linestyle = ":", label='std RIXS 2')
-        plt.plot(w_in, vabc_4.std(axis=(1,2,3)), linestyle = ":", label='std RIXS 4')
-        plt.xlabel("w_in")
-        plt.ylabel("RIXS 4 to RIXS 2 ratio")
+        
+        fig = plt.figure("mean one magnon and two magnon contributions over the whole accessible momentum space")
+        plt.plot(w_in, vabc_2.mean(axis=(1,2,3)),lw=3, label='mean one magnon')
+        plt.plot(w_in, vabc_2.max(axis=(1,2,3)),linestyle = "--", label='max one magnon')
+        plt.plot(w_in, vabc_2.min(axis=(1,2,3)), linestyle = "--", label='min one magnon')
+        plt.plot(w_in, vabc_4.mean(axis=(1,2,3)), lw=3, label='mean two magnon')
+        plt.plot(w_in, vabc_4.max(axis=(1,2,3)), linestyle = "--", label='max two magnon')
+        plt.plot(w_in, vabc_4.min(axis=(1,2,3)), linestyle = "--", label='min two magnon')
+        plt.fill_between(w_in, vabc_2.mean(axis=(1,2,3)) - vabc_2.std(axis=(1,2,3)), vabc_2.mean(axis=(1,2,3)) + vabc_2.std(axis=(1,2,3)), alpha=0.25, label="std one magnon")
+        plt.fill_between(w_in, vabc_4.mean(axis=(1,2,3)) - vabc_4.std(axis=(1,2,3)), vabc_4.mean(axis=(1,2,3)) + vabc_4.std(axis=(1,2,3)), alpha=0.25, label="std two magnon")
+        # plt.plot(w_in, vabc_2.std(axis=(1,2,3)), linestyle = ":", label='std one magnon')
+        # plt.plot(w_in, vabc_4.std(axis=(1,2,3)), linestyle = ":", label='std two magnon')
+        plt.xlabel("Incident energy [eV]")
+        plt.ylabel("Intensity [a.u.]")
         plt.legend()
         fig3 = plt.figure("max RIXS (of computed points) 2 and 4 vs w_in")
-        plt.plot(w_in, max_2, label='max RIXS 2', linestyle='--')
-        plt.plot(w_in, max_4, label='max RIXS 4', linestyle='--')
-        plt.xlabel("w_in")
-        plt.ylabel("RIXS 4 to RIXS 2 ratio")
+        plt.plot(w_in, max_2, label='max one magnon', linestyle='--')
+        plt.plot(w_in, max_4, label='max two magnon', linestyle='--')
+        plt.xlabel("Incident energy [eV]")
+        plt.ylabel("Intensity [a.u.]")
         plt.legend()
         fig4 = plt.figure("max RIXS (of computed points) 4 to RIXS 2 ratio vs w_in")
         plt.plot(w_in,max_4/max_2)
         plt.axvline(x = config.rixs_config.energy_for_momentum_plots)
-        plt.xlabel("w_in")
+        plt.xlabel("Incident energy [eV]")
         plt.ylabel("RIXS 4 to RIXS 2 ratio")
         return fig, fig2, fig3, fig4, fig5
    
@@ -3191,7 +3199,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         # row labels
         for row in range(n_rows):
             ax[row, 0].set_ylabel(
-                f"{prefactor_list[row]}\nIncident Energy",
+                f"{prefactor_list[row]}\nIncident energy [eV]",
                 fontsize=12,
                 rotation=90,
             )
@@ -3255,309 +3263,6 @@ def plotting_rixs_spectra(material: Material, config: Config,
         return figs
     
     # get the sqw along some path
-    def draw_xyz_a_ad_spectra__energies__along_path(
-        relative_grid_points,
-        steps_between_points=1,
-        title_suffix="",
-        indices_to_plot_2: list | None = None,
-        indices_to_plot_4: list | None = None,
-        plot_phase_factor: bool = False,
-        draw_every_sym_class_once = True,
-        draw_sym_class_a_ad:bool = False,
-        draw_equiv_contribution_for_azim: bool = False,
-        fraction_of_max_to_plot: float = 0.01,
-    ):
-        
-        assert (
-            np.imag(relative_grid_points).max()
-            < 1e-2 * np.abs(np.real(relative_grid_points)).max()
-        ), "relative grid points contains significant imaginary parts"
-        relative_grid_points = np.real(relative_grid_points)
-
-        if draw_every_sym_class_once:
-            sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.calc_sym_classes_to_xyz()
-            sym_class_2 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_2,4, give_mean_abs_value=False, compare_only_a_sample = False)
-            sym_class_4 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_4,4, give_mean_abs_value=False, compare_only_a_sample = False)
-            
-            indices_to_plot_2 = [sym_class_2[0][i][0] for i in range(len(sym_class_2[0]))] #take the first batch of xyz indices from every equivalence classs
-            indices_to_plot_4 = [sym_class_4[0][i][0] for i in range(len(sym_class_4[0]))]
-            
-        sqw_2_along_path = functions.path_through_grid_interpolated(
-            config= config, grid=material.sqw_2_ad_a_equiv_class,
-            relative_grid_points=np.array(relative_grid_points),
-            steps=steps_between_points,
-        )
-        if config.calc_two_magnon_spectra:
-            sqw_4_along_path = functions.path_through_grid_interpolated(
-                config= config,
-                grid=material.conv_sqw_2_ad_a_equiv_classes,
-                relative_grid_points=np.array(relative_grid_points),
-                steps=steps_between_points,
-            )
-
-        # relative_grid_points_interpolated = functions.interpolated_path_from_relative_points([2*p for p in material.relative_grid_points_path], steps)
-        # q_grid_points_standard_path = np.einsum('Nd,di->Ni', relative_grid_points_interpolated, material.get_reciprocal_lattice_vectors())
-
-        # creates the minimal k-space grid that contains all relative grid points (just corner points of BZ, points in between are interpolated)
-        # shouldnt be needed
-        # minimal_relative_point = np.zeros(3)
-        # maximal_relative_point = np.zeros(3)
-        # for d in range(3):
-        #     minimal_relative_point[d] = np.floor(np.min(relative_grid_points[:, d]))
-        #     maximal_relative_point[d] = np.ceil(np.max(relative_grid_points[:, d]))
-        # grid_total_k_points_lv_indices = np.stack(np.meshgrid(
-        #     np.arange(minimal_relative_point[0], maximal_relative_point[0]+1),
-        #     np.arange(minimal_relative_point[1], maximal_relative_point[1]+1),
-        #     np.arange(minimal_relative_point[2], maximal_relative_point[2]+1),
-        # indexing='ij'),axis=-1)
-        # grid_total_k_points = np.einsum('ijkv,vd->dijk', grid_total_k_points_lv_indices, material.get_reciprocal_lattice_vectors())
-
-        # q_grid_points_standard_path = functions.path_through_grid_interpolated(grid= grid_total_k_points,
-        #                                                                     relative_grid_points=np.array(relative_grid_points)+minimal_relative_point, #shifted since the index [0,0,0] of the grid corresponds to minimal_relative_point
-        #                                                                     steps=steps_between_points, make_periodic=False).T
-
-        total_k_points_lv_indices_interp = (
-            functions.interpolated_path_from_relative_points(
-                np.array(relative_grid_points), steps_between_points
-            )
-        )
-        total_k_points_lv_interp = np.einsum(
-            "Nv,vd->Nd",
-            total_k_points_lv_indices_interp,
-            material.get_reciprocal_lattice_vectors(),
-        )
-
-        # #phase factor takes the absolute k-points not the relative ones
-        # phase_factor_along_standard_path = give_phase_factor_from_total_k(material, config, total_k_points_lv_interp)[:,:material.N, :material.N]  #N,i,j
-
-        # #-----------------------------------reconstruct the xyz  spectra for debugging-------------------------------------
-        # config.debug_timer.print_difference(f"start calculating coeffcients for different equivalence classes along path {title_suffix}", debug_time_duration)
-        # spectrum_2_xyz_coeff_std_path = opt_einsum.contract("xtioju,kij,OUMNioju->OUMNkx"
-        #                             ,material.coeff_sym_classes_tioju_2
-        #                             ,phase_factor_along_standard_path
-        #                             ,material.coeff_tioju_xyz_2
-        #                             )
-        # if config.calc_conv_intensities:
-        #     spectrum_4_xyz_coeff_std_path = opt_einsum.contract("xytioju,kij,OUMNioju->OUMNkxy"
-        #                             ,material.coeff_sym_classes_tioju_4
-        #                             ,phase_factor_along_standard_path
-        #                             ,material.coeff_tioju_xyz_4
-        #                            )
-        # config.debug_timer.print_difference(f"done calculating coeffcients for different equivalence classes along path {title_suffix}", debug_time_duration)
-
-        # # spectrum_2_xyz_coeff_std_path_without_phase = np.einsum("xtioju,OUMNioju->OUMNx"
-        # #                             ,material.coeff_sym_class_tioju_2
-        # #                             ,material.coeff_tioju_xyz_2
-        # #                             ,optimize='optimal')
-        # spectrum_2_xyz_standard_path = opt_einsum.contract('OUMNkx, xwk->OUMNwk', spectrum_2_xyz_coeff_std_path, sqw_2_along_path).astype(config.dtype_complex)
-        # if config.calc_conv_intensities:
-        #     spectrum_4_xyz_standard_path = opt_einsum.contract('OUMNkxy, xywk->OUMNwk', spectrum_4_xyz_coeff_std_path, sqw_4_along_path).astype(config.dtype_complex)
-        #                                                                     steps=steps_between_points)
-
-        (
-            spectrum_2_xyz_along_path,# OUMNwk
-            spectrum_4_xyz_along_path,
-            phase_factor_along_standard_path,
-        ) = compute_xyz_spectra(
-            material,
-            config,
-            total_k_points=total_k_points_lv_interp,
-            sqw_2_of_total_k_points=sqw_2_along_path,
-            sqw_4_of_total_k_points=(
-                sqw_4_along_path if config.calc_two_magnon_spectra else None
-            ),
-        )
-        
-        fig_spectrum_2 = []
-        fig_spectrum_4 = []
-        fig_spectrum_2_a_ad = []
-        fig_spectrum_4_a_ad = []
-        
-        #material.coeff_xyz_rixs #ROUMNsrpabc
-        
-
-        
-
-        
-        energies_along_path = functions.path_through_grid_interpolated(
-            config= config, grid=material.energies.transpose(0, -1, 1, 2, 3),
-            relative_grid_points= np.array(relative_grid_points),
-            steps=steps_between_points,
-        )
-
-        fig_energies = plt.figure(f"energies_{title_suffix}\n")
-
-        for i in range(energies_along_path.shape[1]):
-            plt.plot(energies_along_path[0, i])
-            plt.xlabel("Path Index")
-            plt.ylabel("Energy Loss [meV]")
-
-
-        # one magnon plots
-
-        for equiv_class_idx in indices_to_plot_2 or np.ndindex(
-            spectrum_2_xyz_along_path.shape[:4]
-        ):
-            if (
-                np.abs(spectrum_2_xyz_along_path[*equiv_class_idx]).max()
-                > fraction_of_max_to_plot * np.abs(np.abs(spectrum_2_xyz_along_path)).max()
-            ):
-
-                # fig_spectrum_2.append(plt.figure(f"spectrum one magnon xyz {op_idx}_{title_suffix}"))
-
-                grid_to_plot = spectrum_2_xyz_along_path[*equiv_class_idx] 
-                #grid_to_plot = np.real(grid_to_plot) 
-
-                fig_spectrum_2.append(
-                    functions.plot_2_1_d_grid(
-                        grid_to_plot,
-                        title=f"One magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
-                        xlabel="Path Index",
-                        ylabel="Energy Loss [meV]",
-                        w_values=material.w_values,
-                        use_intensity_k=True,
-                        plot_also_imaginary_part=True,
-                        config=config,
-                        useLogNorm=config.use_Log_Norm,
-                    )
-                )
-
-                # plt.pcolormesh(grid_to_plot,
-                #             norm=SymLogNorm(
-                #                 linthresh=1e-8,          # linear range around zero
-                #                 linscale=1.0,            # scale of the linear range
-                #                 vmin=np.min(grid_to_plot),
-                #                 vmax=np.max(grid_to_plot),
-                #                 base=10
-                #             ))
-                # plt.colorbar()
-                # plt.title(f"spectrum one magnon xyz {op_idx}")
-                # amount_yticks = 5
-                # step_yticks = max(1, len(material.w_values)//amount_yticks)
-                # plt.yticks(ticks=np.arange(0,len(material.w_values),step_yticks), labels=[f"{np.real(w):.1f}" for w in material.w_values[::step_yticks]])
-
-        if draw_sym_class_a_ad:
-            grid_total = np.zeros_like(sqw_2_along_path[0])
-            for equiv_class_idx in range(material.sqw_2_ad_a_equiv_class.shape[0]):
-                
-                grid_to_plot = np.real(
-                        sqw_2_along_path[equiv_class_idx]
-                    )
-
-                fig_spectrum_2_a_ad.append(
-                    functions.plot_2_1_d_grid(
-                        grid_to_plot,
-                        title=f"spectrum one magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
-                        xlabel="Path Index",
-                        ylabel="Energy Loss [meV]",
-                        w_values=material.w_values,
-                        use_intensity_k=True,
-                        plot_also_imaginary_part=True,
-                        config=config,
-                        useLogNorm=config.use_Log_Norm,
-                    ))
-                tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_2[equiv_class_idx]==1)).T
-                # print(f"equiv class {equiv_class_idx} enters {np.sum(material.coeff_equiv_classes_tioju_2[equiv_class_idx])} times")
-                tioju_indices_first = tioju_indices_all[0]  #gives the first indices tioju corresponding to equiv class equiv_class_idx
-                grid_to_plot = np.einsum("wk,k->wk", grid_to_plot, phase_factor_along_standard_path[:,tioju_indices_first[1],tioju_indices_first[3]])
-                # grid_total += grid_to_plot
-                fig_spectrum_2_a_ad.append(
-                    functions.plot_2_1_d_grid(
-                        grid_to_plot,
-                        title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
-                        xlabel="Path Index",
-                        ylabel="Energy Loss [meV]",
-                        w_values=material.w_values,
-                        use_intensity_k=True,
-                        plot_also_imaginary_part=True,
-                        config=config,
-                        useLogNorm=config.use_Log_Norm,
-                    ))
-        
-        # two magnon plots
-        if config.calc_two_magnon_spectra:
-            for equiv_class_idx in indices_to_plot_4 or np.ndindex(spectrum_4_xyz_along_path.shape[:4]):
-                if (
-                    np.abs(np.real(spectrum_4_xyz_along_path[*equiv_class_idx])).max()
-                    > fraction_of_max_to_plot * np.abs(np.real(spectrum_4_xyz_along_path)).max()
-                ):
-                    # fig_spectrum_4.append(plt.figure(f"spectrum two magnon xyz standard path {op_idx}_{title_suffix}"))
-                    grid_to_plot = np.real(
-                        spectrum_4_xyz_along_path[*equiv_class_idx]
-                    )
-
-                    fig_spectrum_4.append(
-                        functions.plot_2_1_d_grid(
-                            grid_to_plot,
-                            title=f"Two magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
-                            xlabel="Path Index",
-                            ylabel="Energy Loss [meV]",
-                            w_values=material.w_values,
-                            use_intensity_k=True,
-                            plot_also_imaginary_part=True,
-                            config=config,
-                            useLogNorm=config.use_Log_Norm,
-                        )
-                    )
-                    # if config.plot_only_once_per_equivalence_class:
-                    #     break
-        
-            if draw_sym_class_a_ad:
-                for equiv_class_idx in np.ndindex(material.conv_sqw_2_ad_a_equiv_classes.shape[:2]):
-                    grid_to_plot = np.real(
-                            sqw_4_along_path[*equiv_class_idx]
-                        )
-
-                    fig_spectrum_2_a_ad.append(
-                        functions.plot_2_1_d_grid(
-                            grid_to_plot,
-                            title=f"spectrum two magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
-                            xlabel="Path Index",
-                            ylabel="Energy Loss [meV]",
-                            w_values=material.w_values,
-                            use_intensity_k=True,
-                            plot_also_imaginary_part=True,
-                            config=config,
-                            useLogNorm=config.use_Log_Norm,
-                        ))
-                    tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_4[*equiv_class_idx]!=0)).T #gives the first indices tioju corresponding to equiv class equiv_class_idx
-                    if tioju_indices_all.shape[0]==0:
-                        continue
-                    tioju_indices_first = tioju_indices_all[0]
-                    grid_to_plot = np.einsum("wk,k->wk", grid_to_plot, phase_factor_along_standard_path[:,tioju_indices_first[1],tioju_indices_first[3]])
-                            
-                    fig_spectrum_2_a_ad.append(
-                        functions.plot_2_1_d_grid(
-                            grid_to_plot,
-                            title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
-                            xlabel="Path Index",
-                            ylabel="Energy Loss [meV]",
-                            w_values=material.w_values,
-                            use_intensity_k=True,
-                            plot_also_imaginary_part=True,
-                            config=config,
-                            useLogNorm=config.use_Log_Norm,
-                        ))
-        # phase factor plot
-        if plot_phase_factor:
-            fig_phase = plt.figure(f"Phase Factor along Path {title_suffix}")
-            for idx in np.ndindex(phase_factor_along_standard_path.shape[1:]):
-                plt.plot(
-                    np.real(phase_factor_along_standard_path[:, *idx]),
-                    label=f"index {idx}",
-                )
-                plt.plot(
-                    np.imag(phase_factor_along_standard_path[:, *idx]),
-                    linestyle="--",
-                    label=f"index {idx} imag",
-                )
-            plt.legend()
-            plt.xlabel("Path Index")
-            plt.ylabel("Phase Factor")
-
-        fig_phase = [fig_phase] if plot_phase_factor else []
-
-        return [fig_energies] + fig_spectrum_2 + fig_spectrum_4 + fig_spectrum_2_a_ad + fig_spectrum_4_a_ad +fig_phase
 
     
     def print_normalisation_of_spectra():
@@ -3588,7 +3293,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 label=f"alpha index {alpha}",
             )
         plt.legend()
-        plt.xlabel("Incident Energy")
+        plt.xlabel("Incident energy [eV]")
         plt.ylabel("intensity")
 
         # functions.plot_tensor_at_certain_axis(
@@ -3715,26 +3420,27 @@ def plotting_rixs_spectra(material: Material, config: Config,
     
     def draw_prefactors_vs_w_in():
         fig1 = plt.figure("XAS spectra")
-        for key in prefactor_dict_all_w.keys():
-            plt.plot(w_in, np.real(prefactor_dict_all_w[key]), label=f"Re({key})")
-            plt.plot(w_in, np.imag(prefactor_dict_all_w[key]), label=f"Im({key})")
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'] #standard color cycle, will repeat if more prefactors
+        for i, key in enumerate(prefactor_dict_all_w.keys()):
+            plt.plot(w_in, np.real(prefactor_dict_all_w[key]), label=f"{key}", color=colors[i % len(colors)])
+            plt.plot(w_in, np.imag(prefactor_dict_all_w[key]), color=colors[i % len(colors)], linestyle="--")
         plt.xlabel("Energy [eV]")
         plt.ylabel("XAS spectrum")
         plt.legend()
-        plt.axvline(x=w_in[v_index])
+        plt.axvline(x=w_in[v_index], color='black')
         
         fig2 = plt.figure("XAS spectra ")
-        for key in prefactor_dict_all_w.keys():
-            plt.plot( np.real(prefactor_dict_all_w[key]), label=f"Re({key})")
-            plt.plot( np.imag(prefactor_dict_all_w[key]), label=f"Im({key})")
+        for i, key in enumerate(prefactor_dict_all_w.keys()):
+            plt.plot( np.real(prefactor_dict_all_w[key]), label=f"{key}", color=colors[i % len(colors)])
+            plt.plot( np.imag(prefactor_dict_all_w[key]), color=colors[i % len(colors)], linestyle="--")
         plt.xlabel("index")
         plt.ylabel("XAS spectrum")
         plt.legend()
-        plt.axvline(x=v_index)
+        plt.axvline(x=v_index, color='black')
         fig_abs_sqrd = None
         fig_interesting = None
         if material.symmetry_class == "Oh":
-            fig_abs_sqrd = plt.figure("XAS spectra")
+            fig_abs_sqrd = plt.figure("XAS spectra abs squared")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg"])**2, label="||eg||^2")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t1u"])**2, label="||t1u||^2")
@@ -3742,19 +3448,18 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.xlabel("Energy [eV]")
             plt.ylabel("XAS abs squared")
             plt.legend()
-            plt.axvline(x=w_in[v_index])
+            plt.axvline(x=w_in[v_index], color='black')
             
-            fig_interesting = plt.figure("interesting combinations of prefactors vs w_in_index")
+            fig_interesting = plt.figure("interesting combinations Oh")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg"])**2, label="||eg||^2")
-            plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2")
+            # plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t1u"])**2, label="||t1u||^2")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label="||t2g||^2")
             plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label="Im(conj(t2g)*Re(t1u))")
             plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label="Re(conj(t2g)*Re(t1u))")
             plt.xlabel("Energy [eV]")
             plt.legend()
-        
-            plt.axvline(x=w_in[v_index])
+            plt.axvline(x=w_in[v_index], color='black')
         elif material.symmetry_class == "D4h":
             fig_interesting = plt.figure("interesting combinations of prefactors vs w_in_index")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg2"])**2, label="||eg2||^2")
@@ -3765,7 +3470,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.ylabel("XAS abs squared")
             plt.legend()
         
-            plt.axvline(x=w_in[v_index])
+            plt.axvline(x=w_in[v_index], color='black')
         return fig1, fig2, fig_abs_sqrd, fig_interesting
         # plt.figure("energy dependence summed all equivalence classes")
         # for p in range(4):
@@ -4189,7 +3894,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     label=f"alpha index {alpha_idx}, p index {p}",
                     color=colors[alpha_idx],
                 )
-            plt.xlabel("Incident Energy")
+            plt.xlabel("Incident energy [eV]")
             plt.ylabel("normalised intensity")
             plt.legend()
 
@@ -4224,12 +3929,12 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 )
         plt.figure("comparison two magnon to one magnon contribution of prefactor")
         plt.plot(w_in, spectrum_4_set_to_1/spectrum_2_set_to_1)
-        plt.xlabel("Incident Energy")
+        plt.xlabel("Incident energy [eV]")
         plt.ylabel("ratio of two magnon / one magnon contribution of prefactor")
         
         plt.figure("comparison two magnon / one magnon complete spectra")
         plt.plot(w_in, np.einsum("Rpvwabc -> v",material.rixs_spectrum_4)/np.einsum("Rpvwabc -> v",material.rixs_spectrum_2))
-        plt.xlabel("Incident Energy")
+        plt.xlabel("Incident energy [eV]")
         plt.ylabel("ratio of two magnon / one magnon")
     
     def plot_sigma_prefactors():
@@ -4369,6 +4074,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 draw_xyz_equiv_contribution_for_indices_path(indices_path_angles),
                 (
                 draw_xyz_a_ad_spectra__energies__along_path(
+                    material,
+                    config,
                     relative_grid_points_lv_basis.reshape(
                         *shape_v_angles, 3
                     )[0, *indices_path_angles, :],
@@ -4417,6 +4124,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 np.array(material.relative_grid_points_path), steps=100), draw_BZ=False, draw_lv=False)
             ,
             draw_xyz_a_ad_spectra__energies__along_path(
+                material,
+                config,
                 material.relative_grid_points_path,
                 steps_between_points=100,
                 title_suffix="standard path",
@@ -4433,6 +4142,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
             # material.transform_from_cryst_basis_to_lv_basis(material.relative_grid_points_path, reciprocal=False, backtranform=True, transform_coefficients=True),
             (
                 draw_xyz_a_ad_spectra__energies__along_path(
+                    material,
+                    config,
                     relative_grid_points_lv_basis.reshape(
                         *shape_v_angles, 3
                     )[0, :, 0, 0, :],
@@ -4533,10 +4244,314 @@ def plotting_rixs_spectra(material: Material, config: Config,
 
     VALUES_TO_SAVE["figs_for_pdf"]+=flatten_list_of_figures(figs)
     
+def draw_xyz_a_ad_spectra__energies__along_path(
+    material:Material,
+    config:Config,
+    relative_grid_points,
+    steps_between_points=1,
+    title_suffix="",
+    indices_to_plot_2: list | None = None,
+    indices_to_plot_4: list | None = None,
+    plot_phase_factor: bool = False,
+    draw_every_sym_class_once = True,
+    draw_sym_class_a_ad:bool = False,
+    draw_equiv_contribution_for_azim: bool = False,
+    fraction_of_max_to_plot: float = 0.01,
+):
+    
+    assert (
+        np.imag(relative_grid_points).max()
+        < 1e-2 * np.abs(np.real(relative_grid_points)).max()
+    ), "relative grid points contains significant imaginary parts"
+    relative_grid_points = np.real(relative_grid_points)
+
+    if draw_every_sym_class_once:
+        sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.calc_sym_classes_to_xyz()
+        sym_class_2 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_2,4, give_mean_abs_value=False, compare_only_a_sample = False)
+        sym_class_4 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_4,4, give_mean_abs_value=False, compare_only_a_sample = False)
+        
+        indices_to_plot_2 = [sym_class_2[0][i][0] for i in range(len(sym_class_2[0]))] #take the first batch of xyz indices from every equivalence classs
+        indices_to_plot_4 = [sym_class_4[0][i][0] for i in range(len(sym_class_4[0]))]
+        
+    sqw_2_along_path = functions.path_through_grid_interpolated(
+        config= config, grid=material.sqw_2_ad_a_equiv_class,
+        relative_grid_points=np.array(relative_grid_points),
+        steps=steps_between_points,
+    )
+    if config.calc_two_magnon_spectra:
+        sqw_4_along_path = functions.path_through_grid_interpolated(
+            config= config,
+            grid=material.conv_sqw_2_ad_a_equiv_classes,
+            relative_grid_points=np.array(relative_grid_points),
+            steps=steps_between_points,
+        )
+
+    # relative_grid_points_interpolated = functions.interpolated_path_from_relative_points([2*p for p in material.relative_grid_points_path], steps)
+    # q_grid_points_standard_path = np.einsum('Nd,di->Ni', relative_grid_points_interpolated, material.get_reciprocal_lattice_vectors())
+
+    # creates the minimal k-space grid that contains all relative grid points (just corner points of BZ, points in between are interpolated)
+    # shouldnt be needed
+    # minimal_relative_point = np.zeros(3)
+    # maximal_relative_point = np.zeros(3)
+    # for d in range(3):
+    #     minimal_relative_point[d] = np.floor(np.min(relative_grid_points[:, d]))
+    #     maximal_relative_point[d] = np.ceil(np.max(relative_grid_points[:, d]))
+    # grid_total_k_points_lv_indices = np.stack(np.meshgrid(
+    #     np.arange(minimal_relative_point[0], maximal_relative_point[0]+1),
+    #     np.arange(minimal_relative_point[1], maximal_relative_point[1]+1),
+    #     np.arange(minimal_relative_point[2], maximal_relative_point[2]+1),
+    # indexing='ij'),axis=-1)
+    # grid_total_k_points = np.einsum('ijkv,vd->dijk', grid_total_k_points_lv_indices, material.get_reciprocal_lattice_vectors())
+
+    # q_grid_points_standard_path = functions.path_through_grid_interpolated(grid= grid_total_k_points,
+    #                                                                     relative_grid_points=np.array(relative_grid_points)+minimal_relative_point, #shifted since the index [0,0,0] of the grid corresponds to minimal_relative_point
+    #                                                                     steps=steps_between_points, make_periodic=False).T
+
+    total_k_points_lv_indices_interp = (
+        functions.interpolated_path_from_relative_points(
+            np.array(relative_grid_points), steps_between_points
+        )
+    )
+    total_k_points_lv_interp = np.einsum(
+        "Nv,vd->Nd",
+        total_k_points_lv_indices_interp,
+        material.get_reciprocal_lattice_vectors(),
+    )
+
+    # #phase factor takes the absolute k-points not the relative ones
+    # phase_factor_along_standard_path = give_phase_factor_from_total_k(material, config, total_k_points_lv_interp)[:,:material.N, :material.N]  #N,i,j
+
+    # #-----------------------------------reconstruct the xyz  spectra for debugging-------------------------------------
+    # config.debug_timer.print_difference(f"start calculating coeffcients for different equivalence classes along path {title_suffix}", debug_time_duration)
+    # spectrum_2_xyz_coeff_std_path = opt_einsum.contract("xtioju,kij,OUMNioju->OUMNkx"
+    #                             ,material.coeff_sym_classes_tioju_2
+    #                             ,phase_factor_along_standard_path
+    #                             ,material.coeff_tioju_xyz_2
+    #                             )
+    # if config.calc_conv_intensities:
+    #     spectrum_4_xyz_coeff_std_path = opt_einsum.contract("xytioju,kij,OUMNioju->OUMNkxy"
+    #                             ,material.coeff_sym_classes_tioju_4
+    #                             ,phase_factor_along_standard_path
+    #                             ,material.coeff_tioju_xyz_4
+    #                            )
+    # config.debug_timer.print_difference(f"done calculating coeffcients for different equivalence classes along path {title_suffix}", debug_time_duration)
+
+    # # spectrum_2_xyz_coeff_std_path_without_phase = np.einsum("xtioju,OUMNioju->OUMNx"
+    # #                             ,material.coeff_sym_class_tioju_2
+    # #                             ,material.coeff_tioju_xyz_2
+    # #                             ,optimize='optimal')
+    # spectrum_2_xyz_standard_path = opt_einsum.contract('OUMNkx, xwk->OUMNwk', spectrum_2_xyz_coeff_std_path, sqw_2_along_path).astype(config.dtype_complex)
+    # if config.calc_conv_intensities:
+    #     spectrum_4_xyz_standard_path = opt_einsum.contract('OUMNkxy, xywk->OUMNwk', spectrum_4_xyz_coeff_std_path, sqw_4_along_path).astype(config.dtype_complex)
+    #                                                                     steps=steps_between_points)
+
+    (
+        spectrum_2_xyz_along_path,# OUMNwk
+        spectrum_4_xyz_along_path,
+        phase_factor_along_standard_path,
+    ) = compute_xyz_spectra(
+        material,
+        config,
+        total_k_points=total_k_points_lv_interp,
+        sqw_2_of_total_k_points=sqw_2_along_path,
+        sqw_4_of_total_k_points=(
+            sqw_4_along_path if config.calc_two_magnon_spectra else None
+        ),
+    )
+    
+    fig_spectrum_2 = []
+    fig_spectrum_4 = []
+    fig_spectrum_2_a_ad = []
+    fig_spectrum_4_a_ad = []
+    
+    #material.coeff_xyz_rixs #ROUMNsrpabc
+    
+
+    
+
+    
+    energies_along_path = functions.path_through_grid_interpolated(
+        config= config, grid=material.energies.transpose(0, -1, 1, 2, 3),
+        relative_grid_points= np.array(relative_grid_points),
+        steps=steps_between_points,
+    )
+
+    fig_energies = plt.figure(f"energies_{title_suffix}\n")
+
+    for i in range(energies_along_path.shape[1]):
+        plt.plot(energies_along_path[0, i])
+        plt.xlabel("Path Index")
+        plt.ylabel("Energy Loss [meV]")
+
+
+    # one magnon plots
+
+    for equiv_class_idx in indices_to_plot_2 or np.ndindex(
+        spectrum_2_xyz_along_path.shape[:4]
+    ):
+        if (
+            np.abs(spectrum_2_xyz_along_path[*equiv_class_idx]).max()
+            > fraction_of_max_to_plot * np.abs(np.abs(spectrum_2_xyz_along_path)).max()
+        ):
+
+            # fig_spectrum_2.append(plt.figure(f"spectrum one magnon xyz {op_idx}_{title_suffix}"))
+
+            grid_to_plot = spectrum_2_xyz_along_path[*equiv_class_idx] 
+            #grid_to_plot = np.real(grid_to_plot) 
+
+            fig_spectrum_2.append(
+                functions.plot_2_1_d_grid(
+                    grid_to_plot,
+                    title=f"One magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
+                    xlabel="Path Index",
+                    ylabel="Energy Loss [meV]",
+                    w_values=material.w_values,
+                    use_intensity_k=True,
+                    plot_also_imaginary_part=True,
+                    config=config,
+                    useLogNorm=config.use_Log_Norm,
+                )
+            )
+
+            # plt.pcolormesh(grid_to_plot,
+            #             norm=SymLogNorm(
+            #                 linthresh=1e-8,          # linear range around zero
+            #                 linscale=1.0,            # scale of the linear range
+            #                 vmin=np.min(grid_to_plot),
+            #                 vmax=np.max(grid_to_plot),
+            #                 base=10
+            #             ))
+            # plt.colorbar()
+            # plt.title(f"spectrum one magnon xyz {op_idx}")
+            # amount_yticks = 5
+            # step_yticks = max(1, len(material.w_values)//amount_yticks)
+            # plt.yticks(ticks=np.arange(0,len(material.w_values),step_yticks), labels=[f"{np.real(w):.1f}" for w in material.w_values[::step_yticks]])
+
+    if draw_sym_class_a_ad:
+        grid_total = np.zeros_like(sqw_2_along_path[0])
+        for equiv_class_idx in range(material.sqw_2_ad_a_equiv_class.shape[0]):
+            
+            grid_to_plot = np.real(
+                    sqw_2_along_path[equiv_class_idx]
+                )
+
+            fig_spectrum_2_a_ad.append(
+                functions.plot_2_1_d_grid(
+                    grid_to_plot,
+                    title=f"spectrum one magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
+                    xlabel="Path Index",
+                    ylabel="Energy Loss [meV]",
+                    w_values=material.w_values,
+                    use_intensity_k=True,
+                    plot_also_imaginary_part=True,
+                    config=config,
+                    useLogNorm=config.use_Log_Norm,
+                ))
+            tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_2[equiv_class_idx]==1)).T
+            # print(f"equiv class {equiv_class_idx} enters {np.sum(material.coeff_equiv_classes_tioju_2[equiv_class_idx])} times")
+            tioju_indices_first = tioju_indices_all[0]  #gives the first indices tioju corresponding to equiv class equiv_class_idx
+            grid_to_plot = np.einsum("wk,k->wk", grid_to_plot, phase_factor_along_standard_path[:,tioju_indices_first[1],tioju_indices_first[3]])
+            # grid_total += grid_to_plot
+            fig_spectrum_2_a_ad.append(
+                functions.plot_2_1_d_grid(
+                    grid_to_plot,
+                    title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
+                    xlabel="Path Index",
+                    ylabel="Energy Loss [meV]",
+                    w_values=material.w_values,
+                    use_intensity_k=True,
+                    plot_also_imaginary_part=True,
+                    config=config,
+                    useLogNorm=config.use_Log_Norm,
+                ))
+    
+    # two magnon plots
+    if config.calc_two_magnon_spectra:
+        for equiv_class_idx in indices_to_plot_4 or np.ndindex(spectrum_4_xyz_along_path.shape[:4]):
+            if (
+                np.abs(np.real(spectrum_4_xyz_along_path[*equiv_class_idx])).max()
+                > fraction_of_max_to_plot * np.abs(np.real(spectrum_4_xyz_along_path)).max()
+            ):
+                # fig_spectrum_4.append(plt.figure(f"spectrum two magnon xyz standard path {op_idx}_{title_suffix}"))
+                grid_to_plot = np.real(
+                    spectrum_4_xyz_along_path[*equiv_class_idx]
+                )
+
+                fig_spectrum_4.append(
+                    functions.plot_2_1_d_grid(
+                        grid_to_plot,
+                        title=f"Two magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
+                        xlabel="Path Index",
+                        ylabel="Energy Loss [meV]",
+                        w_values=material.w_values,
+                        use_intensity_k=True,
+                        plot_also_imaginary_part=True,
+                        config=config,
+                        useLogNorm=config.use_Log_Norm,
+                    )
+                )
+                # if config.plot_only_once_per_equivalence_class:
+                #     break
+    
+        if draw_sym_class_a_ad:
+            for equiv_class_idx in np.ndindex(material.conv_sqw_2_ad_a_equiv_classes.shape[:2]):
+                grid_to_plot = np.real(
+                        sqw_4_along_path[*equiv_class_idx]
+                    )
+
+                fig_spectrum_2_a_ad.append(
+                    functions.plot_2_1_d_grid(
+                        grid_to_plot,
+                        title=f"spectrum two magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
+                        xlabel="Path Index",
+                        ylabel="Energy Loss [meV]",
+                        w_values=material.w_values,
+                        use_intensity_k=True,
+                        plot_also_imaginary_part=True,
+                        config=config,
+                        useLogNorm=config.use_Log_Norm,
+                    ))
+                tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_4[*equiv_class_idx]!=0)).T #gives the first indices tioju corresponding to equiv class equiv_class_idx
+                if tioju_indices_all.shape[0]==0:
+                    continue
+                tioju_indices_first = tioju_indices_all[0]
+                grid_to_plot = np.einsum("wk,k->wk", grid_to_plot, phase_factor_along_standard_path[:,tioju_indices_first[1],tioju_indices_first[3]])
+                        
+                fig_spectrum_2_a_ad.append(
+                    functions.plot_2_1_d_grid(
+                        grid_to_plot,
+                        title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
+                        xlabel="Path Index",
+                        ylabel="Energy Loss [meV]",
+                        w_values=material.w_values,
+                        use_intensity_k=True,
+                        plot_also_imaginary_part=True,
+                        config=config,
+                        useLogNorm=config.use_Log_Norm,
+                    ))
+    # phase factor plot
+    if plot_phase_factor:
+        fig_phase = plt.figure(f"Phase Factor along Path {title_suffix}")
+        for idx in np.ndindex(phase_factor_along_standard_path.shape[1:]):
+            plt.plot(
+                np.real(phase_factor_along_standard_path[:, *idx]),
+                label=f"index {idx}",
+            )
+            plt.plot(
+                np.imag(phase_factor_along_standard_path[:, *idx]),
+                linestyle="--",
+                label=f"index {idx} imag",
+            )
+        plt.legend()
+        plt.xlabel("Path Index")
+        plt.ylabel("Phase Factor")
+
+    fig_phase = [fig_phase] if plot_phase_factor else []
+
+    return [fig_energies] + fig_spectrum_2 + fig_spectrum_4 + fig_spectrum_2_a_ad + fig_spectrum_4_a_ad +fig_phase
 
 
     
-# TODO: needs testing if it works as anticipated like the plot function in RIXS spectrum
 def compute_xyz_spectra(
     material: Material,
     config: Config,
