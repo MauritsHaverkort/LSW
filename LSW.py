@@ -3435,10 +3435,10 @@ def plotting_rixs_spectra(material: Material, config: Config,
     def plot_RIXS_for_different_incident_energies(steps = 3):
         figs = []
         for v in range(0,shape_v_angles[0], steps):
-            temp_2 = (material.rixs_spectrum_2.sum(axis=0)[:, v, :, *indices_path_angles][:,config.rixs_config.polarisations_to_sum].sum(axis=1)).T #Rpvwabc -> pvwk -> pwk -> wk -> kw
-            
+            one_magnon_at_v = (material.rixs_spectrum_2.sum(axis=0)[:, v, :, *indices_path_angles][:,config.rixs_config.polarisations_to_sum].sum(axis=1)).T #Rpvwabc -> pvwk -> pwk -> wk -> kw
+            two_magnon_at_v = (material.rixs_spectrum_4.sum(axis=0)[:, v, :, *indices_path_angles][:,config.rixs_config.polarisations_to_sum].sum(axis=1)).T #Rpvwabc -> pvwk -> pwk -> wk -> kw
             figs.append(functions.plot_2_1_d_grid(
-                        temp_2,
+                        one_magnon_at_v,
                         k_values_scalar=x_labels_plot,
                         w_values=material.w_values,
                         config=config,
@@ -3446,6 +3446,19 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         use_intensity_k=True,
                         useLogNorm=config.use_Log_Norm,
                         title=f"RIXS one magnon contribution at: {w_in[v]:.2f} eV",
+                        xlabel=title_x,
+                        ylabel=title_y,
+                        gaussian_filter_along_w=True,
+                    ))
+            figs.append(functions.plot_2_1_d_grid(
+                        two_magnon_at_v,
+                        k_values_scalar=x_labels_plot,
+                        w_values=material.w_values,
+                        config=config,
+                        plot_also_imaginary_part=False,
+                        use_intensity_k=True,
+                        useLogNorm=config.use_Log_Norm,
+                        title=f"RIXS two magnon contribution at: {w_in[v]:.2f} eV",
                         xlabel=title_x,
                         ylabel=title_y,
                         gaussian_filter_along_w=True,
