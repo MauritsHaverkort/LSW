@@ -3266,3 +3266,5 @@ The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
 The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
 The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
 The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue
+The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue

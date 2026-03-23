@@ -148,7 +148,7 @@ def call_main_with_material_config():
             # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
             
             # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all domains"),
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
@@ -159,7 +159,7 @@ def call_main_with_material_config():
             # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #K2NiF4
-            # Examples.K2NiF4(config)
+            Examples.K2NiF4(config)
             #Nickelates
             # Examples.RNiO_3(config, anisotropy_K=-50)
             
@@ -3267,7 +3267,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
         
         for x in range(equiv_contribution_2.shape[0]):
             #summing all fund x-ray and polarisations from config
-            plt.plot(xlabels_plot_,equiv_contribution_2[x,:,:,config.rixs_config.polarisations_to_sum,:].sum(axis=(0,1,2)), label=f"equiv class: {sym_class_2[0][x][1]}", lw = equiv_contribution_2.shape[0]+2-x) #equiv class with higher number gets lower line width (just for better visibility)
+            plt.plot(xlabels_plot_,equiv_contribution_2[x,:,:,config.rixs_config.polarisations_to_sum,:].sum(axis=(0,1,2)), label=f"equiv class: {material.index_convention_to_string_xyz(
+sym_class_2[0][x][1])}", lw = equiv_contribution_2.shape[0]+2-x) #equiv class with higher number gets lower line width (just for better visibility)
         plt.legend()
         
          
@@ -3280,7 +3281,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     if np.all(np.abs(term)<1e-2):
                         if only_draw_non_zero:
                             continue
-                    plt.plot(xlabels_plot_,equiv_contribution_2[x,s,r,config.rixs_config.polarisations_to_sum,:].sum(axis=0), label=f"equiv class: {sym_class_2[0][x][1]}, conj({prefactor_list[s]})*{prefactor_list[r]}")
+                    plt.plot(xlabels_plot_,equiv_contribution_2[x,s,r,config.rixs_config.polarisations_to_sum,:].sum(axis=0), label=rf" {material.index_convention_to_string_xyz(sym_class_2[0][x][1])}" +" from: " rf"${prefactor_list[s]}^* \cdot {prefactor_list[r]}$")
             plt.legend()
         
         #two magnon
