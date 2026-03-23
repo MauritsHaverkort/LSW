@@ -148,7 +148,7 @@ def call_main_with_material_config():
             # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
             
             # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all domains"),
-            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
@@ -159,7 +159,7 @@ def call_main_with_material_config():
             # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #K2NiF4
-            Examples.K2NiF4(config)
+            # Examples.K2NiF4(config)
             #Nickelates
             # Examples.RNiO_3(config, anisotropy_K=-50)
             
@@ -2099,9 +2099,10 @@ def calculate_sqw_spectra(
 
     # N_k normalisation from the eff. RIXS operator of the sqw_2 after the convolution
     if config.use_intensity_normalisation:
+        assert False, "use_intensity_normalisation is not used anymore"
         # material.sqw_2_ad_a_sym_class = material.sqw_2_ad_a_sym_class * 1/config.number_k_points
         # sqw_prime_2_ad_a = sqw_prime_2_ad_a * 1/config.number_k_points
-        config.warnings.add("changed normalisation")
+        # config.warnings.add("changed normalisation")
 
     
 
@@ -2190,13 +2191,6 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
 
     q_values_grid = material.q_values
 
-
-    RIXS_config = [
-        (polarisation_in_sigma, polarisation_out_sigma)
-        for polarisation_in_sigma in [False, True]
-        for polarisation_out_sigma in [False, True]
-    ]
-
     # ------------------------------Define spin operators as symbolic variables--------------------------------------------------------------
     Sx, Sy, Sz = sp.symbols(
         "Sx Sy Sz", commutative=False
@@ -2225,6 +2219,8 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             config.warnings.add("No input filename for fundamental xray absorption spectra prefactors given, use fallback (NiO Ligand prefactors)")
             input_filename = "input_data/prefactors_results_crystal_field.dat" #Crystal field
             input_filename = "input_data/prefactors_results_ligand_field.dat" #Ligand field
+        else:
+            config.warnings.add(f"Used as input: {input_filename}")
         loaded_data_orig = pd.read_csv(input_filename, sep="\t")
         
         w_in = np.array(loaded_data_orig["Energy"])
@@ -2260,150 +2256,8 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
 
     # ----------------------------experimental setup: angle rotations and polarisation vectors--------------------------------------------------------
 
-    def define_experimental_setup(alpha=alpha, two_theta=two_theta, phi=phi, draw_setup = True):
-        """Definition of the experimental geometry and polarisation vectors from the angles alpha, two_theta and phi."""
-        
-        angular_shape = alpha.shape + two_theta.shape + phi.shape
-        alpha = np.broadcast_to(alpha[:, np.newaxis, np.newaxis], angular_shape)
-        two_theta = np.broadcast_to(two_theta[np.newaxis, :, np.newaxis], angular_shape)
-        phi = np.broadcast_to(phi[np.newaxis, np.newaxis, :], angular_shape)
-
-        beta = np.pi / 2 - alpha
-        beta_prime = np.pi / 2 - (two_theta - alpha)
-
-        epsilon_in = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
-        epsilon_out = np.zeros((len(RIXS_config), 3, *angular_shape), dtype=float)
-        for p, (polarisation_in_sigma, polarisation_out_sigma) in enumerate(
-            RIXS_config
-        ):
-            # sigma-polarised input
-            if polarisation_in_sigma:
-                epsilon_in[p] = np.array(
-                    [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
-                )
-            # pi-polarised input
-            else:
-                epsilon_in[p] = np.array(
-                    [
-                        np.cos(beta) * np.sin(phi),
-                        np.cos(beta) * np.cos(phi),
-                        np.sin(beta),
-                    ],
-                    dtype=float,
-                )
-
-            # sigma-polarised output
-            if polarisation_out_sigma:
-                epsilon_out[p] = np.array(
-                    [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
-                )
-            # pi-polarised output
-            else:
-                epsilon_out[p] = np.array(
-                    [
-                        -np.cos(beta_prime) * np.sin(phi),
-                        -np.cos(beta_prime) * np.cos(phi),
-                        np.sin(beta_prime),
-                    ],
-                    dtype=float,
-                )
-        # sqw_xyz = np.load("sqw_xyz.npy", allow_pickle=True).item()
-
-        # just for plotting and debugging
-        k_in = np.array(
-            [np.cos(alpha) * np.sin(phi), 
-             np.cos(alpha) * np.cos(phi), 
-             -np.sin(alpha)]
-        )
-        k_out = np.array(
-            [
-                np.cos(two_theta - alpha) * np.sin(phi),
-                np.cos(two_theta - alpha) * np.cos(phi),
-                np.sin(two_theta - alpha),
-            ]
-        )
-        q = np.array(
-            [
-                np.sin(phi) * ((np.cos(alpha) - np.cos(two_theta - alpha))),
-                np.cos(phi) * ((np.cos(alpha) - np.cos(two_theta - alpha))),
-                -np.sin(alpha) - np.sin(two_theta - alpha),
-            ]
-        )
-        
-         
-        def draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out):
-            """Helper function to visualise the scattering geometry."""
-            from mpl_toolkits.mplot3d import Axes3D
-            from matplotlib.lines import Line2D
-
-            fig = plt.figure("3D Scattering Geometry vectors in units of |k_in|") 
-            ax = fig.add_subplot(111, projection="3d")
-
-            origin = np.array([0, 0, 0])
-
-            ax.quiver(
-                *(-k_in),
-                *k_in,
-                color="r",
-                length=la.norm(k_in[:, 0, 0, 0]),
-                normalize=False,
-               
-            )
-            ax.quiver(
-                *origin,
-                *k_out,
-                color="g",
-                length=la.norm(k_out[:, 0, 0, 0]),
-                normalize=False,
-              
-            )
-            ax.quiver(
-                *origin,
-                *q,
-                color="b",
-                length=la.norm(q[:, 0, 0, 0]),
-                normalize=False,
-               
-            )
-            ax.quiver(
-                *(-k_in),
-                *(epsilon_in[0]),
-                color="c",
-                length=la.norm(epsilon_in[:, 0, 0, 0]),
-                normalize=False,
-               
-            )
-            ax.quiver(
-                *(k_out),
-                *(epsilon_out[0]),
-                color="m",
-                length=la.norm(epsilon_out[:, 0, 0, 0]),
-                normalize=False,
-               
-            )
-
-            ax.set_xlim([-2, 2])
-            ax.set_ylim([-2, 2])
-            ax.set_zlim([-2, 2])
-
-            ax.set_xlabel("X axis")
-            ax.set_ylabel("Y axis")
-            ax.set_zlabel("Z axis")
-            legend_handles = [
-                Line2D([0], [0], color="r", lw=2, label="k_in"),
-                Line2D([0], [0], color="g", lw=2, label="k_out"),
-                Line2D([0], [0], color="b", lw=2, label="q"),
-                Line2D([0], [0], color="c", lw=2, label="epsilon_in"),
-                Line2D([0], [0], color="m", lw=2, label="epsilon_out"),
-            ]
-            ax.legend(handles=legend_handles)
-            return fig
-        VALUES_TO_SAVE["figs_for_pdf"].append(draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out)) if draw_setup else None
-
-        
-        return epsilon_in, epsilon_out, q, alpha, two_theta, phi
     
-    epsilon_in, epsilon_out, q, alpha, two_theta, phi = define_experimental_setup()
+    epsilon_in, epsilon_out, q, alpha, two_theta, phi = define_experimental_setup(config)
 
     config.debug_timer.print_difference(
         "calculated q and polarisation vectors from angles", debug_time_duration
@@ -2892,7 +2746,6 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                         S_op_list,
                         prefactor_dict_all_w,
                         idx_energy_debug_plots,
-                        RIXS_config,
                         VALUES_TO_SAVE)
         
         def plot_fraction_first_BZ_covered():
@@ -2904,7 +2757,160 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             VALUES_TO_SAVE["figs"].extend([fig, fig_2])
         
         VALUES_TO_SAVE["figs_for_pdf"].append(plot_fraction_first_BZ_covered())
-       
+
+def define_experimental_setup(config, alpha=None, two_theta=None, phi=None, draw_setup = True):
+    """Definition of the experimental geometry and polarisation vectors from the angles alpha, two_theta and phi."""
+        
+    Polarisations_RIXS_list = [
+        (polarisation_in_sigma, polarisation_out_sigma)
+        for polarisation_in_sigma in [False, True]
+        for polarisation_out_sigma in [False, True]
+    ]
+    alpha = config.rixs_config.alpha if alpha is None else alpha
+    two_theta = config.rixs_config.two_theta if two_theta is None else two_theta
+    phi = config.rixs_config.phi if phi is None else phi
+
+    angular_shape = alpha.shape + two_theta.shape + phi.shape
+    alpha = np.broadcast_to(alpha[:, np.newaxis, np.newaxis], angular_shape)
+    two_theta = np.broadcast_to(two_theta[np.newaxis, :, np.newaxis], angular_shape)
+    phi = np.broadcast_to(phi[np.newaxis, np.newaxis, :], angular_shape)
+
+    beta = np.pi / 2 - alpha
+    beta_prime = np.pi / 2 - (two_theta - alpha)
+
+    epsilon_in = np.zeros((len(Polarisations_RIXS_list), 3, *angular_shape), dtype=float)
+    epsilon_out = np.zeros((len(Polarisations_RIXS_list), 3, *angular_shape), dtype=float)
+    for p, (polarisation_in_sigma, polarisation_out_sigma) in enumerate(
+        Polarisations_RIXS_list
+    ):
+        # sigma-polarised input
+        if polarisation_in_sigma:
+            epsilon_in[p] = np.array(
+                [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
+            )
+        # pi-polarised input
+        else:
+            epsilon_in[p] = np.array(
+                [
+                    np.cos(beta) * np.sin(phi),
+                    np.cos(beta) * np.cos(phi),
+                    np.sin(beta),
+                ],
+                dtype=float,
+            )
+
+        # sigma-polarised output
+        if polarisation_out_sigma:
+            epsilon_out[p] = np.array(
+                [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
+            )
+        # pi-polarised output
+        else:
+            epsilon_out[p] = np.array(
+                [
+                    -np.cos(beta_prime) * np.sin(phi),
+                    -np.cos(beta_prime) * np.cos(phi),
+                    np.sin(beta_prime),
+                ],
+                dtype=float,
+            )
+    # sqw_xyz = np.load("sqw_xyz.npy", allow_pickle=True).item()
+
+    # just for plotting and debugging
+    k_in = np.array(
+        [np.cos(alpha) * np.sin(phi), 
+            np.cos(alpha) * np.cos(phi), 
+            -np.sin(alpha)]
+    )
+    k_out = np.array(
+        [
+            np.cos(two_theta - alpha) * np.sin(phi),
+            np.cos(two_theta - alpha) * np.cos(phi),
+            np.sin(two_theta - alpha),
+        ]
+    )
+    q = np.array(
+        [
+            np.sin(phi) * ((np.cos(alpha) - np.cos(two_theta - alpha))),
+            np.cos(phi) * ((np.cos(alpha) - np.cos(two_theta - alpha))),
+            -np.sin(alpha) - np.sin(two_theta - alpha),
+        ]
+    )
+    
+        
+    def draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out):
+        """Helper function to visualise the scattering geometry."""
+        from mpl_toolkits.mplot3d import Axes3D
+        from matplotlib.lines import Line2D
+
+        fig = plt.figure("3D Scattering Geometry vectors in units of |k_in|") 
+        ax = fig.add_subplot(111, projection="3d")
+
+        origin = np.array([0, 0, 0])
+
+        ax.quiver(
+            *(-k_in),
+            *k_in,
+            color="r",
+            length=la.norm(k_in[:, 0, 0, 0]),
+            normalize=False,
+            
+        )
+        ax.quiver(
+            *origin,
+            *k_out,
+            color="g",
+            length=la.norm(k_out[:, 0, 0, 0]),
+            normalize=False,
+            
+        )
+        ax.quiver(
+            *origin,
+            *q,
+            color="b",
+            # length=la.norm(q[:, 0, 0, 0]),
+            normalize=False,
+            
+        )
+        ax.quiver(
+            *(-k_in),
+            *(epsilon_in[0]),
+            color="c",
+            length=la.norm(epsilon_in[:, 0, 0, 0]),
+            normalize=False,
+            
+        )
+        ax.quiver(
+            *(k_out),
+            *(epsilon_out[0]),
+            color="m",
+            length=la.norm(epsilon_out[:, 0, 0, 0]),
+            normalize=False,
+            
+        )
+
+        ax.set_xlim([-2, 2])
+        ax.set_ylim([-2, 2])
+        ax.set_zlim([-2, 2])
+
+        ax.set_xlabel("X axis")
+        ax.set_ylabel("Y axis")
+        ax.set_zlabel("Z axis")
+        legend_handles = [
+            Line2D([0], [0], color="r", lw=2, label="k_in"),
+            Line2D([0], [0], color="g", lw=2, label="k_out"),
+            Line2D([0], [0], color="b", lw=2, label="q"),
+            Line2D([0], [0], color="c", lw=2, label="epsilon_in"),
+            Line2D([0], [0], color="m", lw=2, label="epsilon_out"),
+        ]
+        ax.legend(handles=legend_handles)
+        return fig
+    VALUES_TO_SAVE["figs_for_pdf"].append(draw_geometry(q, k_in, k_out, epsilon_in, epsilon_out)) if draw_setup else None
+
+    
+    return epsilon_in, epsilon_out, q, alpha, two_theta, phi
+
+
 def plotting_rixs_spectra(material: Material, config: Config, 
                           w_in, 
                           prefactor_list, 
@@ -2948,9 +2954,18 @@ def plotting_rixs_spectra(material: Material, config: Config,
         mean_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum].mean(axis=(0,1,3,4,5,6))
         
         #taking the maximal calue along all computed angles (correspond to k-points)
-        vabc_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum].mean(axis=(0,1,3)) #vabc
-        vabc_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum].mean(axis=(0,1,3))
+        vabc_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,3)) #vabc
         
+        vabc_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,3))
+        
+        peak_w_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,2,4,5,6)).argmax(axis=0) #w
+        peak_w_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,2,4,5,6)).argmax(axis=0) #w
+        vabc_2_peak_w= material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,3)) #vabc
+        
+        vabc_4_peak_w = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum,:,peak_w_4].mean(axis=(0,1)) #vabc
+        vabc_2_peak_w = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:,peak_w_2].mean(axis=(0,1))
+        
+
         max_2 = vabc_2.max(axis=(1,2,3))
         max_4 = vabc_4.max(axis=(1,2,3))
         fig5 = plt.figure("max and min ratio of RIXS 4 to RIXS 2 along computed angles")
@@ -2980,6 +2995,23 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.xlabel("Incident energy [eV]")
         plt.ylabel("Intensity [a.u.]")
         plt.legend()
+
+
+        fig6 = plt.figure(f"mean one magnon and two magnon contributions (peak w) 1:{peak_w_2} and 2:{peak_w_4}")
+        plt.plot(w_in, vabc_2_peak_w.mean(axis=(1,2,3)),lw=3, label='mean one magnon')
+        plt.plot(w_in, vabc_2_peak_w.max(axis=(1,2,3)),linestyle = "--", label='max one magnon')
+        plt.plot(w_in, vabc_2_peak_w.min(axis=(1,2,3)), linestyle = "--", label='min one magnon')
+        plt.plot(w_in, vabc_4_peak_w.mean(axis=(1,2,3)), lw=3, label='mean two magnon')
+        plt.plot(w_in, vabc_4_peak_w.max(axis=(1,2,3)), linestyle = "--", label='max two magnon')
+        plt.plot(w_in, vabc_4_peak_w.min(axis=(1,2,3)), linestyle = "--", label='min two magnon')
+        plt.fill_between(w_in, vabc_2_peak_w.mean(axis=(1,2,3)) - vabc_2_peak_w.std(axis=(1,2,3)), vabc_2_peak_w.mean(axis=(1,2,3)) + vabc_2_peak_w.std(axis=(1,2,3)), alpha=0.25, label="std one magnon")
+        plt.fill_between(w_in, vabc_4_peak_w.mean(axis=(1,2,3)) - vabc_4_peak_w.std(axis=(1,2,3)), vabc_4_peak_w.mean(axis=(1,2,3)) + vabc_4_peak_w.std(axis=(1,2,3)), alpha=0.25, label="std two magnon")
+        # plt.plot(w_in, vabc_2.std(axis=(1,2,3)), linestyle = ":", label='std one magnon')
+        # plt.plot(w_in, vabc_4.std(axis=(1,2,3)), linestyle = ":", label='std two magnon')
+        plt.xlabel("Incident energy [eV]")
+        plt.ylabel("Intensity [a.u.]")
+        plt.legend()
+
         fig3 = plt.figure("max RIXS (of computed points) 2 and 4 vs w_in")
         plt.plot(w_in, max_2, label='max one magnon', linestyle='--')
         plt.plot(w_in, max_4, label='max two magnon', linestyle='--')
@@ -2991,7 +3023,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.axvline(x = config.rixs_config.energy_for_momentum_plots)
         plt.xlabel("Incident energy [eV]")
         plt.ylabel("RIXS 4 to RIXS 2 ratio")
-        return fig, fig2, fig3, fig4, fig5
+        return fig, fig2, fig3, fig4, fig5, fig6
    
     def draw_BZ_in_exp_setup(show_legends=False, draw_BZ=True, draw_lv=True, draw_cryst_vectors=True, draw_path_folded_back = True, indices_path_angles_ = None):
         
@@ -3413,7 +3445,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         plot_also_imaginary_part=False,
                         use_intensity_k=True,
                         useLogNorm=config.use_Log_Norm,
-                        title=f"RIXS two magnon at: {w_in[v]:.2f} eV",
+                        title=f"RIXS one magnon contribution at: {w_in[v]:.2f} eV",
                         xlabel=title_x,
                         ylabel=title_y,
                         gaussian_filter_along_w=True,
@@ -4384,7 +4416,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     for i in range(energies_along_path.shape[1]):
         plt.plot(energies_along_path[0, i])
         if material.relative_grid_points_names is not None:
-            plt.xticks(ticks=[i * steps_between_points for i in range(len(material.relative_grid_points_names))], labels=material.relative_grid_points_names)
+            plt.xticks(ticks=[i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, labels=material.relative_grid_points_names)
         plt.xlabel("Path through k-space")
         plt.ylabel("Energy Loss [meV]")
 
@@ -4411,7 +4443,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
                     xticks_labels= material.relative_grid_points_names,
-                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))],
+                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None,
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4449,7 +4481,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
                     xticks_labels= material.relative_grid_points_names,
-                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
+                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4468,7 +4500,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
                     xticks_labels= material.relative_grid_points_names,
-                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
+                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4495,7 +4527,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
                         xticks_labels= material.relative_grid_points_names,
-                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
+                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
@@ -4519,7 +4551,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
                         xticks_labels= material.relative_grid_points_names,
-                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))],
+                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None,
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
@@ -4539,7 +4571,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
                         xticks_labels= material.relative_grid_points_names,
-                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))], 
+                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
