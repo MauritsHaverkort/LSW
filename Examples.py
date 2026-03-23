@@ -15,7 +15,7 @@ import funtions as functions
 # NiO_input_file = "input_data\prefactors_results_ligand_field.dat" 
 NiO_input_file = "input_data\prefactors_results_ligand_field_paper_scaling.dat"
 
-K2NiF4_input_file = "input_data/prefactors_results_ligand_field K2NiF4.dat"
+K2NiF4_input_file = "input_data/prefactors_results_ligand field K2NiF4.dat"
 
 def NiO_incomm_1_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = "", lattice_constant=4.17e-10):
     #J_NN=-2.3,J_super_exchange=12,

@@ -3272,7 +3272,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         
          
         for x in range(equiv_contribution_2.shape[0]):
-            figs.append(plt.figure(f"equivalence class {sym_class_2[0][x][1]} / x-ray contributions to one magnon spectrum along path")) 
+            figs.append(plt.figure(f"equivalence class {sym_class_2[0][x][1]} ")) 
             #summing all fund x-ray and polarisations from config
             for s in range(1,equiv_contribution_2.shape[1]):
                 for r in range(1,equiv_contribution_2.shape[2]):
@@ -4174,6 +4174,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 material,
                 config,
                 material.relative_grid_points_path,
+                use_standard_path_naming=True,
                 steps_between_points=100,
                 title_suffix="standard path",
                 plot_phase_factor=True,
@@ -4295,6 +4296,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     material:Material,
     config:Config,
     relative_grid_points,
+    use_standard_path_naming = False,
     steps_between_points=1,
     title_suffix="",
     indices_to_plot_2: list | None = None,
@@ -4302,10 +4304,12 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     plot_phase_factor: bool = False,
     draw_every_sym_class_once = True,
     draw_sym_class_a_ad:bool = False,
-    draw_equiv_contribution_for_azim: bool = False,
+    # draw_equiv_contribution_for_azim: bool = False,
     fraction_of_max_to_plot: float = 0.01,
-    grid_point_names: List[str] | None = None,
+    # grid_point_names: List[str] | None = None,
 ):
+    
+    relative_grid_points_names = material.relative_grid_points_names if use_standard_path_naming else None
     
     assert (
         np.imag(relative_grid_points).max()
@@ -4428,8 +4432,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
 
     for i in range(energies_along_path.shape[1]):
         plt.plot(energies_along_path[0, i])
-        if material.relative_grid_points_names is not None:
-            plt.xticks(ticks=[i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, labels=material.relative_grid_points_names)
+        if relative_grid_points_names is not None:
+            plt.xticks(ticks=[i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, labels=relative_grid_points_names)
         plt.xlabel("Path through k-space")
         plt.ylabel("Energy Loss [meV]")
 
@@ -4455,8 +4459,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     title=f"One magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
                     xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
-                    xticks_labels= material.relative_grid_points_names,
-                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None,
+                    xticks_labels= relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None,
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4493,8 +4497,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     title=f"spectrum one magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
                     xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
-                    xticks_labels= material.relative_grid_points_names,
-                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
+                    xticks_labels= relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4512,8 +4516,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
                     xlabel="Path through k-space",
                     ylabel="Energy Loss [meV]",
-                    xticks_labels= material.relative_grid_points_names,
-                    xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
+                    xticks_labels= relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                     w_values=material.w_values,
                     use_intensity_k=True,
                     plot_also_imaginary_part=True,
@@ -4539,8 +4543,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         title=f"Two magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
                         xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
-                        xticks_labels= material.relative_grid_points_names,
-                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
+                        xticks_labels= relative_grid_points_names,
+                        xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
@@ -4563,8 +4567,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         title=f"spectrum two magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
                         xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
-                        xticks_labels= material.relative_grid_points_names,
-                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None,
+                        xticks_labels= relative_grid_points_names,
+                        xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None,
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
@@ -4583,8 +4587,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
                         xlabel="Path through k-space",
                         ylabel="Energy Loss [meV]",
-                        xticks_labels= material.relative_grid_points_names,
-                        xticks_pos= [i * steps_between_points for i in range(len(material.relative_grid_points_names))] if material.relative_grid_points_names is not None else None, 
+                        xticks_labels= relative_grid_points_names,
+                        xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                         w_values=material.w_values,
                         use_intensity_k=True,
                         plot_also_imaginary_part=True,
