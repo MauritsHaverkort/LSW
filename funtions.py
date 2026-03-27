@@ -419,7 +419,7 @@ def give_symmetries_of_tensors(tensor, number_axis_to_include, threshold=None,
         #check if the current indices belong to an already known symmetry batch
         for sym_idx,sym in enumerate(symmetries):
             if use_allclose:
-                if np.allclose(tensor[indices], tensor[sym[0]]):
+                if np.allclose(tensor[indices], tensor[sym[0]], ):
                     new_symmetry = False
                     sym.append(indices)
                     break
@@ -1552,8 +1552,10 @@ def plot_max_x_projection(values, title="Max X Projection", xlabel="W", ylabel="
 def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values_grid, VALUES_TO_SAVE, title = ""):
     try:
         #fig = plt.figure(f"intensities k dependent tau:{t}")
-        M = material.N
+        M = 2*material.N
         fig_grid, axs_grid = plt.subplots(M, M, figsize=(12, 10))
+        fig_grid2, axs_grid2 = plt.subplots(M, M, figsize=(12, 10))
+        fig_grid3, axs_grid3 = plt.subplots(M, M, figsize=(12, 10))
         if title != "":
             fig_grid.suptitle(title)
         else:
@@ -1561,6 +1563,8 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
         for a in range(M):
             for b in range(M):
                 ax = axs_grid[a, b] if M!=1 else axs_grid
+                ax2 = axs_grid2[a, b] if M!=1 else axs_grid2
+                ax3 = axs_grid3[a, b] if M!=1 else axs_grid3
                 # TODO: this is a old function that might make problems at certain grid sizes (thus try)
                 try:
                     intensities_k_along_path, xticks_pos, xticks_labels = path_through_k_grid(
@@ -1576,17 +1580,21 @@ def plot_sqw_ad_a_intensities(material, config:Config, sqw_intensities, q_values
                     config.warnings.add(f"Error in path_through_k_grid: {e}")
                     continue
                 #lw = functions.give_line_width([i, b, a], [2 * material.N, 3, 3])
+                ax2.pcolormesh(np.real(sqw_intensities[0,a, b, :, :, sqw_intensities.shape[-1]//3]),vmin = 0, vmax=5, cmap='viridis', shading='auto')
+                ax3.pcolormesh(np.imag(sqw_intensities[0,a, b, :, :, sqw_intensities.shape[-1]//3]),vmin = 0, vmax=5, cmap='viridis', shading='auto')
                 ax.plot(np.real(intensities_k_along_path), label=f"I_i{a}_j{b}", linewidth=2)
+                ax.set_ylim(-1, 5)
                 ax.set_title(f"i={a}, j={b}")
                 ax.set_xticks(xticks_pos)
                 ax.set_xticklabels(xticks_labels)
                 ax.legend(fontsize=7)
         fig_grid.tight_layout(rect=[0, 0.03, 1, 0.95])
+        fig_grid2.tight_layout(rect=[0, 0.03, 1, 0.95])
         
     except NameError:
         config.warnings.add("try to plot sqw but not defined")
 
-    return fig_grid
+    return fig_grid, fig_grid2
 
 def plot_path_through_grid(path, q_grid=None, material=None):
     """
@@ -2252,7 +2260,7 @@ def load_grid_from_file(filename="grid.npz"):
 
 
 
-def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
+def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200, notitle=True):
     import os
 
     if not os.path.exists(out_put_folder):
@@ -2263,8 +2271,11 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200):
             title = fig.canvas.manager.get_window_title()
         except Exception:
             title = f"Figure_{i}"
-
+        
         safe_title = "".join(c if c.isalnum() or c in "._- " else "_" for c in title)
+        
+        if notitle:
+            fig.canvas.manager.set_window_title(f"")
 
         try:
             # fig.set_size_inches(16,9, forward=True) #bring it into "fullscreen" size

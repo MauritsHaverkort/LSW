@@ -105,6 +105,7 @@ class Material:
         self.q_values: np.ndarray = None
         self.w_values: np.ndarray = None
 
+        self.zero_equiv_class: List[int] = []  # this saves the equiv classes indices which are zero (very small), so this can be referred to when calculating corresponding symmetries of spin correlation functions
         #S_x
         self.sqw_2_ad_a_equiv_class: np.ndarray = None 
         #S_xy
@@ -355,6 +356,7 @@ class Material:
 
     def calc_sym_classes_to_xyz(self):
         """calculate the symmetry classes of the xyz spectra if it wasnt calculated before"""
+        
         if self.sym_classes_to_xyz_4 is None or self.sym_classes_to_xyz_2 is None:
             if self.is_incommensurate():
                 if self.coeff_equiv_classes_tioju_4 is not None and self.coeff_tioju_xyz_4 is not None:
@@ -394,6 +396,13 @@ class Material:
                         self.coeff_tioju_xyz_2,
                         optimize="optimal",
                     )
+            #setting coefficients belonging to zero equivalence classes to zero, so comparisons can be done on the level of only the coefficients
+            for x in self.zero_equiv_class:
+                for y in self.zero_equiv_class:
+                    if self.sym_classes_to_xyz_4 is not None:
+                            self.sym_classes_to_xyz_4[:, :, :, :, x, y] = 0
+                    if self.sym_classes_to_xyz_2 is not None:
+                        self.sym_classes_to_xyz_2[:, :, :, :, x] = 0
         return self.sym_classes_to_xyz_2, self.sym_classes_to_xyz_4
     
     def transform_basis_i_order_i_to_n1_n2(

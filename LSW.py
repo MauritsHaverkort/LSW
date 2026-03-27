@@ -1967,6 +1967,7 @@ def calculate_sqw_spectra(
             number_axis_to_include=5,
             return_conjugated_symmetries=False,
             give_mean_abs_value=True,
+            use_allclose=config.use_allclose_for_equiv_search
         )
     )
     equivalence_list_ad_a_2 = [sym[1:] for sym in equivalence_list_ad_a_2_with_mean] #take out the mea value that is returned
@@ -1979,7 +1980,12 @@ def calculate_sqw_spectra(
     
     #save one per equivalence class
     for i, sym in enumerate(equivalence_list_ad_a_2):
-        material.sqw_2_ad_a_equiv_class[i] = residues_2_prime_ad_a_w[tuple(sym[0])]
+        if np.max(np.abs(residues_2_prime_ad_a_w[tuple(sym[0])])) < 1e-5 * np.max(np.abs(residues_2_prime_ad_a_w)):
+            #if zero equiv class set to zero
+            material.zero_equiv_class.append(i)
+            material.sqw_2_ad_a_equiv_class[i] = np.zeros_like(residues_2_prime_ad_a_w[tuple(sym[0])])
+        else:
+            material.sqw_2_ad_a_equiv_class[i] = residues_2_prime_ad_a_w[tuple(sym[0])]
         
     material.coeff_equiv_classes_tioju_2 = (
         functions.turn_equivalence_list_into_array(
@@ -2953,10 +2959,10 @@ def plotting_rixs_spectra(material: Material, config: Config,
         mean_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum].mean(axis=(0,1,3,4,5,6)) #Rpvwabc
         mean_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum].mean(axis=(0,1,3,4,5,6))
         
-        #taking the maximal calue along all computed angles (correspond to k-points)
-        vabc_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,3)) #vabc
+        #summing over all transferred energies (as experiment would do) but average over polarisation and alignments
+        vabc_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].sum(axis=(3)).mean(axis=(0,1)) #Rpvabc -> vabc
         
-        vabc_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,3))
+        vabc_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum,:].sum(axis=(3)).mean(axis=(0,1))
         
         peak_w_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,2,4,5,6)).argmax(axis=0) #w
         peak_w_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum,:].mean(axis=(0,1,2,4,5,6)).argmax(axis=0) #w
@@ -3023,7 +3029,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.axvline(x = config.rixs_config.energy_for_momentum_plots)
         plt.xlabel("Incident energy [eV]")
         plt.ylabel("RIXS 4 to RIXS 2 ratio")
-        return fig, fig2, fig3, fig4, fig5, fig6
+        return fig2, fig3, fig4, fig5, fig6, fig
    
     def draw_BZ_in_exp_setup(show_legends=False, draw_BZ=True, draw_lv=True, draw_cryst_vectors=True, draw_path_folded_back = True, indices_path_angles_ = None):
         
@@ -5019,7 +5025,7 @@ def treat_divergencies(
                 for i in range(2 * material.N):
                     for j in range(2 * material.N):
                         for l in range(2 * material.N):
-                            # refining only for commensurate (t=0) implemented
+                            # refining only for commensurate (t=0) implemented TODO: add k-shift for the refined grid
                             assert material.is_incommensurate() == False, "refining grid only implemented for commensurate materials yet"
                             residues[0, i, j, *index_div, l] = (
                                 1
@@ -5068,8 +5074,17 @@ def treat_divergencies(
                 )
         # eigvecs_refined = eigvecs_refined.mean(axis=(0, 1, 2))  # averaging over the refined grid
     else:
-        residues[np.abs(residues) > max_value] = max_value * np.sign(residues[np.abs(residues) > max_value]) # set the values that are above the threshold to the threshold value with the same sign
-        config.warnings.add("divergencies are treated not correctl but set to threshold")
+        # residues[np.abs(residues) > max_value] = max_value * np.sign(residues[np.abs(residues) > max_value]) # set the values that are above the threshold to the threshold value with the same sign
+        for index_div in indices_divergencies:
+            for i in range(2 * material.N):
+                for j in range(2 * material.N):
+                    for l in range(2 * material.N):
+                        for t in range(residues.shape[0]):
+                            residues_plus = residues[t,i,j,(index_div[0]+1)%residues.shape[3], index_div[1], index_div[2], l]
+                            residues_minus = residues[t,i,j,(index_div[0]-1)%residues.shape[3], index_div[1], index_div[2], l]
+                            residues[t, i, j, *index_div, l] = np.mean((residues_minus, residues_plus)) # set the value at the divergence to the average of the two neighboring points in the k-grid in x-direction 
+        
+        config.warnings.add("divergencies are treated not correctl but set to mean in x-direction")
         #assuming a 1/x dependency and interpolate from first dimension
         # def divergence(x, a, b, n):
         #     return a*1/x**n+b 
