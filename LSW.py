@@ -3525,8 +3525,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label=r"||$\sigma_{a1g}$||^2", color=colors[1])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t1u"])**2, label=r"||$\sigma_{t1u}$||^2", color=colors[2])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label=r"||$\sigma_{t2g}$||^2", color=colors[3])
-            if "XAS" in prefactor_dict_all_w and prefactor_dict_all_w["XAS"] is not None:
-                plt.plot(w_in, np.abs(prefactor_dict_all_w["XAS"]), label=r"XAS", color='black', linestyle="--")
+            if "XAS" in material.others.keys() and material.others["XAS"] is not None:
+                plt.plot(w_in, np.abs(material.others["XAS"]), label=r"XAS", color='gray', linestyle="--")
             plt.xlabel("Energy [eV]")
             plt.ylabel("XAS abs squared")
             plt.legend()
