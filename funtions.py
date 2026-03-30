@@ -22,7 +22,7 @@ import sympy as sp
 
 #plot fonts control
 import matplotlib as mpl
-fontsize = 10 #18 for presentations, 10 for thesis full size, 14 (?) for thesis half size
+fontsize = 18 #18 for presentations, 10 for thesis full size, 18 (?) for thesis half size
 mpl.rcParams.update({
     "font.size": fontsize,          # base font
     "axes.titlesize": fontsize,
@@ -1176,7 +1176,7 @@ def plot_3d_grid_slider(grid,
 
 def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity_label="Intensity (a.u.)", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
               xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = True, prevent_reusing_fig=False, plot_also_imaginary_part=False,
-              gaussian_filter_along_w = True, sigma_w = 1):
+              gaussian_filter_along_w = True, sigma_w = 2):
     """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
     
     grid = np.array(grid)
@@ -2275,7 +2275,12 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200, notitle
         safe_title = "".join(c if c.isalnum() or c in "._- " else "_" for c in title)
         
         if notitle:
-            fig.canvas.manager.set_window_title(f"")
+            try:
+                for ax in fig.axes:
+                    ax.set_title("")
+                fig.suptitle("")
+            except Exception:
+                pass
 
         try:
             # fig.set_size_inches(16,9, forward=True) #bring it into "fullscreen" size
@@ -2284,7 +2289,8 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200, notitle
             fig.savefig(
                 f"{out_put_folder}/{safe_title}.png",
                 dpi=dpi,
-                pad_inches=0.1,
+                pad_inches=0.005,
+                bbox_inches='tight'
             )
         except Exception as e:
             print(f"Failed to save figure {title} as PNG: {e}")
