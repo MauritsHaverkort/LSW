@@ -3284,8 +3284,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         
         for x in range(equiv_contribution_2.shape[0]):
             #summing all fund x-ray and polarisations from config
-            plt.plot(xlabels_plot_,equiv_contribution_2[x,:,:,:,config.rixs_config.polarisations_to_sum,:].sum(axis=(0,1,2,3)), label=f"equiv class: {material.index_convention_to_string_xyz(
-sym_class_2[0][x][1])}", lw = equiv_contribution_2.shape[0]+2-x) #equiv class with higher number gets lower line width (just for better visibility)
+            plt.plot(xlabels_plot_,equiv_contribution_2[x,:,:,:,config.rixs_config.polarisations_to_sum,:].sum(axis=(0,1,2,3)), label=f"equiv class: {material.index_convention_to_string_xyz(sym_class_2[0][x][1])}", lw = equiv_contribution_2.shape[0]+2-x) #equiv class with higher number gets lower line width (just for better visibility)
         plt.legend()
         
          # different domains shown
@@ -3525,6 +3524,8 @@ sym_class_2[0][x][1])}", lw = equiv_contribution_2.shape[0]+2-x) #equiv class wi
             plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label=r"||$\sigma_{a1g}$||^2", color=colors[1])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t1u"])**2, label=r"||$\sigma_{t1u}$||^2", color=colors[2])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label=r"||$\sigma_{t2g}$||^2", color=colors[3])
+            if "XAS" in prefactor_dict_all_w and prefactor_dict_all_w["XAS"] is not None:
+                plt.plot(w_in, np.abs(prefactor_dict_all_w["XAS"]), label=r"XAS", color='black', linestyle="--")
             plt.xlabel("Energy [eV]")
             plt.ylabel("XAS abs squared")
             plt.legend()

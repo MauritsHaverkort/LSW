@@ -14,7 +14,9 @@ import funtions as functions
 
 # NiO_input_file = "input_data\prefactors_results_ligand_field.dat" 
 # NiO_input_file = "input_data\prefactors_results_ligand_field_not_scaled.dat" 
-NiO_input_file = "input_data\prefactors_results_ligand_field_paper_scaling_v2.dat"
+NiO_input_file = "input_data/prefactors_results_ligand_field_with_XAS.dat"
+# NiO_input_file = "input_data/prefactors_results_ligand_field_scaled85_with_XAS.dat"
+
 
 K2NiF4_input_file = "input_data/prefactors_results_ligand field K2NiF4.dat"
 
