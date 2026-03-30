@@ -165,6 +165,8 @@ class Material:
             self.normal_vector_to_rotation_plane, self.normal_vector_to_rotation_plane
         )
         self.mat_R1 = (np.eye(3) - 1j * mat_nx - self.mat_R2) / 2
+        
+        self.others:dict = {} # this can be used to save any other variables that are needed (only for debugging purposes) 
 
     def add_additional_domain_material(self, additional_material: List["Material"]):
         self.additional_domain_materials = additional_material

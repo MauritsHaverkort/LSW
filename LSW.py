@@ -2259,7 +2259,8 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 prefactor_dict_all_w[pref_name] = np.array(loaded_data[f"Re {pref_name}"])+ 1j * np.array(loaded_data[f"Im {pref_name}"])
             except KeyError:
                 config.warnings.add(f"XAS spectrum {pref_name} not found in input file, set to 0")
-        
+        if "XAS" in loaded_data.keys():
+            material.others["XAS"] = np.array(loaded_data["XAS"])
         idx_energy_debug_plots = np.argmin(np.abs(w_in - energy_debug_plots))
         return w_in, prefactor_dict_all_w, idx_energy_debug_plots
     
