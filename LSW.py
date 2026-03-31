@@ -4241,7 +4241,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     indices_to_plot_2=spatial_idx_to_plot_2,
                     indices_to_plot_4=spatial_idx_to_plot_4,
                     draw_sym_class_a_ad= draw_sym_class_a_ad,
-                    draw_every_sym_class_once = True
+                    draw_every_sym_class_once = True,
+                    gaussian_filter_along_w= True,
+                    sigma_w= config.gaussian_broadening_for_plots
                 )
                 # draw_xyz_a_ad_spectra__energies__along_path(
                 #     relative_grid_points_lv_basis.reshape(
@@ -4290,6 +4292,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 plot_phase_factor=True,
                 indices_to_plot_2=spatial_idx_to_plot_2,
                 indices_to_plot_4=spatial_idx_to_plot_4,
+                gaussian_filter_along_w= True,
+                sigma_w= config.gaussian_broadening_for_plots
             ) if draw_xyz_spectra else None,
             functions.plot_3D_scatter(material.energies[0,:,:,0,0]) if draw_energies_3D else None,
             #TODO: remove hardcoding plot
@@ -4311,6 +4315,8 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     plot_phase_factor=True,
                     indices_to_plot_2=spatial_idx_to_plot_2,
                     indices_to_plot_4=spatial_idx_to_plot_4,
+                    gaussian_filter_along_w= True,
+                    sigma_w= config.gaussian_broadening_for_plots
                 )
                 if shape_v_angles[1] > 1
                 else None
@@ -4432,6 +4438,9 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     ), "relative grid points contains significant imaginary parts"
     relative_grid_points = np.real(relative_grid_points)
 
+    if sigma_w == 0:
+        gaussian_filter_along_w = False
+    
     if draw_every_sym_class_once:
         sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.calc_sym_classes_to_xyz()
         sym_class_2 = functions.give_symmetries_of_tensors(sym_classes_to_xyz_2,4, give_mean_abs_value=False, compare_only_a_sample = False)
