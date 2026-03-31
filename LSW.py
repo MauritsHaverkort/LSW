@@ -2971,7 +2971,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         mean_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum].mean(axis=(0,1,3,4,5,6))
         
         #summing over all transferred energies (as experiment would do) but average over polarisation and alignments
-        vabc_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].sum(axis=(3)).mean(axis=(0,1)) #Rpvabc -> vabc
+        vabc_2 = material.rixs_spectrum_2[:,config.rixs_config.polarisations_to_sum,:].sum(axis=(3)).mean(axis=(0,1)) #Rpvwabc -> Rpvabc -> vabc
         
         vabc_4 = material.rixs_spectrum_4[:,config.rixs_config.polarisations_to_sum,:].sum(axis=(3)).mean(axis=(0,1))
         
@@ -3012,6 +3012,26 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.xlabel("Incident energy [eV]")
         plt.ylabel("Intensity [a.u.]")
         plt.legend()
+        
+        # marks at phi =0 
+        try:
+            fig7 = plt.figure("one and two magnon contributions at phi closest to 0")
+            phi_idx_closest_to_0 = int(np.argmin(np.abs(config.rixs_config.phi)))
+            plt.plot(w_in, vabc_2.mean(axis=(1,2))[:,phi_idx_closest_to_0],lw=3, label=r'one magnon at $\varphi=0$') #vabc -> vc -> v
+            plt.plot(w_in, vabc_2.max(axis=(1,2,3)),linestyle = "--", label='max one magnon')
+            plt.plot(w_in, vabc_2.min(axis=(1,2,3)), linestyle = "--", label='min one magnon')
+            plt.plot(w_in, vabc_4.mean(axis=(1,2))[:,phi_idx_closest_to_0], lw=3, label=r'two magnon at $\varphi=0$')
+            plt.plot(w_in, vabc_4.max(axis=(1,2,3)), linestyle = "--", label='max two magnon')
+            plt.plot(w_in, vabc_4.min(axis=(1,2,3)), linestyle = "--", label='min two magnon')
+            plt.fill_between(w_in, vabc_2.mean(axis=(1,2,3)) - vabc_2.std(axis=(1,2,3)), vabc_2.mean(axis=(1,2,3)) + vabc_2.std(axis=(1,2,3)), alpha=0.25, label="std one magnon")
+            plt.fill_between(w_in, vabc_4.mean(axis=(1,2,3)) - vabc_4.std(axis=(1,2,3)), vabc_4.mean(axis=(1,2,3)) + vabc_4.std(axis=(1,2,3)), alpha=0.25, label="std two magnon")
+            # plt.plot(w_in, vabc_2.std(axis=(1,2,3)), linestyle = ":", label='std one magnon')
+            # plt.plot(w_in, vabc_4.std(axis=(1,2,3)), linestyle = ":", label='std two magnon')
+            plt.xlabel("Incident energy [eV]")
+            plt.ylabel("Intensity [a.u.]")
+            plt.legend()
+        except:            
+            pass
 
 
         fig6 = plt.figure(f"mean one magnon and two magnon contributions (peak w) 1:{peak_w_2} and 2:{peak_w_4}")
@@ -3040,7 +3060,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.axvline(x = config.rixs_config.energy_for_momentum_plots)
         plt.xlabel("Incident energy [eV]")
         plt.ylabel("RIXS 4 to RIXS 2 ratio")
-        return fig2, fig3, fig4, fig5, fig6, fig
+        return fig2, fig3, fig4, fig5, fig6, fig,fig7
    
     def draw_BZ_in_exp_setup(show_legends=False, draw_BZ=True, draw_lv=True, draw_cryst_vectors=True, draw_path_folded_back = True, indices_path_angles_ = None):
         
@@ -3501,11 +3521,14 @@ def plotting_rixs_spectra(material: Material, config: Config,
     def draw_prefactors_vs_w_in():
         fig1 = plt.figure("XAS spectra")
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'] #standard color cycle, will repeat if more prefactors
+        
+        y_label = "Intensity [a.u.]"
+        x_label = "Incident energy [eV]"
         for i, key in enumerate(prefactor_dict_all_w.keys()):
             plt.plot(w_in, np.real(prefactor_dict_all_w[key]), label=f"{key}", color=colors[i % len(colors)])
             plt.plot(w_in, np.imag(prefactor_dict_all_w[key]), color=colors[i % len(colors)], linestyle="--")
-        plt.xlabel("Energy [eV]")
-        plt.ylabel("XAS spectrum")
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.legend()
         plt.axvline(x=w_in[v_index], color='black')
         
@@ -3513,12 +3536,14 @@ def plotting_rixs_spectra(material: Material, config: Config,
         for i, key in enumerate(prefactor_dict_all_w.keys()):
             plt.plot(w_in, np.real(prefactor_dict_all_w[key]), label=rf"$\sigma: {key}$", color=colors[i % len(colors)])
             plt.plot(w_in, np.imag(prefactor_dict_all_w[key]), color=colors[i % len(colors)], linestyle="--")
-        plt.xlabel("Energy [eV]")
-        plt.ylabel("XAS spectrum")
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.legend()
         plt.axvline(x=w_in[v_index], color='black')
         fig_abs_sqrd = None
         fig_interesting = None
+        fig_interesting_2 = None
+        
         if material.symmetry_class == "Oh":
             fig_abs_sqrd = plt.figure("XAS spectra abs squared")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg"])**2, label=r"||$\sigma_{eg}$||^2", color=colors[0])
@@ -3527,33 +3552,51 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label=r"||$\sigma_{t2g}$||^2", color=colors[3])
             if "XAS" in material.others.keys() and material.others["XAS"] is not None:
                 plt.plot(w_in, np.abs(material.others["XAS"]), label=r"XAS", color='gray', linestyle="--")
-            plt.xlabel("Energy [eV]")
-            plt.ylabel("XAS abs squared")
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
             plt.legend()
             plt.axvline(x=w_in[v_index], color='black')
             
-            fig_interesting = plt.figure("interesting combinations Oh")
+            fig_interesting = plt.figure("interesting combinations Oh 1")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg"])**2, label=r"||$\sigma_{eg}$||^2", color=colors[0])
             # plt.plot(w_in, np.abs(prefactor_dict_all_w["a1g"])**2, label="||a1g||^2", color=colors[1])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t1u"])**2, label=r"||$\sigma_{t1u}$||^2", color=colors[2])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["t2g"])**2, label=r"||$\sigma_{t2g}$||^2", color=colors[3])
-            plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Im($\sigma_{t2g}^*\cdot \sigma_{t1u}$)", color=colors[4])
-            plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Re($\sigma_{t2g}^*\cdot \sigma_{t1u}$))", color=colors[5])
-            plt.xlabel("Energy [eV]")
+            # plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Im($\sigma_{t2g}^*\cdot \sigma_{t1u}$)", color=colors[4])
+            # plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Re($\sigma_{t2g}^*\cdot \sigma_{t1u}$))", color=colors[5])
+            if "XAS" in material.others.keys() and material.others["XAS"] is not None:
+                scaling_factor = np.array(np.abs(prefactor_dict_all_w["t1u"])**2).max()/np.array(np.abs(material.others["XAS"])).max() #scaling XAS to fit in the same plot, so we can compare the shape
+                
+                plt.plot(w_in, np.abs(np.array(material.others["XAS"]))*scaling_factor, label=r"XAS", color='gray', linestyle="--")
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
             plt.legend()
             plt.axvline(x=w_in[v_index], color='black')
+            
+            fig_interesting_2 = plt.figure("interesting combinations Oh 2")
+            plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Im($\sigma_{t2g}^*\cdot \sigma_{t1u}$)", color=colors[4])
+            plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Re($\sigma_{t2g}^*\cdot \sigma_{t1u}$))", color=colors[5])
+            if "XAS" in material.others.keys() and material.others["XAS"] is not None:
+                plt.plot(w_in, np.abs(np.array(material.others["XAS"]))*scaling_factor, label=r"XAS", color='gray', linestyle="--")
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
+            plt.legend()
+            plt.axvline(x=w_in[v_index], color='black')
+        
         elif material.symmetry_class == "D4h":
             fig_interesting = plt.figure("interesting combinations of prefactors vs w_in_index")
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg2"])**2, label=r"||$\sigma_{eg2}$||^2", color=colors[0])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eu1"])**2, label=r"||$\sigma_{eu1}$||^2", color=colors[1])
 
-            plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label=r"Im(conj($\sigma_{eu1}$)*$\sigma_{eg2}$)", color=colors[2])
-            plt.xlabel("Energy [eV]")
-            plt.ylabel("XAS abs squared")
+            plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label=r"Im($\sigma_{eu1}$^*\cot$\sigma_{eg2}$)", color=colors[2])
+            
+            plt.plot(w_in, -np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label=r"-Im($\sigma_{eu1}$^*\cot$\sigma_{eg2}$)", color=colors[2])
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
             plt.legend()
         
             plt.axvline(x=w_in[v_index], color='black')
-        return fig1, fig2, fig_abs_sqrd, fig_interesting
+        return fig1, fig2, fig_abs_sqrd, fig_interesting, fig_interesting_2
         # plt.figure("energy dependence summed all equivalence classes")
         # for p in range(4):
         #     plt.plot(
@@ -4181,7 +4224,6 @@ def plotting_rixs_spectra(material: Material, config: Config,
     np.savez(f"outputs/RIXS_plot_data/data_rixs{config.timestamp}", data_rixs=np.array(data_rixs, dtype = object),xlabel=title_x,
                 ylabel=title_y,k_values_scalar=x_labels_plot,
                 w_values=material.w_values, allow_pickle=True)
-    
     if not config.test_normalisation:
         figs = [            
                 draw_xyz_equiv_contribution_for_indices_path(indices_path_angles),
