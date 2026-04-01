@@ -148,7 +148,7 @@ def call_main_with_material_config():
             # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
             
             # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all domains"),
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
             # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
             #only first domain
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
@@ -159,7 +159,7 @@ def call_main_with_material_config():
             # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
             
             #K2NiF4
-            # Examples.K2NiF4(config)
+            Examples.K2NiF4(config)
             #Nickelates
             # Examples.RNiO_3(config, anisotropy_K=-50)
             
@@ -334,16 +334,16 @@ def main(
         # temp = sqw_components_calc_general_tau(material, config, 5)
 
         # In case One does not want the complete RIXS spectrum but only the xyz or ad a spectra along some path:
-        # plt.ioff()
-        # functions.save_figures_to_png(draw_xyz_a_ad_spectra__energies__along_path(current_material, 
-        #                                                                           config,
-        #                                                                           current_material.relative_grid_points_path,
-        #                                                                           steps_between_points=100,
-        #                                                                           use_standard_path_naming=True,
-        #                                                                           title_x="",
-        #                                                                           gaussian_filter_along_w= True,
-        #                                                                           sigma_w = 2,
-        #                                                                           ), out_put_folder="outputs/figs_additional")
+        plt.ioff()
+        functions.save_figures_to_png(draw_xyz_a_ad_spectra__energies__along_path(current_material, 
+                                                                                  config,
+                                                                                  current_material.relative_grid_points_path,
+                                                                                  steps_between_points=100,
+                                                                                  use_standard_path_naming=True,
+                                                                                  title_x="",
+                                                                                  gaussian_filter_along_w= True,
+                                                                                  sigma_w = 2,
+                                                                                  ), out_put_folder="outputs/figs_additional")
         
         # calculate RIXS spectrum for all domains (as materials) but without plotting
         if config.compute_RIXS_spectrum:
@@ -3566,7 +3566,6 @@ def plotting_rixs_spectra(material: Material, config: Config,
             # plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Re($\sigma_{t2g}^*\cdot \sigma_{t1u}$))", color=colors[5])
             if "XAS" in material.others.keys() and material.others["XAS"] is not None:
                 scaling_factor = np.array(np.abs(prefactor_dict_all_w["t1u"])**2).max()/np.array(np.abs(material.others["XAS"])).max() #scaling XAS to fit in the same plot, so we can compare the shape
-                
                 plt.plot(w_in, np.abs(np.array(material.others["XAS"]))*scaling_factor, label=r"XAS", color='gray', linestyle="--")
             plt.xlabel(x_label)
             plt.ylabel(y_label)
@@ -3588,9 +3587,12 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eg2"])**2, label=r"||$\sigma_{eg2}$||^2", color=colors[0])
             plt.plot(w_in, np.abs(prefactor_dict_all_w["eu1"])**2, label=r"||$\sigma_{eu1}$||^2", color=colors[1])
 
-            plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label=r"Im($\sigma_{eu1}$^*\cot$\sigma_{eg2}$)", color=colors[2])
+            plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label=r"Im($\sigma_{eu1}^*\cdot\sigma_{eg2}$)", color=colors[2])
+            plt.plot(w_in, -np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label=r"-Im($\sigma_{eu1}^*\cdot\sigma_{eg2}$)", color=colors[3])
+            if "XAS" in material.others.keys() and material.others["XAS"] is not None:
+                scaling_factor = np.array(np.abs(prefactor_dict_all_w["eu1"])**2).max()/np.array(np.abs(material.others["XAS"])).max() #scaling XAS to fit in the same plot, so we can compare the shape
+                plt.plot(w_in, np.abs(np.array(material.others["XAS"]))*scaling_factor, label=r"XAS", color='gray', linestyle="--")
             
-            plt.plot(w_in, -np.imag(np.conjugate(prefactor_dict_all_w["eu1"])*prefactor_dict_all_w["eg2"]), label=r"-Im($\sigma_{eu1}$^*\cot$\sigma_{eg2}$)", color=colors[2])
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             plt.legend()

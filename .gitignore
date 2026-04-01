@@ -6,6 +6,7 @@ config/
 working_logs/
 outputs/*
 old/
+output/
 
 Configurations.py
 debug_timing_log.txt
