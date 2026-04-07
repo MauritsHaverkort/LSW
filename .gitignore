@@ -19,6 +19,21 @@ intermediate_arrays/
 NiO.py
 COMMANDS
 
+download_from_cluster 
+pseudocodes\ 
+tryout.py 
+tryout_scripts\ 
+Hamiltonians.py 
+LSW_old_functions.py 
+RIXS.py 
+debug.pdf 
+experimental_data.py 
+functions_old.py 
+linear spin wave code.code-workspace' 
+main.py 
+matlab_testout.py 
+testing_functionalities.py 
+
 # Ignore all .dat files
 *.npz
 *LaptopPaul*
