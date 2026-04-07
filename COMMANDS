@@ -1,0 +1,4 @@
+#update gitlab
+
+git fetch LSW
+git push gitlab LSW/master:master
