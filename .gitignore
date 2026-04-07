@@ -16,6 +16,8 @@ plot_results.py
 outputs_interesting/
 texts/
 intermediate_arrays/
+NiO.py
+COMMANDS
 
 # Ignore all .dat files
 *.npz
