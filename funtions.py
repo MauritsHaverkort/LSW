@@ -2092,7 +2092,7 @@ def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=N
     return conv_grids
    # print("shape conv_intens "+str(np.shape(conv_intensities)))
     
-#GPT version
+#optimised version
 def convolute_grids_fft(grid1, grid2, dimension=3, double_convolution=False, grid3=None, use_real=True):
     """
     Fast version: vectorized via FFT.
@@ -2518,14 +2518,6 @@ def find_files_with_keywords(directory:str, keywords: List[str]) -> List[str]:
     return matching_files
 
 
-def sum_k_dependency(grid):
-    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
-    if grid.ndim < 2:
-        raise ValueError("Grid must have at least 2 dimensions.")
-    
-    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
-    return summed_grid
-
 
 
 ########################################################################################################################
@@ -2547,6 +2539,15 @@ def create_Gamma(half_size):
         Gamma[i, i] = 1
         Gamma[half_size + i, half_size + i] = -1
     return Gamma
+
+def sum_k_dependency(grid):
+    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
+    if grid.ndim < 2:
+        raise ValueError("Grid must have at least 2 dimensions.")
+    
+    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
+    return summed_grid
+
 
 
 def integrate_nd(f, grid_points, spacing,dimension):

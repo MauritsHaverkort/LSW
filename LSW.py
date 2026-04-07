@@ -83,28 +83,10 @@ def test_normalisation():
 def call_main_with_material_config():
     # test_normalisation()
 
-    config_SpinW = Configurations.config_experimental("SpinW TT")
-    config_SpinW.use_my_calculation_TT_switched = False
-    config_SpinW.use_SpinW_mat_form_factors = True
-    config_SpinW_my_mat = Configurations.config_experimental("SpinW TT my mat")
-    config_SpinW_my_mat.use_my_calculation_TT_switched = False
-    config_SpinW_my_mat.use_SpinW_mat_form_factors = False
-
-    config_my_TT = Configurations.config_experimental("My TT")
-    config_my_TT.use_my_calculation_TT_switched = True
-    config_my_TT.use_SpinW_mat_form_factors = False
-
-    config_my_TT_SW_mat = Configurations.config_experimental(
-        "My TT but SpinW form factors"
-    )
-    config_my_TT_SW_mat.use_my_calculation_TT_switched = True
-    config_my_TT_SW_mat.use_SpinW_mat_form_factors = True
+    config_main = Configurations.config_experimental("main")
 
     configs = [
-        config_SpinW,
-        # config_my_TT,
-        # config_SpinW_my_mat,
-        # config_my_TT_SW_mat
+        config_main
     ]
 
     for config in configs:
@@ -5263,14 +5245,6 @@ def plotting_additional_values():
 ###################################################################################################
 ###################################################################################################
 
-
-def J_of_k(S: float, bonds: List[np.ndarray], J_couplings: List[float], k_: np.ndarray):
-    temp = 0
-    for i in range(len(bonds)):
-        temp += np.exp(1j * np.dot(bonds[i], k_)) * J_couplings[i]
-    if len(bonds) == 0:
-        return 0
-    return temp * S / len(bonds)
 
 
 if __name__ == "__main__":
