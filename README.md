@@ -9,9 +9,11 @@ Afterwards you can start the calculations by running:
 
 python LSW.py
 
-Alter Configurations.py to change the parameters of the calculations.
+Runtime parameters can be be changed via the config.json file, in that case run:
+python LSW.py --config config.json
 
-In Examples.py a variety of example material input files are provided. 
+Alterinatively, alter Configurations.py to change the parameters of the calculations.
+Furthermore, in Examples.py a variety of example material input files are provided. 
 
 You can specify which material is used in LSW.py by specifying in "call_main_with_material_config" the material e.g. 
 "Examples.K2NiF4(config)" and the configuration e.g. "Configurations.config_experimental("main")"

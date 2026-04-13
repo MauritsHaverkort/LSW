@@ -2747,3 +2747,32 @@ if __name__ == "__main__":
     from LSW import call_main_with_material_config
 
     call_main_with_material_config()
+
+
+def is_approximately_diagonal(matrix, tolerance=1e-3):
+    """
+    Check whether a matrix is approximately diagonal.
+
+    Parameters:
+        matrix (numpy.ndarray): The input matrix.
+        tolerance (float): The threshold for considering an element approximately zero.
+
+    Returns:
+        bool: True if the matrix is approximately diagonal, False otherwise.
+    """
+    if not isinstance(matrix, np.ndarray):
+        raise ValueError("Input must be a NumPy array.")
+
+    # Ensure the matrix is square
+    rows, cols = matrix.shape
+    if rows != cols:
+        raise ValueError("Matrix must be square.")
+
+    # Create a mask for off-diagonal elements
+    off_diagonal_mask = ~np.eye(rows, dtype=bool)
+
+    # Extract off-diagonal elements
+    off_diagonal_elements = matrix[off_diagonal_mask]
+
+    # Check if all off-diagonal elements are within the tolerance
+    return np.all(np.abs(off_diagonal_elements) < tolerance)

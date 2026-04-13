@@ -12,6 +12,7 @@ import funtions as functions
 # Main Examples (tested and up to date):
 ############################################
 
+
 # NiO_input_file = "input_data\prefactors_results_ligand_field.dat" 
 # NiO_input_file = "input_data\prefactors_results_ligand_field_not_scaled.dat" 
 # NiO_input_file = "input_data/prefactors_results_ligand_field_with_XAS.dat"
@@ -304,6 +305,12 @@ def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), la
     
     return material
 
+#for accessing via input file
+MATERIAL_BUILDERS = {
+    "NiO_2_atom_cell_NN_and_NNN": NiO_2_atom_cell_NN_and_NNN,
+    "NiO_incomm_1_atom_cell_NN_and_NNN": NiO_incomm_1_atom_cell_NN_and_NNN,
+    "K2NiF4": K2NiF4,
+}
 ############################################
 # old Examples (Use with care, not tested and patly not up to date with new code structure):
 ############################################

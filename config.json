@@ -1,0 +1,48 @@
+{
+  "config": {
+    "name": "Main Configuration",
+    "debug_timing": true,
+
+    "treat_divergencies": true,
+    "plot_only_once_per_symmetry_class": true,
+    "calc_two_magnon_spectra": true,
+    "use_averaging_TdT": true,
+    "compute_RIXS_spectrum": true,
+    "use_RAM_einsum": false,
+    "set_convolutions_of_zero_grid_to_zero": true,
+    "use_allclose_for_equiv_search": false,
+
+    "amount_k_values": [20, 20, 20],
+    "amount_w_values": 20,
+ 
+    "use_Log_Norm": false,
+    "save_figures_as_png": true,
+    "cmap_plots": "terrain",
+    "shading_colormesh_plots": "flat",
+    "save_material": true,
+    "load_saved_grid": true,
+    "load_material_path": "",
+    "gaussian_broadening_for_plots": 2,
+
+    "additional_values": {},
+
+    "rixs_config": {
+      "energy_for_momentum_plots": 850.32,
+      "polarisations_to_sum": [2, 3],
+
+      "draw_sym_class_a_ad": false,
+      "draw_xyz_spectra": true,
+      "draw_energies_3D": false,
+      "draw_total_sigma_prefactor_contributions": false,
+
+      "title_path": "$\\alpha [deg]$",
+      "title_energy": "Transferred energy [eV]",
+      "title_suffix": ""
+    }
+  },
+
+  "material": {
+    "kind": "K2NiF4",
+    "params": {}
+}
+}

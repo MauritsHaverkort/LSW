@@ -35,6 +35,10 @@ import time
 import json
 from datetime import datetime
 import os
+import argparse
+import json
+from pathlib import Path
+
 
 from funtions import create_q_grid
 from funtions import give_reciprocal_lv
@@ -55,32 +59,93 @@ DEBUGGING_INFO = {"Attention unreasonably high state -> cut off": True}
 # --------------------------------------------------In Use Functions--------------------------------------------------#
 
 
-def test_normalisation():
 
-    config = Configurations.config_experimental("SpinW TT")
-    k_values = np.arange(6, 30, 2)
-    # material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=10, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
-    # material = Examples.NiO_8_atom_cell(config)
-    material = Examples.NiO_2_atom_cell_NN_and_NNN(config)
-    filename = f"total_integral_intensities.txt"
-    with open(filename, "a", encoding="utf-8") as f:
-        f.write(f"{config.timestamp}: material: {material.name}\n")
-    for K in k_values:
-        VALUES_TO_SAVE["figs_for_pdf"] = []
-        VALUES_TO_SAVE["Hamiltonian_not_diagonalised"] = []
-        VALUES_TO_SAVE["figs"] = []
-        VALUES_TO_SAVE["Bog_trafo_of_k"] = []
-        config.amount_k_values = [K, K, K]
-        config.number_k_points = None
-        config.compute_RIXS_spectrum = True
-        config.use_explicit_calc_of_sqw = False
-        config.test_normalisation = True
-        main(config, material)
+def load_config(path: str) -> dict:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-        # functions.save_figures_as_images_to_pdf(config, VALUES_TO_SAVE["figs_for_pdf"], filename=f"outputs/{material.name}_{config.name}_{config.timestamp}.pdf", material=material)
+def call_main_from_input_json():
+    """This function is used to call the main function with a configuration and material specified in an input JSON file."""
+    
+    def build_config_from_input(config_dict: dict) -> Config:
+        # Convert the config dictionary to a Config object
+        config = Configurations.config_main() #start from default config
+        config = Configurations.override_config_with_input(config, config_dict) #override default values with values from input
+        return config
+    def build_material_from_input(material_spec: dict, config: Config):
+        kind = material_spec["kind"]
+        params = material_spec.get("params", {})
+        from Examples import MATERIAL_BUILDERS
+        try:
+            builder = MATERIAL_BUILDERS[kind]
+        except KeyError as e:
+            raise ValueError(
+                f"Unknown material kind '{kind}'. "
+                f"Available: {list(MATERIAL_BUILDERS)}"
+            ) from e
+
+        return builder(config=config, **params)
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", help="Path to config JSON file")
+    args = parser.parse_args()
+    
+    parser.add_argument("--config", help="Path to input JSON file")
+
+    args = parser.parse_args()
+
+    #fallback to default material and config if no input file is given
+    if args.config is None:
+        call_main_with_material_config()
+        return
+    
+    config_path = Path(args.config)
+    cfg = load_config(config_path)
+    
+    config = build_config_from_input(cfg["config"])
+    material = build_material_from_input(cfg["material"], config)
+    
+    main(config, material)
+
+    print("")
+
+    print("before showing")
+    if len(config.warnings) != 0:
+        print(
+            "\n\n-----------------------------WARNINGS----------------------------------:"
+        )
+        for w in config.warnings:
+            print(w)
+    # write results into output file
+    
+    if config.save_figures_as_png:
+        functions.save_figures_to_png(
+            VALUES_TO_SAVE["figs_for_pdf"],
+            )
+    functions.save_figures_as_images_to_pdf(
+        config,
+        VALUES_TO_SAVE["figs_for_pdf"],
+        filename=f"outputs/{material.name}_{config.name}_{config.timestamp}.pdf",
+        material=material,
+    )
+    
+    # plt.show(block = True)
+    config.debug_timer.print_difference(
+        "done with all plotting \n--------------DONE------------------",
+        config.debug_timing,
+    )
+    config.debug_timer.print_complete_time_since_start()
+    plt.close("all")  # Close all figures for next configuration
+
+    # reset config values
+    config.number_k_points = None
+
+    # delete intermediate memmap files after all calculations are done (used for einsum with large arrays to avoid RAM overflow)
+    einsum_RAM.clean_memmap_files(config) if config.use_RAM_einsum else None
 
 
 def call_main_with_material_config():
+    """This function is used to call the main function with different materials and configurations. It also handles the plotting and saving of results."""
     # test_normalisation()
 
     config_main = Configurations.config_experimental("main")
@@ -92,78 +157,16 @@ def call_main_with_material_config():
     for config in configs:
 
         config.debug_timer.print_difference(f"starting: {config.timestamp}")
-        # config.warnings.add("ATTENTION: changing R' manually right now in Atoms!!!!!!!!!!!!!!!")
-        # config.warnings.add("ATTENTION: changed defintion of u matching SpinW but not paper now!!!!!!!!!!!!!")
 
-        # #the config object is changed in the example so every material needs its own config
-
-        # config_materials = []
-        # for i in range(5):
-        #     config_materials.append(copy.deepcopy(config))
-        standard_materials = [
-            # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=1, S2=-1, d=2, spin_dir=np.array([0, 1, 1])),
-            # Examples.NiO_supercell(config),
-            # Examples.D1_spin_spiral_inversion_sym_breaking_general_degree(config, rotated_to_y=False),
-        ]
-
-        testing_materials = [
-            # Examples.D2_with_FM(config, J2 = -0),
-            # Examples.NiO_supercell(config),
-            # FM supercell
-            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=-1, a=1, S1=1, S2=-1, J2 = -5, spin_dir=np.array([0, 1, 1]), relative_position_atom_2=1/2, AFM=False),
-            # Examples.D1_AFM_FM_simple_cubic_supercell(config, J=-1, a=1, S1=1, S2=-1, J2 = -1.5, spin_dir=np.array([0, 0.01, 1]), relative_position_atom_2=1/2, AFM=False),
-            # AFM supercell
-            # Examples.D2_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
-            # Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
-            # Examples.D1_AFM_simple_cubic_supercell(config, J=1, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1])),
-            # In DG_AFM a is defined as the distance between NNN since I added the option to have the second atom somehow shifted so a=2 leads to NN distance of 1!
-            # Examples.DG_AFM_FM_simple_cubic_non_rotated_supercell_auto_bond(config, J=1, a=2, S1=1, S2=1, J2=0, dimension=3, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2),
-            # Examples.NiO_8_atom_cell(config, J = 1)
-            # Examples.NiO_supercell(config)
-            
-            #NiO without NN
-            # Examples.NiO_2_atom_cell(config),
-            # Examples.NiO_2NNN_6NN_atom_cell_NN_and_NNN(config)
-            
-            #NiO with NN and NNN
-            # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="first domain", add_all_domains=False),
-            
-            # Examples.NiO_incomm_1_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all domains"),
-            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, title_suffix="all domains"),
-            # Examples.NiO_2_atom_cell_NN_and_NNN_double_unit_cell(config, T_domain_idx=0, add_all_domains=False, title_suffix="first domain double unit cell"),
-            #only first domain
-            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=False, title_suffix="only first domain"),
-            
-            # ,Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=2)
-            
-            # 2 atom cluster
-            # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1)
+        materials = [
+            # NiO
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all_domains"),
             
             #K2NiF4
             Examples.K2NiF4(config)
-            #Nickelates
-            # Examples.RNiO_3(config, anisotropy_K=-50)
             
-            # AFM sc
-            # Examples.General_D_FM_AFM_simple_cubic(config, J=1, a=1, S1=-1, S2=1, d=3, spin_dir=np.array([0, 0, -1])),
-            # Fe2O3
-            # Examples.Fe2O3_hematite_hexagonal(config, AFM=True),
-            # Examples.Fe2O3_rhombohedral(config, AFM=True),
-            # tryout materials
-            # Examples.D1_2_atom_cluster(config, J=1, a=1, S1=1, S2=1, spin_dir=np.array([0, 0, 1]), spin_dir_2=-np.array([0, 0, 1])),
-            # Examples.D2_FM_AFM_simple_cubic_NNN_interactions(config, J_AFM=1, J_FM=0.5, a=1, S=1, d=2, spin_dir=np.array([0, 1, 1])),
-            # Examples.spin_helix_sc_D(config, J=1, tau=np.array([1/3,0,0])),
-            # Examples.spin_helix_tut30_D2(config, J=1, a=1, S1=1, d=2),
-            # Examples.D1_spin_spiral_inversion_sym_breaking_general_degree(config, rotated_to_y=False),
-            # Examples.spin_helix_tut30_D2_two_atoms(config)
         ]
         
-        # 
-        # additional_domain_materials = None
-
-        # materials = standard_materials
-        materials = testing_materials
 
         for material in materials:
             # plt.ion() #for interactive plotting
@@ -208,13 +211,15 @@ def call_main_with_material_config():
             # reset config values
             config.number_k_points = None
 
-    # delete intermediate memmap files after all calculations are done
+    # delete intermediate memmap files after all calculations are done (used for einsum with large arrays to avoid RAM overflow)
     einsum_RAM.clean_memmap_files(config) if config.use_RAM_einsum else None
 
 def main(
     config: Config,
     material: Material,
 ):
+    """This is the main function which is called for each material and configuration. It handles the calculation of the Hamiltonian, the Bogoliubov transformation, the energies on the grid, the correlation functions, and the RIXS spectrum. It also handles saving the material and the configuration."""
+    
     config.debug_timer.print_difference(f"\nstart main with {material.name}\n", config.debug_timing)
     
     #checks wheter the correct folder structure for saving outputs exists and if not creates it
@@ -230,8 +235,6 @@ def main(
     for d in range(material.dimension):
         config.number_k_points *= config.amount_k_values[d]
 
-    amount_k_values = config.amount_k_values[0]
-    amount_w_values = config.amount_w_values
     dimension = material.dimension
 
     assert material is not None, "Material has to be given "
@@ -246,7 +249,7 @@ def main(
         print("No material loaded from file, calculating material now!")
         config.warnings.add(f"No material loaded from file, calculating new material")
     
-    
+    # plotting the material structure
     VALUES_TO_SAVE["figs_for_pdf"].append(
         material.draw_atoms_new_bond_system(
             DRAW_BONDS=True, DRAW_SPINS=True, DRAW_BONDS_ONCE_PER_DISTANCE=True
@@ -264,6 +267,7 @@ def main(
             azim=45,
         )
     )
+    #following steps are done for all domains seperately
     additional_domain_material = material.additional_domain_materials
     
     for current_material in [material] + (
@@ -274,6 +278,7 @@ def main(
             lv = current_material.lattice_vectors
             grid_fineness = config.amount_k_values
 
+            #create the momenetum grid
             q_values = create_q_grid(
                 give_reciprocal_lv(lv)[:dimension],
                 grid_fineness[:dimension],
@@ -283,6 +288,7 @@ def main(
             config.additional_values["q_grid"] = q_values
             current_material.q_values = q_values
 
+            #create Hamiltonian Bogoliubov transformation and the enegies on the grid
             energy_dependent_part, T, eigvalue_grid, w_values, eigvalues_deriv, T_deriv = (
                 calc_H_T_w_on_grid(
                     config=config,
@@ -295,8 +301,7 @@ def main(
             )
             current_material.w_values = w_values
 
-            # calculate_complete_RIXS_spectrum_for_sqw_xyz(config, material, q_values_along_path= None, sqw_4_xyz_along_path= None)
-
+            #calculate the HP correlation functions on the grid
             calculate_sqw_spectra(
                 config,
                 q_values_grid=q_values,
@@ -316,16 +321,16 @@ def main(
         # temp = sqw_components_calc_general_tau(material, config, 5)
 
         # In case One does not want the complete RIXS spectrum but only the xyz or ad a spectra along some path:
-        plt.ioff()
-        functions.save_figures_to_png(draw_xyz_a_ad_spectra__energies__along_path(current_material, 
-                                                                                  config,
-                                                                                  current_material.relative_grid_points_path,
-                                                                                  steps_between_points=100,
-                                                                                  use_standard_path_naming=True,
-                                                                                  title_x="",
-                                                                                  gaussian_filter_along_w= True,
-                                                                                  sigma_w = 2,
-                                                                                  ), out_put_folder="outputs/figs_additional")
+        # plt.ioff()
+        # functions.save_figures_to_png(draw_xyz_a_ad_spectra__energies__along_path(current_material, 
+        #                                                                           config,
+        #                                                                           current_material.relative_grid_points_path,
+        #                                                                           steps_between_points=100,
+        #                                                                           use_standard_path_naming=True,
+        #                                                                           title_x="",
+        #                                                                           gaussian_filter_along_w= True,
+        #                                                                           sigma_w = 2,
+        #                                                                           ), out_put_folder="outputs/figs_additional")
         
         # calculate RIXS spectrum for all domains (as materials) but without plotting
         if config.compute_RIXS_spectrum:
@@ -353,10 +358,10 @@ def main(
             calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                 config, material, save_RIXS_spectra_to_material=False
             )
-
-    symmetry_checks(config, material)
-
+    #save the configuration
     functions.save_config_to_json(config)
+    
+    #save the material if enabled (may take a lot of memory)
     if config.save_material:
         np.savez(
             f"outputs/material/{material.name}{config.timestamp}.npz",
@@ -364,7 +369,6 @@ def main(
             allow_pickle=True,
         )
 
-    # plotting_additional_values()
 
 def create_folder_structure_for_outputs():
     if not os.path.exists("outputs"):
@@ -377,6 +381,31 @@ def create_folder_structure_for_outputs():
         os.makedirs("outputs/material")
     if not os.path.exists("outputs/figs_additional"):
         os.makedirs("outputs/figs_additional")
+
+def test_normalisation():
+
+    config = Configurations.config_experimental("SpinW TT")
+    k_values = np.arange(6, 30, 2)
+    # material = Examples.D2_AFM_FM_simple_cubic_non_rotated_supercell(config, J=10, a=1, S1=1, S2=-1, spin_dir=np.array([0, 0, 1]), relative_position_atom_2=1/2)
+    # material = Examples.NiO_8_atom_cell(config)
+    material = Examples.NiO_2_atom_cell_NN_and_NNN(config)
+    filename = f"total_integral_intensities.txt"
+    with open(filename, "a", encoding="utf-8") as f:
+        f.write(f"{config.timestamp}: material: {material.name}\n")
+    for K in k_values:
+        VALUES_TO_SAVE["figs_for_pdf"] = []
+        VALUES_TO_SAVE["Hamiltonian_not_diagonalised"] = []
+        VALUES_TO_SAVE["figs"] = []
+        VALUES_TO_SAVE["Bog_trafo_of_k"] = []
+        config.amount_k_values = [K, K, K]
+        config.number_k_points = None
+        config.compute_RIXS_spectrum = True
+        config.use_explicit_calc_of_sqw = False
+        config.test_normalisation = True
+        main(config, material)
+
+        # functions.save_figures_as_images_to_pdf(config, VALUES_TO_SAVE["figs_for_pdf"], filename=f"outputs/{material.name}_{config.name}_{config.timestamp}.pdf", material=material)
+
 
 
 def general_Hamiltonian(
@@ -702,6 +731,8 @@ def Bogoliubov_diagonalisation_and_normalisation(
     Gamma: np.ndarray,
     use_eigvecs_correction=True,
 ):
+    """Diagonalises the Hamiltonian H_ of shape (2N,2N) for a single k-point and normalises the eigenvectors according to the condition T^+ Gamma T = Gamma"""
+    
     eigvals, eigvecs = la.eig(Gamma @ H_)
     eigvals = np.round(
         eigvals, 8
@@ -791,11 +822,8 @@ def current_Hamiltonian_to_use(
     config: Config,
     q_grid,
     material: Material,
-    spins: List[float] = [],
-    J_bonds_general: List[List[float]] = [],
-    dist_bonds_general: List[List[float]] = [],
 ):
-
+    """intermediate function to globally change the Hamiltonian that is used for the calculations in case one wants to try out different versions of the Hamiltonian without changing the general structure of the code"""
     tryout_matlab_hamiltonian = False
     if tryout_matlab_hamiltonian:
         mat_data = scipy.io.loadmat("inputs_debug/ham_AFM_supercell_no_rotation.mat")
@@ -828,14 +856,14 @@ def sqw_components_calc_general_tau(
     material: Material, config: Config, amount_tau_values
 ):
     """
-    This computes the coefficients of the individual S(q,w)' components to make up the complete S(q,w) function. --> paper 4 equation 40 --> done via coefficents for efficiency
+    This computes the coefficients of the individual S(q,w)' components to make up the complete S(q,w) function. --> from https://iopscience.iop.org/article/10.1088/0953-8984/27/16/166002 equation 40 --> done via coefficents for efficiency
 
     return [[alpha, beta], ... ] if S(q,w)^(alpha, beta} is non-trivial
     returns the a list length sqw components of indices and coefficients where the indices give the sqw' element and the coefficient the prefactor that make up the corresponding S(q,w)
     return [[(idx, coeff),...], ...],
 
     """
-
+    assert False, "outdatet use sqw_components_calc_general_tau_optimised instead"
     # all combiantions of alpha, beta and tau
     # sqw_prime_components = material.sqw_prime_components
 
@@ -1095,7 +1123,7 @@ def sqw_components_calc_general_tau_optimised(
     material: Material, config: Config, amount_tau_values
 ):
     """
-    This computes the coefficients of the individual S(q,w)' components to make up the complete S(q,w) function. --> paper 4 equation 40 --> done via coefficents for efficiency
+    This computes the coefficients of the individual S(q,w)' components to make up the complete S(q,w) function. --> paper https://iopscience.iop.org/article/10.1088/0953-8984/27/16/166002 equation 40 --> done via coefficents for efficiency
 
     return [[alpha, beta], ... ] if S(q,w)^(alpha, beta} is non-trivial
     returns the a list length sqw components of indices and coefficients where the indices give the sqw' element and the coefficient the prefactor that make up the corresponding S(q,w)
@@ -1444,7 +1472,7 @@ def calc_H_T_w_on_grid(
     material: Material,
 ):
     """
-    q_values: the grid points in k-space where the spectral weight is calculated --> has to be 3D!
+    This functions calculates the Hamiltonian, the Bogoliubov transformation and the energy dependent part of the spectral weight on a grid in k-space. 
     """
 
     assert len(q_values.shape) == 4, "q_values should be a 3D grid of k-vectors"
@@ -2147,13 +2175,13 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     save_RIXS_spectra_to_material=True,  # with this flag False material is not altered --> can be used just for plotting
     debug_RIXS=False,
    
-    
-    
     hbar=6.582e-16,  # hbar in eV*s
     c=2.992792e8,  # c in m/s
     ):
-    """Compute the total RIXS cross section for the given material and experimental setup and save to material
+    """Compute the total RIXS cross section for the given material and experimental setup and saves it to material
+    
     save_RIXS_spectra_to_material: whether to save to material or just plot the spectra (important for multiple domains if one does not want to overwrite the existing RIXS spectra)
+    do_plotting: whether to do the plotting of the RIXS spectra (can be turned off for multiple domains if one just wants to save the spectra to material without plotting each domain)
     """
     lattice_constant = material.lattice_constant
     
@@ -4413,7 +4441,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     
     # grid_point_names: List[str] | None = None,
 ):
-    
+    """main function to plot intermediate results. Plots HP correlation functions, spin operator correlation functions and energies along a path in k-space defined by the relative_grid_points. The path is interpolated between the given relative grid points with steps_between_points steps in between. The spectra are plotted for the indices given in indices_to_plot_2 and indices_to_plot_4, if not given all unique indices are plotted. If plot_phase_factor is True, the phase factor along the path is also plotted. If draw_every_sym_class_once is True, only one representative of each symmetry class of the a_ad spectra is plotted. If draw_sym_class_a_ad is True, the symmetry classes of the a_ad spectra are drawn (only makes sense if draw_every_sym_class_once is False). If gaussian_filter_along_w is True, a gaussian filter with sigma_w is applied along the w axis to make the plots smoother. The title_suffix is added to the title of the plots. If use_standard_path_naming is True, the grid points are named according to their position in the standard path (Gamma, X, M, R), otherwise they are named according to their relative grid point coordinates."""
     relative_grid_points_names = material.relative_grid_points_names if use_standard_path_naming else None
     
     assert (
@@ -5045,35 +5073,6 @@ def normalized_vector(v):
     # plt.show()
 
 
-def is_approximately_diagonal(matrix, tolerance=1e-3):
-    """
-    Check whether a matrix is approximately diagonal.
-
-    Parameters:
-        matrix (numpy.ndarray): The input matrix.
-        tolerance (float): The threshold for considering an element approximately zero.
-
-    Returns:
-        bool: True if the matrix is approximately diagonal, False otherwise.
-    """
-    if not isinstance(matrix, np.ndarray):
-        raise ValueError("Input must be a NumPy array.")
-
-    # Ensure the matrix is square
-    rows, cols = matrix.shape
-    if rows != cols:
-        raise ValueError("Matrix must be square.")
-
-    # Create a mask for off-diagonal elements
-    off_diagonal_mask = ~np.eye(rows, dtype=bool)
-
-    # Extract off-diagonal elements
-    off_diagonal_elements = matrix[off_diagonal_mask]
-
-    # Check if all off-diagonal elements are within the tolerance
-    return np.all(np.abs(off_diagonal_elements) < tolerance)
-
-
 def herm_conj(U, axis: tuple = None):
     if len(U.shape) == 2:  # if U is a 2D matrix no axis have to be given explicitly
         axis = (-1, -2)
@@ -5220,21 +5219,6 @@ def treat_divergencies(
     return residues
 
 
-def plotting_additional_values():
-    plt.figure("Bogogliubov")
-    B_trafo = np.array(VALUES_TO_SAVE["Bog_trafo_of_k"][-1])
-    for i in range(B_trafo.shape[-1]):
-        for j in range(B_trafo.shape[-2]):
-            try:
-                sliceB = (
-                    (slice(None),) + (0,) * (len(B_trafo.shape) - 3) + (i, j)
-                )  # if it is a grid that is given draw only the first axis of the grid
-                temp = B_trafo[sliceB]
-                plt.plot(temp, label=f"B_trafo_{i}_{j}")
-            except IndexError:
-                print("IndexError: B_trafo does not have the expected shape.")
-                return
-    plt.legend()
 
 
 ###################################################################################################
@@ -5249,4 +5233,5 @@ def plotting_additional_values():
 
 if __name__ == "__main__":
     # not working yet --> somehow values saved as tuples
-    call_main_with_material_config()
+    # call_main_with_material_config()
+    call_main_from_input_json()
