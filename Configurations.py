@@ -11,6 +11,18 @@ class RIXS_Configuration:
     alpha: np.ndarray  # angle of incidence
     two_theta: np.ndarray  # scattering angle
     phi: np.ndarray # azimuthal angle
+    alpha_start: float
+    alpha_end: float
+    alpha_amount: float
+    two_theta_start: float
+    two_theta_end: float
+    two_theta_amount: float
+    phi_start: float
+    phi_end: float
+    phi_amount: float
+    incident_energies_start: float
+    incident_energies_end: float
+    incident_energies_amount: float
     indices_path_angles: np.ndarray # shape of n, 3 gives combinations of alpha, two_theta and phi that should be calculated (if None plotting function might produce weird results when more that one angle is altered)
     incident_energies: np.ndarray # in eV
     energy_for_momentum_plots: float # in meV, only used for some debug plots, should be in the range of the magnon energies
@@ -110,9 +122,22 @@ def RIXS_config_main():
         alpha=np.array([20, 45, 70, 95, 120]) * 2 * np.pi / 360,
         two_theta=np.array([150]) * 2 * np.pi / 360,
         phi=np.array([0]),
+        # if these values are set in th config file the np.linspace arrays will be overwritten, if not the values set in the arrays above will be used
+        alpha_start=None, 
+        alpha_end=None,
+        alpha_amount=None,
+        two_theta_start=None,
+        two_theta_end=None,
+        two_theta_amount=None,
+        phi_start=None,
+        phi_end=None,
+        phi_amount=None,
         indices_path_angles = None
         # ,incident_energies=np.linspace(845, 880, 100) # in meV
         ,incident_energies=np.linspace(857, 863, 200) # in meV
+        ,incident_energies_start=None
+        ,incident_energies_end=None
+        ,incident_energies_amount=None
         ,energy_for_momentum_plots=857.571, # in meV
         polarisations_to_sum = [2,3], #0 pi pi, 1 pi sigma, 2 sigma pi, 3 sigma sigma --> 
         # polarisations_to_sum= [0,1], #pi in
@@ -291,6 +316,20 @@ def override_config_with_input(config: Config, input_dict: dict) -> Config:
             rixs_config_dict = value
             rixs_config = config.rixs_config
             for rixs_key, rixs_value in rixs_config_dict.items():
+                if rixs_key in ["alpha_start", "alpha_end", "alpha_amount", "two_theta_start", "two_theta_end", "two_theta_amount", "phi_start", "phi_end", "phi_amount", "incident_energies_start", "incident_energies_end", "incident_energies_amount"] and rixs_value is not None:
+                    # If the key is one of the start, end, amount keys and the value is not None, we need to create the corresponding array
+                    try:
+                        if rixs_key.startswith("alpha"):
+                            rixs_config.alpha = np.linspace(rixs_config.alpha_start, rixs_config.alpha_end, rixs_config.alpha_amount) * 2 * np.pi / 360
+                        elif rixs_key.startswith("two_theta"):
+                            rixs_config.two_theta = np.linspace(rixs_config.two_theta_start, rixs_config.two_theta_end, rixs_config.two_theta_amount) * 2 * np.pi / 360
+                        elif rixs_key.startswith("phi"):
+                            rixs_config.phi = np.linspace(rixs_config.phi_start, rixs_config.phi_end, rixs_config.phi_amount) * 2 * np.pi / 360
+                        elif rixs_key.startswith("incident_energies"):
+                            rixs_config.incident_energies = np.linspace(rixs_config.incident_energies_start, rixs_config.incident_energies_end, rixs_config.incident_energies_amount) # in meV
+                    except Exception as e:
+                        print(f"Error while creating array for '{rixs_key}': {e}")
+
                 if hasattr(rixs_config, rixs_key):
                     setattr(rixs_config, rixs_key, rixs_value)
                 else:

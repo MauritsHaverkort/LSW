@@ -1,3 +1,10 @@
+This project provides a computational framework for modelling magnetic excitations in resonant inelastic X-ray scattering (RIXS) within linear spin-wave theory (LSWT). It combines a local, symmetry-based effective RIXS scattering operator with the non-local propagation of magnons on a lattice, allowing the calculation of one- and two-magnon contributions including their momentum, polarisation, and incident-energy dependence.
+
+The code is designed for realistic magnetic materials described by bilinear Heisenberg Hamiltonians. It constructs and diagonalises the corresponding bosonic Bogoliubov–de Gennes Hamiltonian, evaluates the relevant magnon correlation functions, and combines them with X-ray absorption prefactors, for example obtained from Quanty. The framework is intended as a general and extensible starting point for studying magnetic RIXS spectra beyond purely local approaches.
+
+##########################################################
+Installation and setup
+##########################################################
 For installing dependencies in a new virtual environment, you can use the following commands:
 
 python3 -m venv venv
@@ -22,6 +29,8 @@ You can specify which material is used in LSW.py by specifying in "call_main_wit
 ##########################################################
 config.json overview (example)
 ##########################################################
+A brief overview of the important runtime parameters that can be directly changed in the config.json file
+
 
 {
   "config": {
@@ -69,6 +78,21 @@ config.json overview (example)
 
       "polarisations_to_sum": [2, 3], -> which polarisation combinations to sum over for the RIXS spectra, where 0=pi-pi, 1=pi-sigma, 2=sigma-pi, 3=sigma-sigma (these numbers correspond to the different combinations of incoming and outgoing photon polarisations, which can affect the RIXS spectra and are often summed over in experimental analysis)
 
+    
+        "incident_energies_start": 857,
+      "incident_energies_end": 863,
+      "incident_energies_amount": 200,
+      "alpha_start": 120,
+      "alpha_end": 120,
+      "alpha_amount": 1,
+      "two_theta_start": 150,
+      "two_theta_end": 150,
+      "two_theta_amount": 1,
+      "phi_start": -180,
+      "phi_end": 165,
+      "phi_amount": 200,
+      --> start stop and amount of steps for the three defining angles of the RIXS experiment as well as the incident energies, if these values are set in the config file they will be used, if not the values set in Configurations.py are used
+
       "draw_sym_class_a_ad": false, -> whether to draw the spectra for all unique correlation functions of HP-operators
 
       "draw_xyz_spectra": true, -> whether to draw the unique spin correlation spectra
@@ -87,3 +111,24 @@ config.json overview (example)
     "params": {} -> potentially change parmeters of the material which are listed in the constructors in Examples.py
 }
 }
+
+##########################################################
+Overview of the included files and directories
+##########################################################
+
+LSW.py -> main file to run the calculations, contains all main functions
+functions.py -> contains most helper functions
+
+Atoms.py -> contains the Atom class, which is used to define the atoms in the material
+Materials.py -> contains the Material class, which is used to define the material for the calculations
+Bonds.py -> contains the Bond class, which is used to define the exchange interactions between the atoms in the material
+rotation.py -> contains functions for vector rotation in 3D
+sympy_manipulations.py -> contains functions for symbolic manipulation of terms (potentially containing bosonic operators that have to obey certain commutation relations) using the sympy library
+Debug_timing.py -> contains functions for timing the different steps of the calculations, which can be useful for debugging and optimization
+
+Configurations.py -> defines the Configuration class, which is used to define the runtime parameters of the calculations, and some example configurations
+Examples.py -> contains example material builder functions, which are used to define the materials for the calculations
+
+
+outputs -> directory where all outputs are saved, including figures, summary PDFs and material objects
+input_data -> directory where input data for the fundamental X-ray absorption spectra are saved, which are exported from Quanty and used for the RIXS spectrum calculations
