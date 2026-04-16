@@ -652,10 +652,10 @@ def diagonalising_Hamiltonian(config, H, shape_k_parts, N, use_eigvecs_correctio
     momentum_shape = H.shape[:-2]  # handles (kx,), (kx, ky), or (kx, ky, kz)
 
     # solving the Hamiltonian
-    with open ("debug_additional_output.txt", "a") as f:
-                f.write(
-                    f"The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue\n"
-                )
+    # with open ("debug_additional_output.txt", "a") as f:
+    #             f.write(
+    #                 f"The Hamiltonian is not positive semi-definite at k-indices: lowest eigenvalue\n"
+    #             )
     for k_index in np.ndindex(momentum_shape):
         H_ = H[*k_index, :, :]
         temp_eigvals = np.linalg.eigvalsh(H_)
@@ -663,10 +663,10 @@ def diagonalising_Hamiltonian(config, H, shape_k_parts, N, use_eigvecs_correctio
             config.warnings.add(
                 f"The Hamiltonian is not positive semi-definite at some k-index {k_index}!"
             )
-            with open ("debug_additional_output.txt", "a") as f:
-                f.write(
-                    f"{k_index}: {temp_eigvals[0]}\n"
-                )
+            # with open ("debug_additional_output.txt", "a") as f:
+            #     f.write(
+            #         f"{k_index}: {temp_eigvals[0]}\n"
+            #     )
         eigvals, eigvecs = Bogoliubov_diagonalisation_and_normalisation(
             config, H_, N, Gamma, use_eigvecs_correction=use_eigvecs_correction
         )
