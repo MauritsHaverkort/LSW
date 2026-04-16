@@ -89,10 +89,6 @@ def call_main_from_input_json():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="Path to config JSON file")
     args = parser.parse_args()
-    
-    parser.add_argument("--config", help="Path to input JSON file")
-
-    args = parser.parse_args()
 
     #fallback to default material and config if no input file is given
     if args.config is None:

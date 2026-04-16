@@ -307,7 +307,7 @@ def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), la
 
 #for accessing via input file
 MATERIAL_BUILDERS = {
-    "NiO_2_atom_cell_NN_and_NNN": NiO_2_atom_cell_NN_and_NNN,
+    "NiO": NiO_2_atom_cell_NN_and_NNN,
     "NiO_incomm_1_atom_cell_NN_and_NNN": NiO_incomm_1_atom_cell_NN_and_NNN,
     "K2NiF4": K2NiF4,
 }
