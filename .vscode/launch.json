@@ -15,7 +15,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}/config.json"
+                "${workspaceFolder}/config_NiO_pi_pol.json"
             ]
         }
     ]

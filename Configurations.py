@@ -320,13 +320,13 @@ def override_config_with_input(config: Config, input_dict: dict) -> Config:
                     # If the key is one of the start, end, amount keys and the value is not None, we need to create the corresponding array
                     try:
                         if rixs_key.startswith("alpha"):
-                            rixs_config.alpha = np.linspace(rixs_config.alpha_start, rixs_config.alpha_end, rixs_config.alpha_amount) * 2 * np.pi / 360
+                            rixs_config.alpha = np.linspace(rixs_config_dict["alpha_start"], rixs_config_dict["alpha_end"], rixs_config_dict["alpha_amount"]) * 2 * np.pi / 360
                         elif rixs_key.startswith("two_theta"):
-                            rixs_config.two_theta = np.linspace(rixs_config.two_theta_start, rixs_config.two_theta_end, rixs_config.two_theta_amount) * 2 * np.pi / 360
+                            rixs_config.two_theta = np.linspace(rixs_config_dict["two_theta_start"], rixs_config_dict["two_theta_end"], rixs_config_dict["two_theta_amount"]) * 2 * np.pi / 360
                         elif rixs_key.startswith("phi"):
-                            rixs_config.phi = np.linspace(rixs_config.phi_start, rixs_config.phi_end, rixs_config.phi_amount) * 2 * np.pi / 360
+                            rixs_config.phi = np.linspace(rixs_config_dict["phi_start"], rixs_config_dict["phi_end"], rixs_config_dict["phi_amount"]) * 2 * np.pi / 360
                         elif rixs_key.startswith("incident_energies"):
-                            rixs_config.incident_energies = np.linspace(rixs_config.incident_energies_start, rixs_config.incident_energies_end, rixs_config.incident_energies_amount) # in meV
+                            rixs_config.incident_energies = np.linspace(rixs_config_dict["incident_energies_start"], rixs_config_dict["incident_energies_end"], rixs_config_dict["incident_energies_amount"]) # in meV
                     except Exception as e:
                         print(f"Error while creating array for '{rixs_key}': {e}")
 
