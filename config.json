@@ -36,7 +36,7 @@
       "draw_total_sigma_prefactor_contributions": false,
 
       "title_path": "$\\alpha [deg]$",
-      "title_energy": "Transferred energy [eV]",
+      "title_energy": "Energy Loss [meV]",
       "title_suffix": ""
     }
   },
