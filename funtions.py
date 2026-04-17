@@ -32,6 +32,7 @@ mpl.rcParams.update({
     "legend.fontsize": fontsize,
     "figure.titlesize": fontsize,
 })
+# mpl.rcParams["figure.constrained_layout.use"] = True # to prevent overlapping of labels and titles and ticks
 
 def turn_comp_info_into_str(comp_info):
     result=""
@@ -2289,7 +2290,7 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200, notitle
             fig.savefig(
                 f"{out_put_folder}/{safe_title}.png",
                 dpi=dpi,
-                pad_inches=0.05,
+                pad_inches=0.08,
                 bbox_inches='tight'
             )
         except Exception as e:

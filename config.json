@@ -11,9 +11,12 @@
     "use_RAM_einsum": false,
     "set_convolutions_of_zero_grid_to_zero": true,
     "use_allclose_for_equiv_search": false,
-
-    "amount_k_values": [20, 20, 20],
-    "amount_w_values": 20,
+    "amount_k_values": [
+      50,
+      50,
+      50
+    ],
+    "amount_w_values": 50,
  
     "use_Log_Norm": false,
     "save_figures_as_png": true,
@@ -34,6 +37,18 @@
       "draw_xyz_spectra": true,
       "draw_energies_3D": false,
       "draw_total_sigma_prefactor_contributions": false,
+      "incident_energies_start": 850,
+      "incident_energies_end": 859,
+      "incident_energies_amount": 200,
+      "alpha_start": 135,
+      "alpha_end": 15,
+      "alpha_amount": 100,
+      "two_theta_start": 150,
+      "two_theta_end": 150,
+      "two_theta_amount": 1,
+      "phi_start": 0,
+      "phi_end": 0,
+      "phi_amount": 1,
 
       "title_path": "$\\alpha [deg]$",
       "title_energy": "Energy Loss [meV]",

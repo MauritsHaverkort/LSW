@@ -348,7 +348,7 @@ def config_experimental(name=""):
     config_tryout_paper.name = name if name else "Experimental Configuration"
 
     config_tryout_paper.load_saved_grid = False
-    fast_grid_size = 10
+    fast_grid_size = 4
     big_grid_size = 50
     fast = True
     # fast = False

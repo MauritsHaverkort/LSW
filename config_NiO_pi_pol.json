@@ -12,8 +12,12 @@
     "set_convolutions_of_zero_grid_to_zero": true,
     "use_allclose_for_equiv_search": false,
 
-    "amount_k_values": [20, 20, 20],
-    "amount_w_values": 20,
+    "amount_k_values": [
+      40,
+      40,
+      40
+    ],
+    "amount_w_values": 40,
  
     "use_Log_Norm": false,
     "save_figures_as_png": true,
@@ -35,7 +39,7 @@
       "draw_energies_3D": false,
       "draw_total_sigma_prefactor_contributions": false,
       "incident_energies_start": 857,
-      "incident_energies_end": 873,
+      "incident_energies_end": 863,
       "incident_energies_amount": 200,
       "alpha_start": 20,
       "alpha_end": 20,

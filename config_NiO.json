@@ -6,14 +6,18 @@
     "treat_divergencies": true,
     "plot_only_once_per_symmetry_class": true,
     "calc_two_magnon_spectra": true,
-    "use_averaging_TdT": true,
+    "use_averaging_TdT": false,
     "compute_RIXS_spectrum": true,
     "use_RAM_einsum": false,
     "set_convolutions_of_zero_grid_to_zero": true,
     "use_allclose_for_equiv_search": false,
 
-    "amount_k_values": [20, 20, 20],
-    "amount_w_values": 20,
+    "amount_k_values": [
+      40,
+      40,
+      40
+    ],
+    "amount_w_values": 40,
  
     "use_Log_Norm": false,
     "save_figures_as_png": true,
