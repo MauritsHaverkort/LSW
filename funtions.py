@@ -955,6 +955,31 @@ def path_k_space(k_points, total_steps, a, steps=None):
 ########################################################################################################################
 ########################################################################################################################
 
+def closest_indices_to_values(arr, values):
+    """
+    For each value in `values`, find the index of the closest element in `arr`.
+    
+    Parameters
+    ----------
+    arr : array-like
+        The array to search within.
+    values : array-like
+        The values to find closest indices for.
+        
+    Returns
+    -------
+    indices : list of int
+        A list of indices corresponding to the closest elements in `arr` for each value in `values`.
+    """
+    arr = np.asarray(arr)
+    values = np.asarray(values)
+    
+    indices = []
+    for val in values:
+        idx = np.argmin(np.abs(arr - val))
+        indices.append(idx)
+    
+    return indices
 
 def extend_array_equal_spacing(arr, target_len: int):
     """

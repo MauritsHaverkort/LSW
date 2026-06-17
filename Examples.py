@@ -135,7 +135,7 @@ def NiO_incomm_1_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=
     # all_atoms.append(atoms[0])
     return material
 
-def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = "", lattice_constant=4.17e-10):
+def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, S2=-1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = "", lattice_constant=4.17e-10, picked_S_domains = None):
     #J_NN=-2.3,J_super_exchange=12,
     #J_NN=-1.4,J_super_exchange=19,
     
@@ -147,7 +147,11 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     
     #1= 12meV
     S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2]),-np.array([1, -2, 1]), -np.array([-2, 1, 1]), -np.array([1, 1, -2])]
-    # alignements = [np.array([1, 1, -2])]
+    
+    #in case not all S_domains should be included, e.g. for testing only one domain
+    if not picked_S_domains:
+        S_domains = S_domains[picked_S_domains]
+    
     
     #TODO: test this!!!
     A,B,C = np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])

@@ -240,7 +240,7 @@ def config_main():
         calc_two_magnon_spectra=True,
 
         treat_divergencies=True,
-        use_averaging_TdT=True, #use carefully might be not correct
+        use_averaging_TdT=False, #use carefully might be not correct
         use_intensity_normalisation=True,
         compute_RIXS_spectrum=True,
         test_normalisation=False,  # nothing is plotted just printing normalsiation

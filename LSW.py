@@ -156,10 +156,12 @@ def call_main_with_material_config():
 
         materials = [
             # NiO
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all_domains"),
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all_domains"),
+            #NiO with only one domain for testing
+            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, picked_S_domains=[0], add_all_domains=False, title_suffix="one_domain"),
             
             #K2NiF4
-            Examples.K2NiF4(config)
+            # Examples.K2NiF4(config)
             
         ]
         
@@ -3005,14 +3007,17 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.axvline(x = config.rixs_config.energy_for_momentum_plots)
         
         fig = plt.figure("mean one magnon and two magnon contributions over the whole accessible momentum space")
-        plt.plot(w_in, vabc_2.mean(axis=(1,2,3)),lw=3, label='mean one magnon')
-        plt.plot(w_in, vabc_2.max(axis=(1,2,3)),linestyle = "--", label='max one magnon')
-        plt.plot(w_in, vabc_2.min(axis=(1,2,3)), linestyle = "--", label='min one magnon')
-        plt.plot(w_in, vabc_4.mean(axis=(1,2,3)), lw=3, label='mean two magnon')
-        plt.plot(w_in, vabc_4.max(axis=(1,2,3)), linestyle = "--", label='max two magnon')
-        plt.plot(w_in, vabc_4.min(axis=(1,2,3)), linestyle = "--", label='min two magnon')
-        plt.fill_between(w_in, vabc_2.mean(axis=(1,2,3)) - vabc_2.std(axis=(1,2,3)), vabc_2.mean(axis=(1,2,3)) + vabc_2.std(axis=(1,2,3)), alpha=0.25, label="std one magnon")
-        plt.fill_between(w_in, vabc_4.mean(axis=(1,2,3)) - vabc_4.std(axis=(1,2,3)), vabc_4.mean(axis=(1,2,3)) + vabc_4.std(axis=(1,2,3)), alpha=0.25, label="std two magnon")
+        color_one_magnon = "#1f77b4"
+        color_two_magnon = "#d62728"
+        
+        plt.plot(w_in, vabc_2.mean(axis=(1,2,3)),lw=3, label=r'$u_1$', color = color_one_magnon)
+        plt.plot(w_in, vabc_2.max(axis=(1,2,3)),linestyle = "--", label='min / max 1', color = color_one_magnon)
+        plt.plot(w_in, vabc_2.min(axis=(1,2,3)), linestyle = "--", color = color_one_magnon)
+        plt.plot(w_in, vabc_4.mean(axis=(1,2,3)), lw=3, label=r'$u_2$', color = color_two_magnon)
+        plt.plot(w_in, vabc_4.max(axis=(1,2,3)), linestyle = "--", label='min / max 2', color = color_two_magnon)
+        plt.plot(w_in, vabc_4.min(axis=(1,2,3)), linestyle = "--", color = color_two_magnon)
+        plt.fill_between(w_in, vabc_2.mean(axis=(1,2,3)) - vabc_2.std(axis=(1,2,3)), vabc_2.mean(axis=(1,2,3)) + vabc_2.std(axis=(1,2,3)), alpha=0.25, label=r'$\sigma_1$', color = color_one_magnon)
+        plt.fill_between(w_in, vabc_4.mean(axis=(1,2,3)) - vabc_4.std(axis=(1,2,3)), vabc_4.mean(axis=(1,2,3)) + vabc_4.std(axis=(1,2,3)), alpha=0.25, label=r'$\sigma_2$', color = color_two_magnon)
         # plt.plot(w_in, vabc_2.std(axis=(1,2,3)), linestyle = ":", label='std one magnon')
         # plt.plot(w_in, vabc_4.std(axis=(1,2,3)), linestyle = ":", label='std two magnon')
         plt.xlabel("Incident energy [eV]")
@@ -3522,9 +3527,10 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         ylabel=title_y,
                         gaussian_filter_along_w=True,
                     ))
+            draw_prefactors_vs_w_in(additional_v_lines=[v])
         return figs
     
-    def draw_prefactors_vs_w_in():
+    def draw_prefactors_vs_w_in(additional_v_lines=None):
         fig1 = plt.figure("XAS spectra")
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'] #standard color cycle, will repeat if more prefactors
         
@@ -3537,7 +3543,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.ylabel(y_label)
         plt.legend()
         plt.axvline(x=w_in[v_index], color='black')
-        
+        if additional_v_lines is not None:
+            for v in additional_v_lines:
+                plt.axvline(x=w_in[v], color='black', linestyle="--")
         fig2 = plt.figure("XAS spectra ")
         for i, key in enumerate(prefactor_dict_all_w.keys()):
             plt.plot(w_in, np.real(prefactor_dict_all_w[key]), label=rf"$\sigma: {key}$", color=colors[i % len(colors)])
@@ -3546,6 +3554,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.ylabel(y_label)
         plt.legend()
         plt.axvline(x=w_in[v_index], color='black')
+        if additional_v_lines is not None:
+            for v in additional_v_lines:
+                plt.axvline(x=w_in[v], color='black', linestyle="--")
         fig_abs_sqrd = None
         fig_interesting = None
         fig_interesting_2 = None
@@ -3577,7 +3588,10 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.ylabel(y_label)
             plt.legend()
             plt.axvline(x=w_in[v_index], color='black')
-            
+            if additional_v_lines is not None:
+                for v in additional_v_lines:
+                    plt.axvline(x=w_in[v], color='black', linestyle="--")
+                
             fig_interesting_2 = plt.figure("interesting combinations Oh 2")
             plt.plot(w_in, np.imag(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Im($\sigma_{t2g}^*\cdot \sigma_{t1u}$)", color=colors[4])
             plt.plot(w_in, np.real(np.conjugate(prefactor_dict_all_w["t2g"])*np.real(prefactor_dict_all_w["t1u"])), label=r"Re($\sigma_{t2g}^*\cdot \sigma_{t1u}$))", color=colors[5])
@@ -3587,6 +3601,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.ylabel(y_label)
             plt.legend()
             plt.axvline(x=w_in[v_index], color='black')
+            if additional_v_lines is not None:
+                for v in additional_v_lines:
+                    plt.axvline(x=w_in[v], color='black', linestyle="--")
         
         elif material.symmetry_class == "D4h":
             fig_interesting = plt.figure("interesting combinations of prefactors vs w_in_index")
@@ -3604,6 +3621,10 @@ def plotting_rixs_spectra(material: Material, config: Config,
             plt.legend()
         
             plt.axvline(x=w_in[v_index], color='black')
+            if additional_v_lines is not None:
+                for v in additional_v_lines:
+                    plt.axvline(x=w_in[v], color='black', linestyle="--")
+                
         return fig1, fig2, fig_abs_sqrd, fig_interesting, fig_interesting_2
         # plt.figure("energy dependence summed all equivalence classes")
         # for p in range(4):
