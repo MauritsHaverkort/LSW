@@ -12,10 +12,12 @@ import funtions as functions
 # Main Examples (tested and up to date):
 ############################################
 
+
 # NiO_input_file = "input_data\prefactors_results_ligand_field.dat" 
 # NiO_input_file = "input_data\prefactors_results_ligand_field_not_scaled.dat" 
-# NiO_input_file = "input_data/prefactors_results_ligand_field_with_XAS.dat"
-NiO_input_file = "input_data/prefactors_results_ligand_field_scaled85_with_XAS.dat"
+
+NiO_input_file = "input_data/prefactors_results_ligand_field_with_XAS.dat" #used in thesis
+# NiO_input_file = "input_data/prefactors_results_ligand_field_scaled85_with_XAS.dat" #used in thesis
 
 
 K2NiF4_input_file = "input_data/prefactors_results_ligand field K2NiF4.dat"
@@ -245,105 +247,6 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     # all_atoms.append(atoms[0])
     return material
 
-#thesis version (commented)
-def NiO(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1, S1=1, T_domain_idx = 0, spin_dir=np.array([0,0,1]), add_all_domains = True, title_suffix = "", lattice_constant=4.17e-10):
-
-    
-    #Define the S-domain spin directions
-    S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2]),-np.array([1, -2, 1]), -np.array([-2, 1, 1]), -np.array([1, 1, -2])]
-
-    #Helpter vectors to define the lattice vectors
-    A,B,C = np.array([a, a, 0]), np.array([0, a, a]), np.array([a, 0, a])
-
-    #lattice vectors
-    lv = [1/2*(A-B), 1/2*(A-C), A]
-    
-    #crystallographic lattice vectors, in cubic symmetry, important to relate later to the effective RIXS operator, defined in cubic symmetry (Oh)
-    crystallographic_lv = [np.array([a, 0, 0]), np.array([0, a, 0]), np.array([0, 0, a])]   
-    
-    #roate S-domain vectors by 90 degrees around the z-axis to get the four different T domains
-    S_domains = np.einsum("ij,vj->vi", rotation.rot_vec(T_domain_idx*1/2*np.pi, crystallographic_lv[2]), np.array(S_domains)) 
-    
-    #roate lattice vectors by 90 degrees around the z-axis to get the four different T domains
-    lv = np.einsum("ij,vj->vi", rotation.rot_vec(T_domain_idx*1/2*np.pi, crystallographic_lv[2]), np.array(lv))
-    
-    
-    #these are the four normal vectors of the different T-domain planes, the first two lattice vectors of exactly one T_domain_idx should be orthogonal to one of these normal vectors
-    T_domains_normal_vectors = [np.array([1, 1, 1]), np.array([-1, 1, 1]), np.array([-1, -1, 1]),np.array([1, -1, 1])]
-    
-    #checks S_domain vectors should lay in the plane of the two first lattice vectors
-    for S_vec in S_domains:
-        if abs(np.dot(S_vec, np.cross(lv[0], lv[1]))) > 1e-5:
-            raise ValueError("S_domain vector is not in the plane of the first two lattice vectors")
-        
-    #checks that only one T_domain normal vector is orthogonal to the two first lattice vectors 
-    if T_domains_normal_vectors[T_domain_idx]@lv[0] > 1e-5 and T_domains_normal_vectors[T_domain_idx]@lv[1] > 1e-5:  
-        raise ValueError("rotated T_domain doesnt match the normal vector of the T_domain plane")
-        
-    # These parts are only relevant for incommensurate materials (not discussed in the thesis)
-    normal_vector = np.array([-1,1,0]) #arbitrary since commensurate case
-    tau = np.array([0, 0, 0])  # commensurate
-    
-    #define the Material object
-    material = Material(config=config,lattice_vectors=lv, tau=tau, normal_vector_to_rotation_plane=normal_vector, dimension=3, name=f"NiO 2 atom cell NN_NNN T_domain_{T_domain_idx}_{title_suffix}",
-                        extension=1, S_domains=S_domains , crystallographic_lv=crystallographic_lv, lattice_constant=lattice_constant,
-                        fund_xray_prefactors_filename=NiO_input_file)
-    
-    #the euclidean X,Y,Z vectors in lattice vector units
-    X,Y,Z = material.transform_from_cryst_basis_to_lv_basis(np.array(crystallographic_lv), transform_coefficients=True)
-    
-    # Create the two atoms in the unit cell
-    atoms: List["Atom"] = []
-    atoms = [
-        Atom(np.array([0, 0, 0]), type=0, S=S1, spin_dir=spin_dir),
-        Atom(position=X, type=1, S=S1, spin_dir=-spin_dir), #set the second atom at position X with opposite spin to the first atom
-    ]
-
-
-    #set correct spin directions according to T_domains
-    for atom in atoms[1:]:
-        bond_to_atom_0 = atom.position - atoms[0].position
-        bond_to_atom_1 = atom.position - atoms[1].position
-        if np.dot(T_domains_normal_vectors[T_domain_idx], bond_to_atom_0) <= 1e-5:
-            atom.spin_dir = atoms[0].spin_dir
-        elif np.dot(T_domains_normal_vectors[T_domain_idx], bond_to_atom_1) <= 1e-5:
-            atom.spin_dir = atoms[1].spin_dir
-        else:
-            raise ValueError("Atom position does not correspond to the selected T_domain_idx")
-
-    J_values = [J_NN,J_super_exchange]
-
-    #create all bonds automatically up to a cetatin distance, then set the corresponding J values to the NN and the NNN bonds
-    bonds = []
-    combinations, distances = material.return_combinations_up_to_distance(atoms, 4*a)
-    for i,j_value in enumerate(J_values):
-        for combs in combinations[i]:
-            atom1, uc1, atom2, uc2 = combs
-            assert np.all(uc1==np.array([0,0,0])), "only bonds from origin unit cell implemented here"
-            bonds.append(Bond(material, atom1, atom2, unit_cell_of_atom_2=uc2, j=j_value))
-
-
-    # save the bonds and atoms in the material object
-    material.set_bond_atoms(material.sort_atoms_for_type(atoms), bonds=bonds)
-    
-    #Define the standard path for plots through the Brillouin zone
-    #give in euclidean basis for better readability
-    relative_grid_points_path = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]), np.array([1,1,1]), np.array([0,0,0])]
-    #transform to lattice vector basis
-    material.relative_grid_points_path = material.transform_from_cryst_basis_to_lv_basis(1/2*np.array(relative_grid_points_path),reciprocal=True, transform_coefficients=True, backtranform=False)
-    material.relative_grid_points_names = [r"$\Gamma$", "X", "M","R", r"$\Gamma$"]
-    
-    #adding T-domains as additional material objects, with rotated geometry
-    if add_all_domains: #only the material of the first domain should have all other domains added
-        material.add_additional_domain_material([
-                NiO(config, T_domain_idx=1, add_all_domains=False),
-                NiO(config, T_domain_idx=2, add_all_domains=False),
-                NiO(config, T_domain_idx=3, add_all_domains=False),
-            ])
-
-    return material
-
-
 def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), lattice_constant=4.103e-10): #bond length: https://journals.iucr.org/paper?S0108768193003246
 
     A,B,C = np.array([a, a, 0]), np.array([-a, a, 0]), np.array([0, 0, 50*a])
@@ -403,6 +306,12 @@ def K2NiF4(config:Config, a=1, J1 = 9.68, S=1,  spin_dir = np.array([0,0,1]), la
     
     return material
 
+#for accessing via input file
+MATERIAL_BUILDERS = {
+    "NiO": NiO_2_atom_cell_NN_and_NNN,
+    "NiO_incomm_1_atom_cell_NN_and_NNN": NiO_incomm_1_atom_cell_NN_and_NNN,
+    "K2NiF4": K2NiF4,
+}
 ############################################
 # old Examples (Use with care, not tested and patly not up to date with new code structure):
 ############################################

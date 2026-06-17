@@ -8,7 +8,6 @@ outputs/*
 old/
 output/
 
-Configurations.py
 debug_timing_log.txt
 temp.py
 storage.py
@@ -16,8 +15,22 @@ plot_results.py
 outputs_interesting/
 texts/
 intermediate_arrays/
+
+Hamiltonians.py
+LSW_old_functions.py
 NiO.py
-COMMANDS
+RIXS.py
+debug.pdf
+download_from_cluster/
+experimental_data.py
+functions_old.py
+linear spin wave code.code-workspace
+main.py
+matlab_testout.py
+pseudocodes/
+testing_functionalities.py
+tryout.py
+tryout_scripts/
 
 download_from_cluster 
 pseudocodes\ 

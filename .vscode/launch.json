@@ -12,7 +12,11 @@
             "console": "integratedTerminal",
             "env": {
                 "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "6"
-            }
+            },
+            "args": [
+                "--config",
+                "${workspaceFolder}/config_NiO_pi_pol.json"
+            ]
         }
     ]
 }

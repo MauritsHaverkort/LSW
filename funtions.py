@@ -32,6 +32,7 @@ mpl.rcParams.update({
     "legend.fontsize": fontsize,
     "figure.titlesize": fontsize,
 })
+# mpl.rcParams["figure.constrained_layout.use"] = True # to prevent overlapping of labels and titles and ticks
 
 def turn_comp_info_into_str(comp_info):
     result=""
@@ -2092,7 +2093,7 @@ def convolute_grids(grid1, grid2, dimension=3, double_convolution=False, grid3=N
     return conv_grids
    # print("shape conv_intens "+str(np.shape(conv_intensities)))
     
-#GPT version
+#optimised version
 def convolute_grids_fft(grid1, grid2, dimension=3, double_convolution=False, grid3=None, use_real=True):
     """
     Fast version: vectorized via FFT.
@@ -2289,7 +2290,7 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200, notitle
             fig.savefig(
                 f"{out_put_folder}/{safe_title}.png",
                 dpi=dpi,
-                pad_inches=0.05,
+                pad_inches=0.08,
                 bbox_inches='tight'
             )
         except Exception as e:
@@ -2518,14 +2519,6 @@ def find_files_with_keywords(directory:str, keywords: List[str]) -> List[str]:
     return matching_files
 
 
-def sum_k_dependency(grid):
-    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
-    if grid.ndim < 2:
-        raise ValueError("Grid must have at least 2 dimensions.")
-    
-    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
-    return summed_grid
-
 
 
 ########################################################################################################################
@@ -2547,6 +2540,15 @@ def create_Gamma(half_size):
         Gamma[i, i] = 1
         Gamma[half_size + i, half_size + i] = -1
     return Gamma
+
+def sum_k_dependency(grid):
+    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
+    if grid.ndim < 2:
+        raise ValueError("Grid must have at least 2 dimensions.")
+    
+    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
+    return summed_grid
+
 
 
 def integrate_nd(f, grid_points, spacing,dimension):
@@ -2746,3 +2748,32 @@ if __name__ == "__main__":
     from LSW import call_main_with_material_config
 
     call_main_with_material_config()
+
+
+def is_approximately_diagonal(matrix, tolerance=1e-3):
+    """
+    Check whether a matrix is approximately diagonal.
+
+    Parameters:
+        matrix (numpy.ndarray): The input matrix.
+        tolerance (float): The threshold for considering an element approximately zero.
+
+    Returns:
+        bool: True if the matrix is approximately diagonal, False otherwise.
+    """
+    if not isinstance(matrix, np.ndarray):
+        raise ValueError("Input must be a NumPy array.")
+
+    # Ensure the matrix is square
+    rows, cols = matrix.shape
+    if rows != cols:
+        raise ValueError("Matrix must be square.")
+
+    # Create a mask for off-diagonal elements
+    off_diagonal_mask = ~np.eye(rows, dtype=bool)
+
+    # Extract off-diagonal elements
+    off_diagonal_elements = matrix[off_diagonal_mask]
+
+    # Check if all off-diagonal elements are within the tolerance
+    return np.all(np.abs(off_diagonal_elements) < tolerance)
