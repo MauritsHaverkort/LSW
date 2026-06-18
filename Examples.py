@@ -149,8 +149,8 @@ def NiO_2_atom_cell_NN_and_NNN(config:Config ,J_NN=-1.4,J_super_exchange=19,a=1,
     S_domains = [np.array([1, -2, 1]), np.array([-2, 1, 1]), np.array([1, 1, -2]),-np.array([1, -2, 1]), -np.array([-2, 1, 1]), -np.array([1, 1, -2])]
     
     #in case not all S_domains should be included, e.g. for testing only one domain
-    if not picked_S_domains:
-        S_domains = S_domains[picked_S_domains]
+    if picked_S_domains is not None:
+        S_domains = [S_domains[idx] for idx in picked_S_domains]
     
     
     #TODO: test this!!!
