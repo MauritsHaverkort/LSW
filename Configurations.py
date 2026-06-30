@@ -66,6 +66,8 @@ class Config:
     experimental_plots_on_extended_grid: bool
     compute_H_derivatives: bool
     calc_two_magnon_spectra: bool
+    calc_integrated_dos: bool
+    calc_INS_spectra: bool
     normalise_to_sum_rule: bool
     use_Log_Norm: bool
     debug_Sa_ad: bool
@@ -107,6 +109,7 @@ class Config:
     save_grid_to_file: bool
     save_material: bool
     load_material_path: str
+    sigma_w: int
     gaussian_broadening_for_plots: int
     
     #RIXS specific
@@ -139,7 +142,7 @@ def RIXS_config_main():
         ,incident_energies_end=None
         ,incident_energies_amount=None
         ,energy_for_momentum_plots=857.571, # in meV
-        polarisations_to_sum = [2,3], #0 pi pi, 1 pi sigma, 2 sigma pi, 3 sigma sigma --> 
+        polarisations_to_sum = [0,1,2,3], #0 pi pi, 1 pi sigma, 2 sigma pi, 3 sigma sigma --> 
         # polarisations_to_sum= [0,1], #pi in
         
         
@@ -238,6 +241,8 @@ def config_main():
         # ---- Feature toggles / computation switches ----
         compute_H_derivatives=False,
         calc_two_magnon_spectra=True,
+        calc_integrated_dos=True,
+        calc_INS_spectra=True,
 
         treat_divergencies=True,
         use_averaging_TdT=False, #use carefully might be not correct
@@ -273,7 +278,8 @@ def config_main():
             # "structure_plot": (True, False),
             # "path_plot": (True, True),
         },
-        gaussian_broadening_for_plots=2, #0 no broadening (otherwise amount of grid points to include)
+        sigma_w=2, #0 no broadening (otherwise amount of grid points to include)
+        gaussian_broadening_for_plots=2, 
         shading_colormesh_plots="flat",  # "auto","flat","gouraud"
         cmap_plots = "terrain",#'viridis',
         # shading_colormesh_plots="gouraud",
@@ -337,6 +343,10 @@ def override_config_with_input(config: Config, input_dict: dict) -> Config:
         else:
             if hasattr(config, key):
                 setattr(config, key, value)
+                if key == "sigma_w":
+                    config.gaussian_broadening_for_plots = value
+                elif key == "gaussian_broadening_for_plots":
+                    config.sigma_w = value
             else:
                 print(f"Warning: Config has no attribute '{key}' to override.")
     return config
@@ -349,9 +359,9 @@ def config_experimental(name=""):
 
     config_tryout_paper.load_saved_grid = False
     fast_grid_size = 4
-    big_grid_size = 50
+    big_grid_size = 60
     fast = True
-    # fast = False
+    fast = False
     if fast:
         config_tryout_paper.amount_k_values = [
             fast_grid_size,

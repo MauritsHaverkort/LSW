@@ -99,6 +99,8 @@ class Material:
 
         # arrays to store results
         self.energies: np.ndarray = None
+        self.integrated_dos: np.ndarray = None
+        self.integrated_dos_w_values: np.ndarray = None
         self.T: np.ndarray = None
         self.residues: np.ndarray = None
         self.phase_factor: np.ndarray = None

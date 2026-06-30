@@ -1254,6 +1254,10 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
     # fig.colorbar(image, label=intensity)  
     # plt.xlabel(xlabel)
     # plt.ylabel(ylabel)
+    
+    # smoothing the grid along the w direction (axis=0) with a gaussian filter
+    if gaussian_filter_along_w and sigma_w != 0:
+        grid = gaussian_filter1d(grid, sigma=sigma_w, axis=0)
 
 
     # gs = gridspec.GridSpec(2, 2, width_ratios=[4, 1], height_ratios=[4,1], wspace=0.05)
@@ -1344,8 +1348,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
             X, Y = np.meshgrid(k_values_scalar[:-1], w_values[:-1])
         else:
             X, Y = np.meshgrid(k_values_scalar, w_values) 
-        if gaussian_filter_along_w:
-            grid = gaussian_filter1d(grid, sigma=sigma_w, axis=0)
+        
         if not useLogNorm:
             image = ax0.pcolormesh(X, Y, grid, cmap=config.cmap_plots, shading=config.shading_colormesh_plots)
         else:

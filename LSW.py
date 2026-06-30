@@ -24,6 +24,7 @@ import krein_full_space as krein_full_space
 import Examples as Examples
 import rotation as rotation
 import sympy_manipulations as sympy_manipulations
+import integrated_DOS as integrated_DOS
 
 
 # from numba import njit, prange
@@ -158,10 +159,10 @@ def call_main_with_material_config():
             # NiO
             # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, add_all_domains=True, title_suffix="all_domains"),
             #NiO with only one domain for testing
-            Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, picked_S_domains=[0], add_all_domains=False, title_suffix="one_domain"),
+            # Examples.NiO_2_atom_cell_NN_and_NNN(config, T_domain_idx=0, picked_S_domains=[0], add_all_domains=False, title_suffix="one_domain"),
             
             #K2NiF4
-            # Examples.K2NiF4(config)
+            Examples.K2NiF4(config)
             
         ]
         
@@ -359,13 +360,6 @@ def main(
     #save the configuration
     functions.save_config_to_json(config)
     
-    #save the material if enabled (may take a lot of memory)
-    if config.save_material:
-        np.savez(
-            f"outputs/material/{material.name}{config.timestamp}.npz",
-            material=material,
-            allow_pickle=True,
-        )
 
 
 def create_folder_structure_for_outputs():
@@ -2010,6 +2004,12 @@ def calculate_sqw_spectra(
             equivalence_list_ad_a_2, shape_indices=residues_2_prime_ad_a_w.shape[0:5]
         )
     )
+    if config.calc_integrated_dos:
+        material.integrated_dos = integrated_DOS.integrate_DOS(
+            energy_dependent_part,
+            dimension=material.dimension,
+        )
+        material.integrated_dos_w_values = integrated_DOS.integrated_dos_w_values(w_values)
 
 
     if config.calc_two_magnon_spectra:
@@ -2164,7 +2164,6 @@ def calculate_sqw_spectra(
     return 
 
 
-
 def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     config: Config,
     material: Material,
@@ -2289,6 +2288,8 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     )
 
     # ----------------------------writing eff RIXS oeprator as coeff matrix--------------------------------------------------------
+    
+    
     def compute_rixs_coeff_array():
         """effective RIXS operator for different symmetries"""
         # ------------------------------Construct the RIXS matrix----------------------------------------------------------------------------
@@ -2644,7 +2645,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
                     optimize="optimal",
                 )
         # ------------------------------------memory efficient way of contraction------------------------------------
-        # TODO: cite this
+        
         if debug_RIXS:
             path, info = opt_einsum.contract_path(
                 "xtioju,vabcij,OUMNioju,ROUMNsrpabc,srv->Rvpabcx",
@@ -2751,7 +2752,18 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     config.debug_timer.print_difference(
         f"done calculating RIXS spectrum", debug_time_duration
     )
+    
     config.warnings.add(f"w_in {w_in[idx_energy_debug_plots]}, v_shape {shape_v_angles}, alpha: {alpha[0:3,0,0]*360/(2*np.pi)}, two_theta: {two_theta[0,0:3,0]*360/(2*np.pi)}, phi: {phi[0,0,0:3]*360/(2*np.pi)}")
+    # ----------------------------save material if enabled----------------------------
+    
+    #save the material if enabled (may take a lot of memory)
+    if config.save_material:
+        np.savez(
+            f"outputs/material/{material.name}{config.timestamp}.npz",
+            material=material,
+            allow_pickle=True,
+        )
+    
     # ---------------------------- call the plot function with all intermediate important results ---------------------------- 
     if do_plotting:
         plotting_rixs_spectra(material, config,
@@ -2971,7 +2983,45 @@ def plotting_rixs_spectra(material: Material, config: Config,
     ################################                          data analysis plots                     ######################
     ########################################################################################################################
     ########################################################################################################################
-
+    def plot_integrated_dos(material, config,
+                            relative_grid_points, 
+                            steps_between_points,
+                            use_standard_path_naming=False,
+                            title_x = "Path in reciprocal space",
+                            relative_grid_points_names = None,
+                            gaussian_filter_along_w: bool = False,
+                            sigma_w = 2,
+                            normalise_to_one = True
+                            ):
+        relative_grid_points_names = (
+            material.relative_grid_points_names
+            if use_standard_path_naming
+            else relative_grid_points_names
+        )
+        
+        integrated_dos_along_path = functions.path_through_grid_interpolated(
+        config= config, grid=material.integrated_dos,
+        relative_grid_points=np.array(relative_grid_points),
+        steps=steps_between_points)
+        
+        fig = functions.plot_2_1_d_grid(
+                    integrated_dos_along_path,
+                    title=f"Integrated Density of States",
+                    xlabel=title_x,
+                    ylabel="Energy Loss [meV]",
+                    xticks_labels= relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None,
+                    w_values=material.integrated_dos_w_values,
+                    use_intensity_k=True,
+                    plot_also_imaginary_part=True,
+                    config=config,
+                    useLogNorm=config.use_Log_Norm,
+                    gaussian_filter_along_w=gaussian_filter_along_w,
+                    sigma_w = sigma_w
+                )
+        
+        return fig
+    
 
     def plot_mean_rixs_2_to_rixs_4_ratio_vs_w_in():
         
@@ -3073,13 +3123,132 @@ def plotting_rixs_spectra(material: Material, config: Config,
         plt.ylabel("RIXS 4 to RIXS 2 ratio")
         return fig2, fig3, fig4, fig5, fig6, fig,fig7
    
-    def draw_BZ_in_exp_setup(show_legends=False, draw_BZ=True, draw_lv=True, draw_cryst_vectors=True, draw_path_folded_back = True, indices_path_angles_ = None):
+    def draw_BZ_in_exp_setup(show_legends=False, draw_BZ=True, draw_lv=True, draw_cryst_vectors=True, draw_path_folded_back = True, indices_path_angles_ = None, title="k-points and BZ in experimental setup"):
+        k_unit_scale = np.pi  # plot momenta in units of pi/a with a=1
+        axis_labels_pi_over_a = (r"kx [$\pi/a$]", r"ky [$\pi/a$]", r"kz [$\pi/a$]")
+
+        def plot_vectors_2d(vectors, ax, colors=None, labels=None):
+            colors = colors or ["b"] * len(vectors)
+            labels = labels or [""] * len(vectors)
+            for vector, color, label in zip(vectors, colors, labels):
+                vector = np.real(np.asarray(vector).flatten()) / k_unit_scale
+                ax.quiver(
+                    0,
+                    0,
+                    vector[0],
+                    vector[1],
+                    angles="xy",
+                    scale_units="xy",
+                    scale=1,
+                    color=color,
+                    label=label,
+                )
+
+        def plot_BZ_from_lv_2d(ax, reciprocal_vectors, color="lightgreen", starting_depth=3, include_negative=True):
+            origin = np.zeros(2)
+
+            def plot_from_origin(origin, depth):
+                if depth == 0:
+                    return
+                for vec in reciprocal_vectors:
+                    vec = np.real(np.asarray(vec).flatten()[:2]) / k_unit_scale
+                    if np.any(vec != origin):
+                        linestyle = "dashed" if depth < starting_depth else "solid"
+                        alpha = 1 if depth < starting_depth else 0.5
+                        ax.quiver(
+                            *origin,
+                            *vec,
+                            angles="xy",
+                            scale_units="xy",
+                            scale=1,
+                            color=color,
+                            linestyle=linestyle,
+                            alpha=alpha,
+                        )
+                        if include_negative:
+                            ax.quiver(
+                                *origin,
+                                *-vec,
+                                angles="xy",
+                                scale_units="xy",
+                                scale=1,
+                                color=color,
+                                linestyle=linestyle,
+                                alpha=alpha,
+                            )
+                    plot_from_origin(origin + vec, depth - 1)
+                    if include_negative:
+                        plot_from_origin(origin - vec, depth - 1)
+
+            plot_from_origin(origin, depth=starting_depth)
+
+        if material.dimension == 2:
+            fig, ax = plt.subplots()
+            if draw_cryst_vectors:
+                plot_vectors_2d(
+                    functions.give_reciprocal_lv(material.crystallographic_lv),
+                    ax=ax,
+                    colors=["orange"] * 3,
+                    labels=[""] * 3,
+                )
+
+            colors = plt.cm.viridis(np.linspace(0, 1, np.prod(shape_v_angles[1:])))
+
+            points = np.real(q_grid_points_lv)
+            points = points.T.reshape(points.shape[-1], *shape_v_angles)
+            points = points / k_unit_scale
+            if indices_path_angles_ is not None:
+                points = points[:,:,*indices_path_angles_] #spatial,vabc -> spatial,vk
+                colors = plt.cm.viridis(np.linspace(0, 1, indices_path_angles_.shape[1]))
+            for color_idx, idx_tot_mom_point in enumerate(
+                np.ndindex(points.shape[2:])
+            ):
+                ax.scatter(
+                    points[0, :, *idx_tot_mom_point].flatten(),
+                    points[1, :, *idx_tot_mom_point].flatten(),
+                    marker="x",
+                    color=colors[color_idx],
+                )
+            if draw_BZ:
+                plot_BZ_from_lv_2d(
+                    ax, material.get_reciprocal_lattice_vectors(), include_negative=True
+                )
+
+            if draw_lv:
+                plot_vectors_2d(
+                    material.get_reciprocal_lattice_vectors(), labels=[""] * 3, ax=ax
+                )
+            ax.set_title(title)
+
+            if draw_path_folded_back:
+                points = np.real(q_grid_points_crystal_momentum)
+                points = points.reshape(points.shape[0], *shape_v_angles)
+                points = points / k_unit_scale
+                for color_idx, idx in enumerate(np.ndindex(points.shape[2:])):
+                    ax.scatter(
+                        points[0, :, *idx].flatten(),
+                        points[1, :, *idx].flatten(),
+                        marker="o",
+                        label=f"angle {idx}",
+                        color=colors[color_idx],
+                    )
+            if show_legends:
+                ax.legend()
+            max_len = 6 / k_unit_scale
+            ax.set_xlim([-max_len, max_len])
+            ax.set_ylim([-max_len, max_len])
+            ax.set_aspect("equal", adjustable="box")
+            ax.set_xlabel(axis_labels_pi_over_a[0])
+            ax.set_ylabel(axis_labels_pi_over_a[1])
+
+            return fig
         
         if draw_cryst_vectors:
             fig, ax = functions.plot_vectors_3d(
-                functions.give_reciprocal_lv(material.crystallographic_lv),
+                functions.give_reciprocal_lv(material.crystallographic_lv) / k_unit_scale,
                 colors=["orange"] * 3,
                 labels=[""] * 3,
+                axis_labels=axis_labels_pi_over_a,
             )
         else:
             fig, ax = None, None
@@ -3088,6 +3257,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         
         points = np.real(q_grid_points_lv)
         points = points.T.reshape(points.shape[-1], *shape_v_angles)
+        points = points / k_unit_scale
         if indices_path_angles_ is not None:
             points = points[:,:,*indices_path_angles_] #spatial,vabc -> spatial,vk
             colors = plt.cm.viridis(np.linspace(0, 1, indices_path_angles_.shape[1]))
@@ -3104,22 +3274,24 @@ def plotting_rixs_spectra(material: Material, config: Config,
             )
         if draw_BZ:
             functions.plot_BZ_from_lv(
-                ax, material.get_reciprocal_lattice_vectors(), include_negative=True
+                ax, material.get_reciprocal_lattice_vectors() / k_unit_scale, include_negative=True
             )
         
         if draw_lv:
             fig, ax = functions.plot_vectors_3d(
-                material.get_reciprocal_lattice_vectors(), labels=[""] * 3,
+                material.get_reciprocal_lattice_vectors() / k_unit_scale, labels=[""] * 3,
                 ax=ax,
                 fig=fig,
+                axis_labels=axis_labels_pi_over_a,
             )
-        ax.set_title("k-points and BZ in experimental setup")
+        ax.set_title(title)
         
 
         # path folded back to 1st BZ
         if draw_path_folded_back:
             points = np.real(q_grid_points_crystal_momentum)
             points = points.reshape(points.shape[0], *shape_v_angles)
+            points = points / k_unit_scale
             for color_idx, idx in enumerate(np.ndindex(points.shape[2:])):
                 ax.scatter(
                     points[0, :, *idx].flatten(),
@@ -3131,7 +3303,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 )
         if show_legends:
             ax.legend()
-        max_len = 6
+        max_len = 6 / k_unit_scale
         ax.set_xlim([-max_len, max_len])
         ax.set_ylim([-max_len, max_len])
         ax.set_zlim([-max_len, max_len])
@@ -4254,7 +4426,21 @@ def plotting_rixs_spectra(material: Material, config: Config,
                 ylabel=title_y,k_values_scalar=x_labels_plot,
                 w_values=material.w_values, allow_pickle=True)
     if not config.test_normalisation:
-        figs = [            
+        figs = [
+                (
+                plot_integrated_dos(
+                    material,
+                    config,
+                    material.relative_grid_points_path,
+                    steps_between_points=100,
+                    use_standard_path_naming=True,
+                    title_x="",
+                    gaussian_filter_along_w=True,
+                    sigma_w=config.gaussian_broadening_for_plots,
+                )
+                if config.calc_integrated_dos and material.integrated_dos is not None
+                else None
+                ),
                 draw_xyz_equiv_contribution_for_indices_path(indices_path_angles),
                 (
                 draw_xyz_a_ad_spectra__energies__along_path(
@@ -4264,6 +4450,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         *shape_v_angles, 3
                     )[0, *indices_path_angles, :],
                     steps_between_points=1,
+                    k_values_scalar=x_labels_plot,
                     title_suffix=f"experiment_{title_x}",
                     title_x=title_x,
                     plot_phase_factor=True,
@@ -4339,6 +4526,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         *shape_v_angles, 3
                     )[0, :, 0, 0, :],
                     steps_between_points=1,
+                    k_values_scalar=x_labels_plot,
                     title_suffix=title_suffix_angle,
                     title_x=title_x,
                     plot_phase_factor=True,
@@ -4444,6 +4632,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     relative_grid_points,
     use_standard_path_naming = False,
     steps_between_points=1,
+    k_values_scalar = None,
     title_suffix="",
     title_x = "Path through k-space",
     indices_to_plot_2: list | None = None,
@@ -4466,6 +4655,15 @@ def draw_xyz_a_ad_spectra__energies__along_path(
         < 1e-2 * np.abs(np.real(relative_grid_points)).max()
     ), "relative grid points contains significant imaginary parts"
     relative_grid_points = np.real(relative_grid_points)
+    x_values_plot = (
+        np.asarray(k_values_scalar)
+        if k_values_scalar is not None
+        else np.arange(
+            functions.interpolated_path_from_relative_points(
+                np.array(relative_grid_points), steps_between_points
+            ).shape[0]
+        )
+    )
 
     if sigma_w == 0:
         gaussian_filter_along_w = False
@@ -4571,7 +4769,33 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     
     #material.coeff_xyz_rixs #ROUMNsrpabc
     
-
+    fig_spectrum_INS = []
+    
+    #INS spectrum
+    if config.calc_INS_spectra:
+        # delta_ab - Q_aQ_b 
+        spectrum_INS_correlator = spectrum_2_xyz_along_path[3,:3,3,:3] #OUMNwk -> ABwk with AB in xyz basis
+        delta_ab = np.eye(3)
+        QQ = np.einsum("Na,Nb->Nab", total_k_points_lv_interp, total_k_points_lv_interp)
+        INS_prefactor = delta_ab[None, :, :] - QQ / np.einsum("Na,Na->N", total_k_points_lv_interp, total_k_points_lv_interp)[:, None, None]
+        INS_spectra = np.einsum("kab,abwk->wk", INS_prefactor, spectrum_INS_correlator, optimize="optimal")
+        fig_spectrum_INS.append(
+            functions.plot_2_1_d_grid(
+                    INS_spectra,
+                    title=f"INS spectrum {title_suffix}:",
+                    xlabel=title_x,
+                    ylabel="Energy Loss [meV]",
+                    k_values_scalar=k_values_scalar,
+                    xticks_labels= relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None,
+                    w_values=material.w_values,
+                    use_intensity_k=True,
+                    plot_also_imaginary_part=True,
+                    config=config,
+                    useLogNorm=config.use_Log_Norm,
+                    gaussian_filter_along_w=gaussian_filter_along_w,
+                    sigma_w = sigma_w
+                ))
     
 
     
@@ -4584,7 +4808,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     fig_energies = plt.figure(f"energies_{title_suffix}\n")
 
     for i in range(energies_along_path.shape[1]):
-        plt.plot(energies_along_path[0, i])
+        plt.plot(x_values_plot, energies_along_path[0, i])
         if relative_grid_points_names is not None:
             plt.xticks(ticks=[i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, labels=relative_grid_points_names)
         plt.xlabel(title_x)
@@ -4612,6 +4836,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     title=f"One magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
                     xlabel=title_x,
                     ylabel="Energy Loss [meV]",
+                    k_values_scalar=k_values_scalar,
                     xticks_labels= relative_grid_points_names,
                     xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None,
                     w_values=material.w_values,
@@ -4652,6 +4877,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     title=f"spectrum one magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
                     xlabel=title_x,
                     ylabel="Energy Loss [meV]",
+                    k_values_scalar=k_values_scalar,
                     xticks_labels= relative_grid_points_names,
                     xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                     w_values=material.w_values,
@@ -4673,6 +4899,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
                     xlabel=title_x,
                     ylabel="Energy Loss [meV]",
+                    k_values_scalar=k_values_scalar,
                     xticks_labels= relative_grid_points_names,
                     xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                     w_values=material.w_values,
@@ -4703,6 +4930,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         title=f"Two magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
                         xlabel=title_x,
                         ylabel="Energy Loss [meV]",
+                        k_values_scalar=k_values_scalar,
                         xticks_labels= relative_grid_points_names,
                         xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                         w_values=material.w_values,
@@ -4729,6 +4957,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         title=f"spectrum two magnon a_ad, sym-class{equiv_class_idx}_{title_suffix}",
                         xlabel=title_x,
                         ylabel="Energy Loss [meV]",
+                        k_values_scalar=k_values_scalar,
                         xticks_labels= relative_grid_points_names,
                         xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None,
                         w_values=material.w_values,
@@ -4751,6 +4980,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         title=f"spectrum one magnon a_ad with phase factor\n, equiv-class{equiv_class_idx}:{tioju_indices_first}_{title_suffix}",
                         xlabel=title_x,
                         ylabel="Energy Loss [meV]",
+                        k_values_scalar=k_values_scalar,
                         xticks_labels= relative_grid_points_names,
                         xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
                         w_values=material.w_values,
@@ -4766,10 +4996,12 @@ def draw_xyz_a_ad_spectra__energies__along_path(
         fig_phase = plt.figure(f"Phase Factor along Path {title_suffix}")
         for idx in np.ndindex(phase_factor_along_standard_path.shape[1:]):
             plt.plot(
+                x_values_plot,
                 np.real(phase_factor_along_standard_path[:, *idx]),
                 label=f"index {idx}",
             )
             plt.plot(
+                x_values_plot,
                 np.imag(phase_factor_along_standard_path[:, *idx]),
                 linestyle="--",
                 label=f"index {idx} imag",
@@ -4780,7 +5012,7 @@ def draw_xyz_a_ad_spectra__energies__along_path(
 
     fig_phase = [fig_phase] if plot_phase_factor else []
 
-    return [fig_energies] + fig_spectrum_2 + fig_spectrum_4 + fig_spectrum_2_a_ad + fig_spectrum_4_a_ad +fig_phase
+    return [fig_energies]+ fig_spectrum_INS + fig_spectrum_2 + fig_spectrum_4 + fig_spectrum_2_a_ad + fig_spectrum_4_a_ad +fig_phase
 
 
     
