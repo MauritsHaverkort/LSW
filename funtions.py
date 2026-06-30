@@ -1293,10 +1293,10 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         if use_dos:
             dos_whole_k_space = False
             if dos_grid is not None:
-                dos = sum_k_dependency(dos_grid)
+                dos = avg_k_dependency(dos_grid)
                 dos_whole_k_space = True
             else:   
-                dos = sum_k_dependency(grid)
+                dos = avg_k_dependency(grid)
                     
             # Side DOS plot
             
@@ -2569,13 +2569,13 @@ def create_Gamma(half_size):
         Gamma[half_size + i, half_size + i] = -1
     return Gamma
 
-def sum_k_dependency(grid):
-    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
+def avg_k_dependency(grid):
+    """Averages k-dependency of a grid over all k-values, i.e. averages over all but the first axis"""
     if grid.ndim < 2:
         raise ValueError("Grid must have at least 2 dimensions.")
     
-    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
-    return summed_grid
+    avg_grid = np.mean(grid, axis=tuple(range(1, grid.ndim)))
+    return avg_grid
 
 
 

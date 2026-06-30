@@ -3000,7 +3000,9 @@ def plotting_rixs_spectra(material: Material, config: Config,
         )
         
         integrated_dos_along_path = functions.path_through_grid_interpolated(
-        config= config, grid=material.integrated_dos,
+        config= config, 
+        
+        grid=material.integrated_dos/np.mean(material.integrated_dos) if normalise_to_one else material.integrated_dos,
         relative_grid_points=np.array(relative_grid_points),
         steps=steps_between_points)
         
