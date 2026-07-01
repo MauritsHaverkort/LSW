@@ -213,6 +213,130 @@ def call_main_with_material_config():
     # delete intermediate memmap files after all calculations are done (used for einsum with large arrays to avoid RAM overflow)
     einsum_RAM.clean_memmap_files(config) if config.use_RAM_einsum else None
 
+def expected_k_grid_shape(config: Config, material: Material):
+    return tuple(config.amount_k_values[: material.dimension]) + (1,) * (3 - material.dimension)
+
+def material_has_sqw_calculation(material: Material, config: Config) -> bool:
+    """Return True if the material contains the grid and S(q,w) data needed for later stages."""
+    def warn_if_loaded(message):
+        if config.load_material_path != "":
+            config.warnings.add(message)
+
+    saved_config = getattr(material, "config", None)
+    if saved_config is not None:
+        if list(saved_config.amount_k_values[: material.dimension]) != list(config.amount_k_values[: material.dimension]):
+            warn_if_loaded("Loaded material was calculated with different amount_k_values, recalculating S(q,w) stage.")
+            return False
+        if saved_config.amount_w_values != config.amount_w_values:
+            warn_if_loaded("Loaded material was calculated with different amount_w_values, recalculating S(q,w) stage.")
+            return False
+        if saved_config.calc_two_magnon_spectra != config.calc_two_magnon_spectra:
+            warn_if_loaded("Loaded material was calculated with different calc_two_magnon_spectra setting, recalculating S(q,w) stage.")
+            return False
+
+    required_fields = [
+        "q_values",
+        "w_values",
+        "energies",
+        "T",
+        "sqw_2_ad_a_equiv_class",
+        "coeff_equiv_classes_tioju_2",
+        "coeff_tioju_xyz_2",
+    ]
+    if config.calc_two_magnon_spectra:
+        required_fields += [
+            "conv_sqw_2_ad_a_equiv_classes",
+            "coeff_equiv_classes_tioju_4",
+            "coeff_tioju_xyz_4",
+        ]
+    if config.calc_integrated_dos:
+        required_fields += ["integrated_dos", "integrated_dos_w_values"]
+
+    for field in required_fields:
+        if getattr(material, field, None) is None:
+            warn_if_loaded(f"Loaded material misses '{field}', recalculating S(q,w) stage.")
+            return False
+
+    k_shape = expected_k_grid_shape(config, material)
+    if material.q_values.shape != k_shape + (3,):
+        warn_if_loaded(
+            f"Loaded q grid shape {material.q_values.shape} does not match expected {k_shape + (3,)}, recalculating S(q,w) stage."
+        )
+        return False
+    if material.energies.shape[1:4] != k_shape:
+        warn_if_loaded(
+            f"Loaded energies k-shape {material.energies.shape[1:4]} does not match expected {k_shape}, recalculating S(q,w) stage."
+        )
+        return False
+    if material.sqw_2_ad_a_equiv_class.shape[1] != config.amount_w_values:
+        warn_if_loaded(
+            f"Loaded S(q,w) energy grid has {material.sqw_2_ad_a_equiv_class.shape[1]} points, expected {config.amount_w_values}; recalculating S(q,w) stage."
+        )
+        return False
+    if material.sqw_2_ad_a_equiv_class.shape[2:5] != k_shape:
+        warn_if_loaded(
+            f"Loaded S(q,w) k-shape {material.sqw_2_ad_a_equiv_class.shape[2:5]} does not match expected {k_shape}, recalculating S(q,w) stage."
+        )
+        return False
+    if config.calc_two_magnon_spectra and material.conv_sqw_2_ad_a_equiv_classes.shape[2] != 2 * config.amount_w_values:
+        warn_if_loaded(
+            f"Loaded two-magnon S(q,w) energy grid has {material.conv_sqw_2_ad_a_equiv_classes.shape[2]} points, expected {2 * config.amount_w_values}; recalculating S(q,w) stage."
+        )
+        return False
+    if config.calc_two_magnon_spectra and material.conv_sqw_2_ad_a_equiv_classes.shape[3:6] != k_shape:
+        warn_if_loaded(
+            f"Loaded two-magnon S(q,w) k-shape {material.conv_sqw_2_ad_a_equiv_classes.shape[3:6]} does not match expected {k_shape}, recalculating S(q,w) stage."
+        )
+        return False
+
+    return True
+
+def material_has_rixs_spectrum(material: Material, config: Config) -> bool:
+    """Return True if the material contains RIXS spectra compatible with the current angle/energy grid."""
+    saved_config = getattr(material, "config", None)
+    if saved_config is not None:
+        saved_rixs_config = saved_config.rixs_config
+        rixs_config = config.rixs_config
+        for field in ["alpha", "two_theta", "phi", "incident_energies"]:
+            saved_value = np.asarray(getattr(saved_rixs_config, field))
+            current_value = np.asarray(getattr(rixs_config, field))
+            if saved_value.shape != current_value.shape or not np.allclose(saved_value, current_value):
+                config.warnings.add(f"Loaded RIXS spectrum was calculated with different {field}, recalculating RIXS spectrum.")
+                return False
+        if saved_config.calc_two_magnon_spectra != config.calc_two_magnon_spectra:
+            config.warnings.add("Loaded RIXS spectrum was calculated with different calc_two_magnon_spectra setting, recalculating RIXS spectrum.")
+            return False
+        if saved_config.normalise_rixs_spectra_to_max != config.normalise_rixs_spectra_to_max:
+            config.warnings.add("Loaded RIXS spectrum was calculated with different normalise_rixs_spectra_to_max setting, recalculating RIXS spectrum.")
+            return False
+
+    required_fields = ["rixs_spectrum_2", "rixs_spectrum", "coeff_xyz_rixs"]
+    if config.calc_two_magnon_spectra:
+        required_fields.append("rixs_spectrum_4")
+
+    for field in required_fields:
+        if getattr(material, field, None) is None:
+            return False
+
+    angle_shape = (
+        len(config.rixs_config.alpha),
+        len(config.rixs_config.two_theta),
+        len(config.rixs_config.phi),
+    )
+    expected_v = len(config.rixs_config.incident_energies)
+    for field in ["rixs_spectrum_2"] + (["rixs_spectrum_4"] if config.calc_two_magnon_spectra else []):
+        spectrum = getattr(material, field)
+        if spectrum.ndim != 7:
+            config.warnings.add(f"Loaded {field} has ndim {spectrum.ndim}, expected 7; recalculating RIXS spectrum.")
+            return False
+        if spectrum.shape[2] != expected_v or spectrum.shape[4:7] != angle_shape:
+            config.warnings.add(
+                f"Loaded {field} shape {spectrum.shape} does not match current RIXS grid v={expected_v}, angles={angle_shape}; recalculating RIXS spectrum."
+            )
+            return False
+
+    return True
+
 def main(
     config: Config,
     material: Material,
@@ -223,18 +347,6 @@ def main(
     
     #checks wheter the correct folder structure for saving outputs exists and if not creates it
     create_folder_structure_for_outputs()
-    
-    # set global values in configuration and assert basic settings
-    assert config.number_k_points is None, "number_k_points shouldnt be set"
-    config.number_k_points = 1
-    assert np.all(
-        config.amount_k_values[config.amount_k_values != 1] % 2 == 0
-    ), "amount_k_values should be even numbers or 1 (for unused dimensions) for the path through the grid working properly"
-
-    for d in range(material.dimension):
-        config.number_k_points *= config.amount_k_values[d]
-
-    dimension = material.dimension
 
     assert material is not None, "Material has to be given "
 
@@ -247,6 +359,18 @@ def main(
     else:   
         print("No material loaded from file, calculating material now!")
         config.warnings.add(f"No material loaded from file, calculating new material")
+
+    # set global values in configuration and assert basic settings
+    assert config.number_k_points is None, "number_k_points shouldnt be set"
+    config.number_k_points = 1
+    assert np.all(
+        config.amount_k_values[config.amount_k_values != 1] % 2 == 0
+    ), "amount_k_values should be even numbers or 1 (for unused dimensions) for the path through the grid working properly"
+
+    for d in range(material.dimension):
+        config.number_k_points *= config.amount_k_values[d]
+
+    dimension = material.dimension
     
     # plotting the material structure
     VALUES_TO_SAVE["figs_for_pdf"].append(
@@ -272,8 +396,8 @@ def main(
     for current_material in [material] + (
         additional_domain_material if additional_domain_material is not None else []
     ):
-        # calculation is happening if no previously saved material is loaded #TODO: have cleaner check which parts are not calculated in the material
-        if config.load_material_path == "":
+        # calculation is skipped only when the loaded material already has a compatible S(q,w) stage
+        if not material_has_sqw_calculation(current_material, config):
             lv = current_material.lattice_vectors
             grid_fineness = config.amount_k_values
 
@@ -316,6 +440,9 @@ def main(
             config.debug_timer.print_difference(
                 "done with calculate_sqw_spectra", config.debug_timing
             )
+        else:
+            config.additional_values["q_grid"] = current_material.q_values
+            config.warnings.add(f"Using precalculated S(q,w) stage for {current_material.name}.")
         
         # temp = sqw_components_calc_general_tau(material, config, 5)
 
@@ -2685,7 +2812,11 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
             debug_time_duration,
         )
 
-        if save_RIXS_spectra_to_material:
+        reuse_precalculated_rixs = save_RIXS_spectra_to_material and material_has_rixs_spectrum(material, config)
+        if reuse_precalculated_rixs:
+            config.warnings.add(f"Using precalculated RIXS spectrum for {material.name}.")
+
+        if save_RIXS_spectra_to_material and not reuse_precalculated_rixs:
 
             if config.calc_two_magnon_spectra:
                 # contract the coefficient
@@ -2758,6 +2889,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     
     #save the material if enabled (may take a lot of memory)
     if config.save_material:
+        material.config = config
         np.savez(
             f"outputs/material/{material.name}{config.timestamp}.npz",
             material=material,

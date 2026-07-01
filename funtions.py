@@ -2331,7 +2331,7 @@ def save_figures_to_png(figures, out_put_folder="outputs/figs", dpi=200, notitle
             fig.savefig(
                 f"{out_put_folder}/{safe_title}.png",
                 dpi=dpi,
-                pad_inches=0.08,
+                pad_inches=0.2,
                 bbox_inches='tight'
             )
         except Exception as e:
