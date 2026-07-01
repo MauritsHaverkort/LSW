@@ -6,6 +6,8 @@
     "treat_divergencies": true,
     "plot_only_once_per_symmetry_class": true,
     "calc_two_magnon_spectra": true,
+    "calc_integrated_dos": true,
+    "calc_INS_spectra": true,
     "use_averaging_TdT": false,
     "compute_RIXS_spectrum": true,
     "use_RAM_einsum": false,

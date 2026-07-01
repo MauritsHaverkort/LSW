@@ -3014,7 +3014,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     xticks_labels= relative_grid_points_names,
                     xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None,
                     w_values=material.integrated_dos_w_values,
-                    use_intensity_k=True,
+                    use_intensity_k = False,
                     plot_also_imaginary_part=True,
                     config=config,
                     useLogNorm=config.use_Log_Norm,
@@ -3687,6 +3687,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         xlabel=title_x,
                         ylabel=title_y,
                         gaussian_filter_along_w=True,
+                        sigma_w= config.gaussian_broadening_for_plots
                     ))
             figs.append(functions.plot_2_1_d_grid(
                         two_magnon_at_v,
@@ -3700,6 +3701,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                         xlabel=title_x,
                         ylabel=title_y,
                         gaussian_filter_along_w=True,
+                        sigma_w= config.gaussian_broadening_for_plots
                     ))
             draw_prefactors_vs_w_in(additional_v_lines=[v])
         return figs
@@ -4583,6 +4585,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     xlabel=title_x,
                     ylabel=title_y,
                     gaussian_filter_along_w=True,
+                    sigma_w=config.gaussian_broadening_for_plots
                 ),
                 #complete RIXS spectrum
                 functions.plot_2_1_d_grid(
@@ -4597,6 +4600,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
                     xlabel=title_x,
                     ylabel=title_y,
                     gaussian_filter_along_w=True,
+                    sigma_w=config.gaussian_broadening_for_plots
                 ),
                 # comparison of two magnon to one magnon contribution of prefactor
                 plot_mean_rixs_2_to_rixs_4_ratio_vs_w_in()
@@ -4645,11 +4649,12 @@ def draw_xyz_a_ad_spectra__energies__along_path(
     # draw_equiv_contribution_for_azim: bool = False,
     fraction_of_max_to_plot: float = 0.01,
     gaussian_filter_along_w: bool = False,
-    sigma_w = 2
+    sigma_w = 2,
+    use_common_color_scale: bool = True,
     
     # grid_point_names: List[str] | None = None,
 ):
-    """main function to plot intermediate results. Plots HP correlation functions, spin operator correlation functions and energies along a path in k-space defined by the relative_grid_points. The path is interpolated between the given relative grid points with steps_between_points steps in between. The spectra are plotted for the indices given in indices_to_plot_2 and indices_to_plot_4, if not given all unique indices are plotted. If plot_phase_factor is True, the phase factor along the path is also plotted. If draw_every_sym_class_once is True, only one representative of each symmetry class of the a_ad spectra is plotted. If draw_sym_class_a_ad is True, the symmetry classes of the a_ad spectra are drawn (only makes sense if draw_every_sym_class_once is False). If gaussian_filter_along_w is True, a gaussian filter with sigma_w is applied along the w axis to make the plots smoother. The title_suffix is added to the title of the plots. If use_standard_path_naming is True, the grid points are named according to their position in the standard path (Gamma, X, M, R), otherwise they are named according to their relative grid point coordinates."""
+    """main function to plot intermediate results. Plots HP correlation functions, spin operator correlation functions and energies along a path in k-space defined by the relative_grid_points. The path is interpolated between the given relative grid points with steps_between_points steps in between. The spectra are plotted for the indices given in indices_to_plot_2 and indices_to_plot_4, if not given all unique indices are plotted. If plot_phase_factor is True, the phase factor along the path is also plotted. If draw_every_sym_class_once is True, only one representative of each symmetry class of the a_ad spectra is plotted. If draw_sym_class_a_ad is True, the symmetry classes of the a_ad spectra are drawn (only makes sense if draw_every_sym_class_once is False). If gaussian_filter_along_w is True, a gaussian filter with sigma_w is applied along the w axis to make the plots smoother. If use_common_color_scale is True, comparable xyz/equivalence-class plot groups share one color scale. The title_suffix is added to the title of the plots. If use_standard_path_naming is True, the grid points are named according to their position in the standard path (Gamma, X, M, R), otherwise they are named according to their relative grid point coordinates."""
     relative_grid_points_names = material.relative_grid_points_names if use_standard_path_naming else None
     
     assert (
@@ -4669,6 +4674,27 @@ def draw_xyz_a_ad_spectra__energies__along_path(
 
     if sigma_w == 0:
         gaussian_filter_along_w = False
+
+    def get_common_color_scale(grids):
+        if not use_common_color_scale or len(grids) == 0:
+            return {}
+
+        min_value = np.inf
+        max_value = -np.inf
+        for grid in grids:
+            grid = np.real(grid)
+            if gaussian_filter_along_w:
+                grid = scipy.ndimage.gaussian_filter1d(grid, sigma=sigma_w, axis=0)
+            min_value = min(min_value, np.min(grid))
+            max_value = max(max_value, np.max(grid))
+
+        if not np.isfinite(min_value) or not np.isfinite(max_value):
+            return {}
+        if min_value == max_value:
+            padding = max(1e-12, np.abs(max_value) * 1e-12)
+            min_value -= padding
+            max_value += padding
+        return {"vmin": min_value, "vmax": max_value}
     
     if draw_every_sym_class_once:
         sym_classes_to_xyz_2, sym_classes_to_xyz_4 = material.calc_sym_classes_to_xyz()
@@ -4817,15 +4843,21 @@ def draw_xyz_a_ad_spectra__energies__along_path(
         plt.ylabel("Energy Loss [meV]")
 
 
-    # one magnon plots
-
-    for equiv_class_idx in indices_to_plot_2 or np.ndindex(
-        spectrum_2_xyz_along_path.shape[:4]
-    ):
+    indices_to_plot_2_filtered = [
+        equiv_class_idx
+        for equiv_class_idx in (indices_to_plot_2 or np.ndindex(spectrum_2_xyz_along_path.shape[:4]))
         if (
             np.abs(spectrum_2_xyz_along_path[*equiv_class_idx]).max()
             > fraction_of_max_to_plot * np.abs(np.abs(spectrum_2_xyz_along_path)).max()
-        ):
+        )
+    ]
+    common_scale_2_xyz = get_common_color_scale(
+        [spectrum_2_xyz_along_path[*idx] for idx in indices_to_plot_2_filtered]
+    )
+
+    # one magnon plots
+
+    for equiv_class_idx in indices_to_plot_2_filtered:
 
             # fig_spectrum_2.append(plt.figure(f"spectrum one magnon xyz {op_idx}_{title_suffix}"))
 
@@ -4847,7 +4879,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     config=config,
                     useLogNorm=config.use_Log_Norm,
                     gaussian_filter_along_w=gaussian_filter_along_w,
-                    sigma_w = sigma_w
+                    sigma_w = sigma_w,
+                    **common_scale_2_xyz
                 )
             )
 
@@ -4866,6 +4899,17 @@ def draw_xyz_a_ad_spectra__energies__along_path(
             # plt.yticks(ticks=np.arange(0,len(material.w_values),step_yticks), labels=[f"{np.real(w):.1f}" for w in material.w_values[::step_yticks]])
 
     if draw_sym_class_a_ad:
+        grids_2_a_ad_to_plot = []
+        for equiv_class_idx in range(material.sqw_2_ad_a_equiv_class.shape[0]):
+            grid_to_plot = np.real(sqw_2_along_path[equiv_class_idx])
+            grids_2_a_ad_to_plot.append(grid_to_plot)
+            tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_2[equiv_class_idx]==1)).T
+            if tioju_indices_all.shape[0] != 0:
+                tioju_indices_first = tioju_indices_all[0]
+                grids_2_a_ad_to_plot.append(
+                    np.einsum("wk,k->wk", grid_to_plot, phase_factor_along_standard_path[:,tioju_indices_first[1],tioju_indices_first[3]])
+                )
+        common_scale_2_a_ad = get_common_color_scale(grids_2_a_ad_to_plot)
         grid_total = np.zeros_like(sqw_2_along_path[0])
         for equiv_class_idx in range(material.sqw_2_ad_a_equiv_class.shape[0]):
             
@@ -4888,7 +4932,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     config=config,
                     useLogNorm=config.use_Log_Norm,
                     gaussian_filter_along_w=gaussian_filter_along_w,
-                    sigma_w = sigma_w
+                    sigma_w = sigma_w,
+                    **common_scale_2_a_ad
                 ))
             tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_2[equiv_class_idx]==1)).T
             # print(f"equiv class {equiv_class_idx} enters {np.sum(material.coeff_equiv_classes_tioju_2[equiv_class_idx])} times")
@@ -4910,44 +4955,65 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                     config=config,
                     useLogNorm=config.use_Log_Norm,
                     gaussian_filter_along_w=gaussian_filter_along_w,
-                    sigma_w = sigma_w
+                    sigma_w = sigma_w,
+                    **common_scale_2_a_ad
 
                 ))
     
     # two magnon plots
     if config.calc_two_magnon_spectra:
-        for equiv_class_idx in indices_to_plot_4 or np.ndindex(spectrum_4_xyz_along_path.shape[:4]):
+        indices_to_plot_4_filtered = [
+            equiv_class_idx
+            for equiv_class_idx in (indices_to_plot_4 or np.ndindex(spectrum_4_xyz_along_path.shape[:4]))
             if (
                 np.abs(np.real(spectrum_4_xyz_along_path[*equiv_class_idx])).max()
                 > fraction_of_max_to_plot * np.abs(np.real(spectrum_4_xyz_along_path)).max()
-            ):
-                # fig_spectrum_4.append(plt.figure(f"spectrum two magnon xyz standard path {op_idx}_{title_suffix}"))
-                grid_to_plot = np.real(
-                    spectrum_4_xyz_along_path[*equiv_class_idx]
-                )
+            )
+        ]
+        common_scale_4_xyz = get_common_color_scale(
+            [np.real(spectrum_4_xyz_along_path[*idx]) for idx in indices_to_plot_4_filtered]
+        )
 
-                fig_spectrum_4.append(
-                    functions.plot_2_1_d_grid(
-                        grid_to_plot,
-                        title=f"Two magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
-                        xlabel=title_x,
-                        ylabel="Energy Loss [meV]",
-                        k_values_scalar=k_values_scalar,
-                        xticks_labels= relative_grid_points_names,
-                        xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
-                        w_values=material.w_values,
-                        use_intensity_k=True,
-                        plot_also_imaginary_part=True,
-                        config=config,
-                        useLogNorm=config.use_Log_Norm,
-                        gaussian_filter_along_w=gaussian_filter_along_w,
-                        sigma_w = sigma_w
-                    )
+        for equiv_class_idx in indices_to_plot_4_filtered:
+            # fig_spectrum_4.append(plt.figure(f"spectrum two magnon xyz standard path {op_idx}_{title_suffix}"))
+            grid_to_plot = np.real(
+                spectrum_4_xyz_along_path[*equiv_class_idx]
+            )
+
+            fig_spectrum_4.append(
+                functions.plot_2_1_d_grid(
+                    grid_to_plot,
+                    title=f"Two magnon spectrum: {material.index_convention_to_string_xyz(equiv_class_idx)} ({title_suffix})",
+                    xlabel=title_x,
+                    ylabel="Energy Loss [meV]",
+                    k_values_scalar=k_values_scalar,
+                    xticks_labels= relative_grid_points_names,
+                    xticks_pos= [i * steps_between_points for i in range(len(relative_grid_points_names))] if relative_grid_points_names is not None else None, 
+                    w_values=material.w_values,
+                    use_intensity_k=True,
+                    plot_also_imaginary_part=True,
+                    config=config,
+                    useLogNorm=config.use_Log_Norm,
+                    gaussian_filter_along_w=gaussian_filter_along_w,
+                    sigma_w = sigma_w,
+                    **common_scale_4_xyz
                 )
-                # if config.plot_only_once_per_equivalence_class:
-                #     break
+            )
+            # if config.plot_only_once_per_equivalence_class:
+            #     break
     
         if draw_sym_class_a_ad:
+            grids_4_a_ad_to_plot = []
+            for equiv_class_idx in np.ndindex(material.conv_sqw_2_ad_a_equiv_classes.shape[:2]):
+                grid_to_plot = np.real(sqw_4_along_path[*equiv_class_idx])
+                grids_4_a_ad_to_plot.append(grid_to_plot)
+                tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_4[*equiv_class_idx]!=0)).T
+                if tioju_indices_all.shape[0] != 0:
+                    tioju_indices_first = tioju_indices_all[0]
+                    grids_4_a_ad_to_plot.append(
+                        np.einsum("wk,k->wk", grid_to_plot, phase_factor_along_standard_path[:,tioju_indices_first[1],tioju_indices_first[3]])
+                    )
+            common_scale_4_a_ad = get_common_color_scale(grids_4_a_ad_to_plot)
             for equiv_class_idx in np.ndindex(material.conv_sqw_2_ad_a_equiv_classes.shape[:2]):
                 grid_to_plot = np.real(
                         sqw_4_along_path[*equiv_class_idx]
@@ -4968,7 +5034,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         config=config,
                         useLogNorm=config.use_Log_Norm,
                         gaussian_filter_along_w=gaussian_filter_along_w,
-                        sigma_w = sigma_w
+                        sigma_w = sigma_w,
+                        **common_scale_4_a_ad
                     ))
                 tioju_indices_all = np.array(np.where(material.coeff_equiv_classes_tioju_4[*equiv_class_idx]!=0)).T #gives the first indices tioju corresponding to equiv class equiv_class_idx
                 if tioju_indices_all.shape[0]==0:
@@ -4991,7 +5058,8 @@ def draw_xyz_a_ad_spectra__energies__along_path(
                         config=config,
                         useLogNorm=config.use_Log_Norm,
                         gaussian_filter_along_w=gaussian_filter_along_w,
-                        sigma_w = sigma_w
+                        sigma_w = sigma_w,
+                        **common_scale_4_a_ad
                     ))
     # phase factor plot
     if plot_phase_factor:

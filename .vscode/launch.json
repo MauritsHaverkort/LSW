@@ -17,6 +17,23 @@
                 "--config",
                 "${workspaceFolder}/config_NiO.json"
             ]
+        },
+        {
+            "name": "Python Debugger: Dominant Channel Analysis",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/Dominant_channel_analysis.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "6"
+            },
+            "args": [
+                "--config",
+                "${workspaceFolder}/config.json",
+                "--top",
+                "30"
+            ]
         }
     ]
 }

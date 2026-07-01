@@ -1200,10 +1200,29 @@ def plot_3d_grid_slider(grid,
 
 
 
-def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intensity_label="Intensity (a.u.)", save_path=None, useLogNorm=False, range_from_max=1000, useStandardAxis=False, config:Config=None,
-              xticks_pos=[], xticks_labels=[], k_values_scalar=None, w_values=[], dos_grid=None, use_dos=True, use_intensity_k = True, prevent_reusing_fig=False, plot_also_imaginary_part=False,
-              gaussian_filter_along_w = True, sigma_w = 2):
-    """Plots a 2D grid with optional DOS plot on the side. returs the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
+def plot_2_1_d_grid(grid, title="Grid", 
+                    xlabel="X-axis", 
+                    ylabel="Y-axis", 
+                    intensity_label="Intensity (a.u.)", 
+                    save_path=None, 
+                    useLogNorm=False, 
+                    range_from_max=1000, 
+                    useStandardAxis=False, 
+                    config:Config=None,
+                    xticks_pos=[], 
+                    xticks_labels=[], 
+                    k_values_scalar=None, 
+                    w_values=[], 
+                    dos_grid=None, 
+                    use_dos=True, 
+                    use_intensity_k = True, 
+                    prevent_reusing_fig=False, 
+                    plot_also_imaginary_part=False,
+                    gaussian_filter_along_w = True, 
+                    sigma_w = 2, 
+                    vmin=None, 
+                    vmax=None):
+    """Plots a 2D grid with optional DOS plot on the side. returns the figure object. if it is complex, it will plot the real part and optionally the imaginary part as well."""
     
     grid = np.array(grid)
     
@@ -1213,7 +1232,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         if plot_also_imaginary_part and np.max(np.abs(np.imag(grid))) > 1e-3*np.max(np.abs(np.real(grid))): #plot only imag values when they are non zero
             #recall the function to plot the imaginary part
             imag_fig = plot_2_1_d_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity_label=intensity_label, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
-                      xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False)
+                      xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False, vmin=vmin, vmax=vmax, gaussian_filter_along_w=gaussian_filter_along_w, sigma_w=sigma_w)
             if np.max(np.abs(np.imag(grid))) > 1e+3*np.max(np.abs(np.real(grid))): # if the imaginary part is much larger than the real part, we return only the imaginary part
                 return imag_fig
         else:
@@ -1239,21 +1258,6 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
             xticks_pos = config.plot_info["x_ticks_pos"]
             w_values = config.plot_info["y_ticks_label"]
 
-    # if not useLogNorm:
-    #     image=plt.pcolormesh(k_values_scalar, w_values, grid, cmap='viridis', shading='auto' )
-    # else:
-    #     image=plt.pcolormesh(k_values_scalar, w_values,  grid, cmap='viridis', shading='auto', norm=LogNorm(np.max(grid)/range_from_max,np.max(grid))) 
-    # if len(xticks_pos)!=0 and len(xticks_labels) != 0:
-    #     ax = plt.gca()
-    #     ax.set_xticks(xticks_pos,xticks_labels)
-    # # if len(w_values)!=0:
-    # #     ax = plt.gca()
-    # #     ax.set_yticks(ticks=np.linspace(0, grid.shape[0],len(w_values)),labels=np.round(w_values,2))
-        
-
-    # fig.colorbar(image, label=intensity)  
-    # plt.xlabel(xlabel)
-    # plt.ylabel(ylabel)
     
     # smoothing the grid along the w direction (axis=0) with a gaussian filter
     if gaussian_filter_along_w and sigma_w != 0:
@@ -1263,7 +1267,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
     # gs = gridspec.GridSpec(2, 2, width_ratios=[4, 1], height_ratios=[4,1], wspace=0.05)
     gs = gridspec.GridSpec(
     2, 4, figure=fig,
-    width_ratios=[4.0, 0.12, 0.8, 1.2],  # <-- col2 is the gap
+    width_ratios=[4.0, 0.12, 0.9, 1.6],  # <-- col2 is the gap
     height_ratios=[4.0, 1.0],
     wspace=0.15,  # keep general spacing small
     hspace=0.6
@@ -1293,10 +1297,10 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
         if use_dos:
             dos_whole_k_space = False
             if dos_grid is not None:
-                dos = avg_k_dependency(dos_grid)
+                dos = sum_k_dependency(dos_grid)
                 dos_whole_k_space = True
             else:   
-                dos = avg_k_dependency(grid)
+                dos = sum_k_dependency(grid)
                     
             # Side DOS plot
             
@@ -1305,6 +1309,13 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                 ax1.set_xlabel("DOS (whole k-space or other)")
             else:
                 ax1.set_xlabel(intensity_label)
+            from matplotlib.ticker import MaxNLocator, ScalarFormatter
+            ax1.xaxis.set_major_locator(MaxNLocator(nbins=3))
+            formatter = ScalarFormatter(useMathText=False)
+            formatter.set_scientific(False)
+            formatter.set_useOffset(False)
+            ax1.xaxis.set_major_formatter(formatter)
+            ax1.tick_params(axis="x", pad=2)
             ax1.yaxis.set_tick_params(labelleft=False)  # Hide y-axis labels to avoid duplication
             ax1.grid(True)
             
@@ -1339,7 +1350,7 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
             intensity_k = np.sum(grid, axis=0)
            
             ax2.plot(k_values_scalar[:-1], intensity_k)
-            # ax2.set_ylabel(intensity_label)
+            ax2.set_ylabel(intensity_label)
             
         
         if len(w_values) == 0:
@@ -1350,9 +1361,11 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
             X, Y = np.meshgrid(k_values_scalar, w_values) 
         
         if not useLogNorm:
-            image = ax0.pcolormesh(X, Y, grid, cmap=config.cmap_plots, shading=config.shading_colormesh_plots)
+            image = ax0.pcolormesh(X, Y, grid, cmap=config.cmap_plots, shading=config.shading_colormesh_plots, vmin=vmin, vmax=vmax)
         else:
             try:
+                vmax_norm = np.max(grid) if vmax is None else vmax
+                vmin_norm = vmax_norm / range_from_max if vmin is None else vmin
                 image = ax0.pcolormesh(
                         X,
                         Y,
@@ -1360,10 +1373,10 @@ def plot_2_1_d_grid(grid, title="Grid", xlabel="X-axis", ylabel="Y-axis", intens
                         cmap=config.cmap_plots,
                         shading=config.shading_colormesh_plots,
                         norm=SymLogNorm(
-                            linthresh=1e-10*np.max(grid),          # linear range around zero
+                            linthresh=max(1e-30, 1e-10*np.max(np.abs(grid))),          # linear range around zero
                             linscale=1.0,            # scale of the linear range
-                            vmin=np.max(grid) / range_from_max,
-                            vmax=np.max(grid),
+                            vmin=vmin_norm,
+                            vmax=vmax_norm,
                             base=10
                         )
                     )
@@ -2569,13 +2582,13 @@ def create_Gamma(half_size):
         Gamma[half_size + i, half_size + i] = -1
     return Gamma
 
-def avg_k_dependency(grid):
-    """Averages k-dependency of a grid over all k-values, i.e. averages over all but the first axis"""
+def sum_k_dependency(grid):
+    """Sums k-dependency of a grid over all k-values, i.e. sums over all but the first axis"""
     if grid.ndim < 2:
         raise ValueError("Grid must have at least 2 dimensions.")
     
-    avg_grid = np.mean(grid, axis=tuple(range(1, grid.ndim)))
-    return avg_grid
+    summed_grid = np.sum(grid, axis=tuple(range(1, grid.ndim)))
+    return summed_grid
 
 
 

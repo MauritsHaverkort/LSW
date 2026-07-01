@@ -279,7 +279,7 @@ def config_main():
             # "path_plot": (True, True),
         },
         sigma_w=2, #0 no broadening (otherwise amount of grid points to include)
-        gaussian_broadening_for_plots=5, 
+        gaussian_broadening_for_plots=8, 
         shading_colormesh_plots="flat",  # "auto","flat","gouraud"
         cmap_plots = "terrain",#'viridis',
         # shading_colormesh_plots="gouraud",
