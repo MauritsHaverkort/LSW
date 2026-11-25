@@ -2060,7 +2060,7 @@ def calculate_sqw_spectra(
         residues_2_prime_ad_a_w = einsum_RAM.contract_autostore(
         "tcd...l,l->tcd...",
         residues_2_prime_ad_a_w,
-        extraction_only_creation_operator,
+        extraction_only_creation_operator / extraction_only_creation_operator.shape[0],  # the same 1/(2N) as in the branch below
         optimize="optimal",
         config=config
     )
