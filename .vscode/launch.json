@@ -15,7 +15,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}/config_NiO.json"
+                "${workspaceFolder}/config.json"
             ]
         },
         {

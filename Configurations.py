@@ -142,7 +142,7 @@ def RIXS_config_main():
         ,incident_energies_end=None
         ,incident_energies_amount=None
         ,energy_for_momentum_plots=857.571, # in meV
-        polarisations_to_sum = [0,1,2,3], #0 pi pi, 1 pi sigma, 2 sigma pi, 3 sigma sigma --> 
+        polarisations_to_sum = [2,3], #0 pi pi, 1 pi sigma, 2 sigma pi, 3 sigma sigma --> 
         # polarisations_to_sum= [0,1], #pi in
         
         

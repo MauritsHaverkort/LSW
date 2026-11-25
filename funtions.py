@@ -1232,7 +1232,7 @@ def plot_2_1_d_grid(grid, title="Grid",
         if plot_also_imaginary_part and np.max(np.abs(np.imag(grid))) > 1e-3*np.max(np.abs(np.real(grid))): #plot only imag values when they are non zero
             #recall the function to plot the imaginary part
             imag_fig = plot_2_1_d_grid(np.imag(grid), title=title + " (Imaginary Part)", xlabel=xlabel, ylabel=ylabel, intensity_label=intensity_label, save_path=save_path, useLogNorm=useLogNorm, range_from_max=range_from_max, useStandardAxis=useStandardAxis, config=config,
-                      xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False, vmin=vmin, vmax=vmax, gaussian_filter_along_w=gaussian_filter_along_w, sigma_w=sigma_w)
+                      xticks_pos=xticks_pos, xticks_labels=xticks_labels, k_values_scalar=k_values_scalar, w_values=w_values, dos_grid=dos_grid, use_dos=use_dos, use_intensity_k=use_intensity_k, prevent_reusing_fig=prevent_reusing_fig, plot_also_imaginary_part=False, vmin=vmin, vmax=vmax, gaussian_filter_along_w=gaussian_filter_along_w, sigma_w=sigma_w)
             if np.max(np.abs(np.imag(grid))) > 1e+3*np.max(np.abs(np.real(grid))): # if the imaginary part is much larger than the real part, we return only the imaginary part
                 return imag_fig
         else:
@@ -1261,22 +1261,25 @@ def plot_2_1_d_grid(grid, title="Grid",
     
     # smoothing the grid along the w direction (axis=0) with a gaussian filter
     if gaussian_filter_along_w and sigma_w != 0:
-        grid = gaussian_filter1d(grid, sigma=sigma_w, axis=0)
+        grid = gaussian_filter1d(grid, sigma=sigma_w, axis=0, mode = "reflect") #"reflect"
 
+    n_rows = 2 if use_intensity_k else 1
+    n_cols = 4 if use_dos else 2
+    width_ratios = [4.0, 0.12, 0.9, 1.6] if use_dos else [4.0, 0.12]
+    height_ratios = [4.0, 1.0] if use_intensity_k else [4.0]
 
-    # gs = gridspec.GridSpec(2, 2, width_ratios=[4, 1], height_ratios=[4,1], wspace=0.05)
     gs = gridspec.GridSpec(
-    2, 4, figure=fig,
-    width_ratios=[4.0, 0.12, 0.9, 1.6],  # <-- col2 is the gap
-    height_ratios=[4.0, 1.0],
+    n_rows, n_cols, figure=fig,
+    width_ratios=width_ratios,  # when use_dos=True, col2 is the gap
+    height_ratios=height_ratios,
     wspace=0.15,  # keep general spacing small
     hspace=0.6
 )
 
     ax0 = fig.add_subplot(gs[0, 0])              # heatmap
-    ax2 = fig.add_subplot(gs[1, 0], sharex=ax0)  # bottom line plot (same width as ax0)
+    ax2 = fig.add_subplot(gs[1, 0], sharex=ax0) if use_intensity_k else None  # bottom line plot
     cax = fig.add_subplot(gs[0, 1])              # colorbar axis (close to heatmap)
-    # gs[0,2] is intentionally empty spacer
+    # gs[0,2] is intentionally empty spacer when use_dos=True
     
     ax1 = fig.add_subplot(gs[0, 3], sharey=ax0) if use_dos else None  # right DOS plot
     ax0.set_title(title)
@@ -1347,7 +1350,7 @@ def plot_2_1_d_grid(grid, title="Grid",
         if use_intensity_k:
             # beneath intensity plot
             
-            intensity_k = np.sum(grid, axis=0)
+            intensity_k = np.round(np.sum(grid, axis=0), decimals=5) # prevent small fluctuations from being plotted
            
             ax2.plot(k_values_scalar[:-1], intensity_k)
             ax2.set_ylabel(intensity_label)
