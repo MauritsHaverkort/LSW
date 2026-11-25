@@ -1361,7 +1361,7 @@ def sqw_prime_from_a_ad_to_xyz(
         a_op.append(sp.symbols("a" + str(i), commutative=False))
         ad_op.append(Dagger(a_op[i]))
         Sop_i.append(
-            np.sqrt(S) / 2 * (ub * a_op[i] + u * ad_op[i])
+            np.sqrt(S / 2) * (ub * a_op[i] + u * ad_op[i])
             + v * (S - ad_op[i] * a_op[i])
         )
         Sop_i[-1] = np.concatenate(
