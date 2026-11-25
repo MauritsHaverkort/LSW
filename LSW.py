@@ -2174,6 +2174,10 @@ def calculate_sqw_spectra(
                 if config.use_intensity_normalisation
                 else 1
             )  # only 1/Nk
+        # each one-magnon grid carries the factor 1/(2N) of the mode sum, so the
+        # convolution carries it twice; multiply by 2N to give S4 the same single
+        # 1/(2N) as S2 (Wick: S4 = 1/N_k sum_k R(k) R(q-k) with the raw residues R)
+        norm = norm * 2 * material.N
         material.conv_sqw_2_ad_a_equiv_classes = norm * np.array(
             convoluted_grids_equivalence_classes
         )
