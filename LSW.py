@@ -2162,7 +2162,7 @@ def calculate_sqw_spectra(
         #TODO: shouldnt be necessary anymore (for config always 1)
         norm = (
             (np.max(w_values) - np.min(w_values))
-            / (config.amount_w_values)
+            / (config.amount_w_values - 1)
             * 1
             / config.number_k_points
             if config.use_intensity_normalisation
