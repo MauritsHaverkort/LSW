@@ -2955,7 +2955,7 @@ def define_experimental_setup(config, alpha=None, two_theta=None, phi=None, draw
         # sigma-polarised input
         if polarisation_in_sigma:
             epsilon_in[p] = np.array(
-                [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
+                [np.cos(phi), -np.sin(phi), np.zeros_like(beta)], dtype=float
             )
         # pi-polarised input
         else:
@@ -2971,7 +2971,7 @@ def define_experimental_setup(config, alpha=None, two_theta=None, phi=None, draw
         # sigma-polarised output
         if polarisation_out_sigma:
             epsilon_out[p] = np.array(
-                [np.sin(phi), -np.cos(phi), np.zeros_like(beta)], dtype=float
+                [np.cos(phi), -np.sin(phi), np.zeros_like(beta)], dtype=float
             )
         # pi-polarised output
         else:
