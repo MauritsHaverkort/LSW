@@ -2304,7 +2304,7 @@ def calculate_complete_RIXS_spectrum_for_sqw_xyz_experimental_setup(
     debug_RIXS=False,
    
     hbar=6.582e-16,  # hbar in eV*s
-    c=2.992792e8,  # c in m/s
+    c=2.99792458e8,  # c in m/s
     ):
     """Compute the total RIXS cross section for the given material and experimental setup and saves it to material
     
