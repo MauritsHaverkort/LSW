@@ -3401,7 +3401,7 @@ def plotting_rixs_spectra(material: Material, config: Config,
         
         if draw_cryst_vectors:
             fig, ax = functions.plot_vectors_3d(
-                functions.give_reciprocal_lv(material.crystallographic_lv) / k_unit_scale,
+                np.array(functions.give_reciprocal_lv(material.crystallographic_lv)) / k_unit_scale,
                 colors=["orange"] * 3,
                 labels=[""] * 3,
                 axis_labels=axis_labels_pi_over_a,
@@ -3430,12 +3430,12 @@ def plotting_rixs_spectra(material: Material, config: Config,
             )
         if draw_BZ:
             functions.plot_BZ_from_lv(
-                ax, material.get_reciprocal_lattice_vectors() / k_unit_scale, include_negative=True
+                ax, np.array(material.get_reciprocal_lattice_vectors()) / k_unit_scale, include_negative=True
             )
         
         if draw_lv:
             fig, ax = functions.plot_vectors_3d(
-                material.get_reciprocal_lattice_vectors() / k_unit_scale, labels=[""] * 3,
+                np.array(material.get_reciprocal_lattice_vectors()) / k_unit_scale, labels=[""] * 3,
                 ax=ax,
                 fig=fig,
                 axis_labels=axis_labels_pi_over_a,
