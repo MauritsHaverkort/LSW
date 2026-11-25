@@ -278,7 +278,7 @@ def material_has_sqw_calculation(material: Material, config: Config) -> bool:
             f"Loaded S(q,w) k-shape {material.sqw_2_ad_a_equiv_class.shape[2:5]} does not match expected {k_shape}, recalculating S(q,w) stage."
         )
         return False
-    if config.calc_two_magnon_spectra and material.conv_sqw_2_ad_a_equiv_classes.shape[2] != 2 * config.amount_w_values:
+    if config.calc_two_magnon_spectra and material.conv_sqw_2_ad_a_equiv_classes.shape[2] < 2 * config.amount_w_values:
         warn_if_loaded(
             f"Loaded two-magnon S(q,w) energy grid has {material.conv_sqw_2_ad_a_equiv_classes.shape[2]} points, expected {2 * config.amount_w_values}; recalculating S(q,w) stage."
         )
@@ -1698,11 +1698,14 @@ def calc_H_T_w_on_grid(
         )
         # the energy window is decided on
         if q_shift_index == 0:
-            w_values = np.linspace(
-                np.min(H_diag) - 0.2,
-                np.max(H_diag) + 10 * config.Gamma,
-                config.amount_w_values,
-            )
+            # equidistant grid w_j = (m + j) dw with an integer m, so that the
+            # convolution grid of the two-magnon part (bin n at 2 w_0 + n dw) is the
+            # same grid shifted by m bins; it covers at least
+            # [E_min - 0.2, E_max + 10 Gamma]
+            w_bottom = np.min(np.real(H_diag)) - 0.2
+            w_top = np.max(np.real(H_diag)) + 10 * config.Gamma
+            dw = (w_top - w_bottom) / (config.amount_w_values - 2)
+            w_values = (np.floor(w_bottom / dw) + np.arange(config.amount_w_values)) * dw
 
         config.debug_timer.print_difference(
             "calculated H and bog_trafo ", config.debug_timing
@@ -2178,9 +2181,24 @@ def calculate_sqw_spectra(
         # convolution carries it twice; multiply by 2N to give S4 the same single
         # 1/(2N) as S2 (Wick: S4 = 1/N_k sum_k R(k) R(q-k) with the raw residues R)
         norm = norm * 2 * material.N
-        material.conv_sqw_2_ad_a_equiv_classes = norm * np.array(
+        convoluted_grids_equivalence_classes = norm * np.array(
             convoluted_grids_equivalence_classes
         )
+        # convolution bin n lies at 2 w_0 + n dw = w_0 + (n + m) dw with w_0 = m dw;
+        # shift by m bins so that the two-magnon grids use the energies w_0 + n dw
+        # of the one-magnon grid (extended); m > 0 (gap) needs m extra bins on top
+        dw = np.real(w_values[1] - w_values[0])
+        m = int(np.rint(np.real(w_values[0]) / dw))
+        W2 = convoluted_grids_equivalence_classes.shape[2]
+        shifted = np.zeros(
+            convoluted_grids_equivalence_classes.shape[:2] + (W2 + max(m, 0),) + convoluted_grids_equivalence_classes.shape[3:],
+            dtype=convoluted_grids_equivalence_classes.dtype,
+        )
+        if m >= 0:
+            shifted[:, :, m:] = convoluted_grids_equivalence_classes
+        else:
+            shifted[:, :, : W2 + m] = convoluted_grids_equivalence_classes[:, :, -m:]
+        material.conv_sqw_2_ad_a_equiv_classes = shifted
 
         coeff_sym_classes_tioju_4 = np.zeros(
             (
