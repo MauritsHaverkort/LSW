@@ -1803,7 +1803,7 @@ def give_phase_factor_from_total_k(
 
             exp_minus_i_rj_q = material.e_minus_ikd(pos_j, q_values)
             prefactor = (
-                np.sqrt(np.abs(si * s_j)) * np.conj(exp_minus_i_ri_q) * exp_minus_i_rj_q
+                np.conj(exp_minus_i_ri_q) * exp_minus_i_rj_q
             )
             prefactor_tensor[..., i, j] = prefactor
             prefactor_tensor[..., i + N, j] = prefactor
